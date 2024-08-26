@@ -1,0 +1,35 @@
+# aipipeline/projects/cfe/config.yml
+# Config file for CFE project production
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6380
+
+data:
+  raw_data_path: "/mnt/CFElab/"
+  processed_data_path: "/mnt/CFElab/machineLearning/"
+  version: "Baseline"
+  labels: "Diatom,Aggregation,Copepod"
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  clu_det_ini: "sdcat_clu_det.ini"
+  exemplar_ini: "sdcat_exemplar.ini"
+
+vss:
+  threshold: 0.6
+  url: "http://doris.shore.mbari.org/knn"
+
+mounts:
+  - name: "image"
+    path: "/mnt/CFElab"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/CFElab"
+
+tator:
+  project: "902111-CFE"
+  host: "mantis.shore.mbari.org"
+
+docker:
+  aidata: 'mbari/aidata:1.12.2-cuda124'
+  sdcat: 'mbari/sdcat:1.9.4-cuda124'
+  voccropper: 'mbari/voc-imagecropper:0.3.7'

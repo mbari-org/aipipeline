@@ -1,0 +1,63 @@
+# aipipeline/projects/uav/config.yml
+# Config file for UAV project production
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6379
+
+docker:
+  aidata: 'mbari/aidata:1.12.2-cuda124'
+  sdcat: 'mbari/sdcat:1.9.4-cuda124'
+  voccropper: 'mbari/voc-imagecropper:0.3.7'
+
+data:
+  raw_path: "/mnt/UAV/"
+  processed_path: "/mnt/ML_SCRATCH/uav-901902/"
+  version: "Baseline"
+  labels: "Pinniped,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
+  download_args: ["--verified"]
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  clu_det_ini: "sdcat_clu_det.ini"
+  exemplar_ini: "sdcat_exemplar.ini"
+
+vss:
+  threshold: 0.5
+  url: "http://doris.shore.mbari.org/knn"
+
+tator:
+  project: "901902-uavs"
+  host: "mantis.shore.mbari.org"
+  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
+
+  image:
+    attributes:
+      date:
+        type: string
+      time:
+        type: string
+      latitude:
+        type: float
+      longitude:
+        type: float
+      make:
+        type: string
+      model:
+        type: string
+
+  box:
+    attributes:
+      Label:
+        type: string
+      score:
+        type: float
+      cluster:
+        type: string
+      saliency:
+        type: float
+      area:
+        type: int
+      exemplar:
+        type: bool
+      verified:
+        type: bool

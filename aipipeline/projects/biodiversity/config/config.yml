@@ -1,0 +1,63 @@
+# aipipeline/projects/biodiversity/config.yml
+# Config file for Bio project production
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6380
+
+docker:
+  aidata: 'mbari/aidata:1.12.2-cuda124'
+  sdcat: 'mbari/sdcat:1.9.4-cuda124'
+  voccropper: 'mbari/voc-imagecropper:0.3.7'
+
+  bind_volumes:
+    /mnt/ML_SCRATCH:
+      bind: /mnt/ML_SCRATCH
+      mode: rw
+    /tmp:
+      bind: /tmp
+      mode: rw
+data:
+  processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
+  version: "Baseline"
+  labels: "Aegina, Eusergestes similis, Gymnopraia lapislazula, Nanomia, Poeobius, Solmissus, Solmundella bitentaculata"
+  download_args: ["--group NMS --verified"]
+
+vss:
+  threshold: 0.4
+  url: "http://doris.shore.mbari.org/knn"
+
+tator:
+  project: "901103-biodiversity"
+  host: "mantis.shore.mbari.org"
+  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
+
+  image:
+    attributes:
+      date:
+        type: string
+      time:
+        type: string
+
+  box:
+    attributes:
+      Label:
+        type: string
+      concept:
+        type: string
+      score:
+        type: float
+      cluster:
+        type: string
+      saliency:
+        type: float
+      group:
+        type: string
+      obs_uuid:
+        type: string
+      exemplar:
+        type: bool
+      verified:
+        type: bool
+
+
+ffmpeg_path: "/usr/bin/ffmpeg"
