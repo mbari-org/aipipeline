@@ -1,0 +1,11 @@
+opencv-python-headless
+requests
+pandas
+docker==7.1.0
+plotly
+python-dotenv
+pyyaml
+scikit-learn
+matplotlib
+albumentations
+torch

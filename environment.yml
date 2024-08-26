@@ -1,0 +1,10 @@
+name: aipipeline
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python==3.11
+  - apache-beam
+  - pip
+  - pip:
+    - -r requirements.txt
