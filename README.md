@@ -6,7 +6,12 @@ e.g. accuracy, precision, recall, F1 score. This may include object detection,
 clustering, classification, and vector search algorithms. It is designed to be used for a number of projects at MBARI 
 that require advanced workflows to process large amounts of images or video.
 
-See the [MBARI AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and  services used in the pipelines.
+### See the [MBARI AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and  services used in the pipelines.
+
+---
+Example plots from the t-SNE analysis of the data.
+
+![example plots](docs/imgs/tsne_plot_example.png)
 
 --- 
 ## Requirements
