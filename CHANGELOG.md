@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.1.2 (2024-08-26)
+
+### Documentation
+
+* docs: minor typo fix ([`9e7a728`](https://github.com/mbari-org/aipipeline/commit/9e7a7284485e379f9c7da27a864400b124371074))
+
+### Performance
+
+* perf: add retry to crop with 30 second delay ([`193542b`](https://github.com/mbari-org/aipipeline/commit/193542b6b2b6d935f69829bf88b87b58ee6ec366))
+
 ## v0.1.1 (2024-08-26)
 
 ### Documentation
