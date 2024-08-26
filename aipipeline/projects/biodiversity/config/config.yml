@@ -19,8 +19,12 @@ docker:
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
   version: "Baseline"
-  labels: "Aegina, Eusergestes similis, Gymnopraia lapislazula, Nanomia, Poeobius, Solmissus, Solmundella bitentaculata"
+  labels: "Aegina,Gymnopraia lapislazula,Nanomia,Poeobius,Solmissus,Solmundella bitentaculata"
   download_args: ["--group NMS --verified"]
+
+sdcat:
+  exemplar_ini: "sdcat_exemplar.ini"
+  clu_det_ini: "sdcat_clu_det.ini"
 
 vss:
   threshold: 0.4
