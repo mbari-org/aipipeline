@@ -9,6 +9,14 @@ docker:
   sdcat: 'mbari/sdcat:1.9.4-cuda124'
   voccropper: 'mbari/voc-imagecropper:0.3.7'
 
+  bind_volumes:
+    /mnt/ML_SCRATCH:
+      bind: /mnt/ML_SCRATCH
+      mode: rw
+    /tmp:
+      bind: /tmp
+      mode: rw
+
 data:
   raw_path: "/mnt/UAV/"
   processed_path: "/mnt/ML_SCRATCH/uav-901902/"
