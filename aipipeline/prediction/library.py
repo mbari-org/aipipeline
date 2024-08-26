@@ -3,6 +3,7 @@ import logging
 import multiprocessing
 import os
 import shutil
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List
@@ -145,20 +146,32 @@ def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
     #     args.extend(["--labels", f'"{labels_str}"'])
 
     now = datetime.now().strftime("%Y%m%d")
-    try:
-        container = run_docker(
-            config_dict["docker"]["voccropper"], f"{short_name}-voccrop-{now}", args, config_dict["docker"]["bind_volumes"]
-        )
-        if container:
-            logger.info(f"Cropping ROIs in {base_path}....")
-            container.wait()
-            logger.info(f"Done cropping ROIs in {base_path}....")
-        else:
-            logger.error(f"Failed to crop ROIs in {base_path}....")
-            return []
-    except Exception as e:
-        logger.error(f"Failed to crop ROIs in {base_path}....{e}")
-        return []
+
+    n = 3  # Number of retries
+    delay_secs = 30 # Delay between retries
+
+    for attempt in range(1, n + 1):
+        try:
+            container = run_docker(
+                config_dict["docker"]["voccropper"], f"{short_name}-voccrop-{now}", args,
+                config_dict["docker"]["bind_volumes"]
+            )
+            if container:
+                logger.info(f"Cropping ROIs in {base_path}....")
+                container.wait()
+                logger.info(f"Done cropping ROIs in {base_path}....")
+                break  # Exit loop if successful
+            else:
+                logger.error(f"Failed to crop ROIs in {base_path}....")
+                return []
+        except Exception as e:
+            logger.error(f"Attempt {attempt}/{n}: Failed to crop ROIs in {base_path}....{e}")
+            if attempt < n:
+                logger.info(f"Retrying in {delay_secs} seconds...")
+                time.sleep(delay_secs)
+            else:
+                logger.error(f"All {n} attempts failed. Giving up.")
+                return []
 
     # Find the file stats.txt and read it as a json file
     stats_file = Path(f"{base_path}/crops/stats.txt")
