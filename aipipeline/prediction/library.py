@@ -144,7 +144,7 @@ def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
     #     labels_str = ",".join(labels)
     #     args.extend(["--labels", f'"{labels_str}"'])
 
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
+    now = datetime.now().strftime("%Y%m%d")
     try:
         container = run_docker(
             config_dict["docker"]["voccropper"], f"{short_name}-voccrop-{now}", args, config_dict["docker"]["bind_volumes"]
@@ -223,7 +223,7 @@ def download(labels: List[str], config_dict: Dict, additional_args: List[str] = 
     else:
         labels = []
 
-    now = datetime.now().strftime("%Y%m%d%H%M%S")
+    now = datetime.now().strftime("%Y%m%d")
     logger.info(f"Downloading data for labels: {labels}....")
     container = run_docker(
         config_dict["docker"]["aidata"], f"{short_name}-vss-download-{now}", args, config_dict["docker"]["bind_volumes"]
