@@ -5,11 +5,15 @@ import os
 import shutil
 import time
 from datetime import datetime
+import numpy as np
 from pathlib import Path
 from typing import Dict, List
 
+import cv2
+
 from aipipeline.docker.utils import run_docker
 import apache_beam as beam
+from albumentations.pytorch import ToTensorV2
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -17,13 +21,65 @@ formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 console = logging.StreamHandler()
 logger.addHandler(console)
 logger.setLevel(logging.INFO)
-# and log to file
+# # and log to file
 now = datetime.now()
 log_filename = f"library-{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+
+def simclr_augmentations(image_size):
+    import albumentations as albu
+    return albu.Compose([
+        albu.RandomResizedCrop(height=image_size, width=image_size, scale=(0.2, 1.0), p=1.0),
+        albu.HorizontalFlip(p=0.5),
+        albu.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8),
+        albu.GaussianBlur(blur_limit=(3, 7), sigma_limit=0.1, p=0.5),
+        albu.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+        ToTensorV2()
+    ])
+
+
+def generate_multicrop_views(elements) -> List[tuple]:
+    data = []
+    small_crop_augmentations = simclr_augmentations(image_size=112)
+    for count, crop_path, save_path in elements:
+        if count > 100:
+            logger.info(f"Skipping {count} crops in {crop_path}")
+            data.append((count, crop_path, save_path))
+            continue
+
+        logger.info(f"Augmenting {count} crops in {crop_path}....")
+        for image_path in Path(crop_path).glob("*.jpg"):
+            num_aug = 0
+            image = cv2.imread(image_path)
+            if image is None:
+                logger.error(f"Failed to read {image_path}")
+                continue
+
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            small_crops = [small_crop_augmentations(image=image)['image'] for _ in range(6)]
+            multicrop = small_crops
+            for i, crop in enumerate(multicrop):
+                # Extract the augmented image and convert it back to BGR
+                augmented_image = crop.numpy()
+                mean = np.array([0.485, 0.456, 0.406])
+                std = np.array([0.229, 0.224, 0.225])
+                augmented_image = std[:, None, None] * augmented_image + mean[:, None, None]
+                augmented_image = np.clip(augmented_image.transpose(1, 2, 0) * 255, 0, 255).astype(np.uint8)
+                augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
+
+                # Save the augmented image using the same name as the original image with an index
+                # This avoids overwriting the original image and allows the loader to still use the database index stem
+                save_file = image_path.parent / f"{image_path.stem}.{i}.jpg"
+                logger.info(f"Saving {save_file}")
+                cv2.imwrite(save_file.as_posix(), augmented_image)
+            num_aug += 1
+        data.append((num_aug, crop_path, save_path))
+    return data
+
 
 def cluster(data, config_dict: Dict) -> List[tuple]:
     logger.info(data)
@@ -49,6 +105,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
         min_cluster_size = 3
     else:
         min_cluster_size = 2
+
     logger.info(f"Running clustering on {num_images} images with min-cluster-size=2")
     args = [
         "cluster",
@@ -93,12 +150,14 @@ class ProcessClusterBatch(beam.DoFn):
 
     def __init__(self, config_dict: Dict):
         self.config_dict = config_dict
+
     def process(self, batch):
-        num_processes = min(5, len(batch))
+        num_processes = min(1, len(batch))
         with multiprocessing.Pool(num_processes) as pool:
             args = [(data, self.config_dict) for data in batch]
             results = pool.starmap(cluster, args)
         return results
+
 
 def batch_elements(elements, batch_size=3):
     batch = []
@@ -148,7 +207,7 @@ def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
     now = datetime.now().strftime("%Y%m%d")
 
     n = 3  # Number of retries
-    delay_secs = 30 # Delay between retries
+    delay_secs = 30  # Delay between retries
 
     for attempt in range(1, n + 1):
         try:
@@ -202,6 +261,7 @@ def clean(base_path: str) -> str:
     for f in Path(base_path).glob("*"):
         if f.is_dir() and f.name != "images":
             try:
+                logger.info(f"Removing {f}")
                 shutil.rmtree(f)
             except Exception as e:
                 logger.error(f"Failed to remove {f}: {e}")
