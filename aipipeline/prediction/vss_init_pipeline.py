@@ -1,6 +1,7 @@
 # aipipeline, Apache-2.0 license
 # Filename: aipiipeline/prediction/vss-_init_pipeline.py
 # Description: Run the VSS initialization pipeline
+import time
 from datetime import datetime
 
 import dotenv
@@ -16,6 +17,7 @@ from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.prediction.library import (
     download,
     crop_rois,
+    generate_multicrop_views,
     get_short_name,
     gen_machine_friendly_label,
     clean,
@@ -52,12 +54,27 @@ def load_exemplars(data, config_dict=Dict) -> str:
     num_loaded = 0
     for label, save_dir in data:
         machine_friendly_label = gen_machine_friendly_label(label)
-        logger.info(f"Loading exemplars for {label} as {machine_friendly_label} from {save_dir}")
+        # Grab the most recent file
+        all_exemplars = list(Path(save_dir).rglob("*_exemplars.csv"))
+        exemplar_file = sorted(all_exemplars, key=os.path.getmtime, reverse=True)[0] if all_exemplars else None
+        exemplar_count = 0
+        if exemplar_file is not None:
+            with open(exemplar_file, "r") as f:
+                exemplar_count = len(f.readlines())
+
+        if exemplar_count < 10 or exemplar_file is None:
+            all_detections = list(Path(save_dir).rglob("*_detections.csv"))
+            exemplar_file = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
+            with open(exemplar_file, "r") as f:
+                exemplar_count = len(f.readlines())
+            logger.info(f"To few exemplars, using detections file {exemplar_file} instead")
+
+        logger.info(f"Loading {exemplar_count} exemplars for {label} as {machine_friendly_label} from {exemplar_file}")
         args = [
             "load",
             "exemplars",
             "--input",
-            f"'{save_dir}'",
+            f"'{exemplar_file}'",
             "--label",
             f"'{label}'",
             "--device",
@@ -69,24 +86,34 @@ def load_exemplars(data, config_dict=Dict) -> str:
             "--token",
             TATOR_TOKEN,
         ]
-        try:
-            container = run_docker(
-                config_dict["docker"]["aidata"],
-                f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
-                args,
-                config_dict["docker"]["bind_volumes"],
-            )
-            if container:
-                logger.info(f"Loading cluster exemplars for {label}...")
-                container.wait()
-                logger.info(f"Loaded cluster exemplars for {label}")
-                num_loaded += 1
-            else:
-                logger.error(f"Failed to load cluster exemplars for {label}")
-        except Exception as e:
-            logger.error(f"Failed to load exemplars for {label}: {e}")
+        n = 3  # Number of retries
+        delay_secs = 30  # Delay between retries
 
-    return f"Loaded {num_loaded} exemplars"
+        for attempt in range(1, n + 1):
+            try:
+                container = run_docker(
+                    config_dict["docker"]["aidata"],
+                    f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
+                    args,
+                    config_dict["docker"]["bind_volumes"],
+                )
+                if container:
+                    logger.info(f"Loading cluster exemplars for {label}...")
+                    container.wait()
+                    logger.info(f"Loaded cluster exemplars for {label}")
+                    num_loaded += 1
+                else:
+                    logger.error(f"Failed to load cluster exemplars for {label}")
+            except Exception as e:
+                logger.error(f"Failed to load v exemplars for {label}: {e}")
+                if attempt < n:
+                    logger.info(f"Retrying in {delay_secs} seconds...")
+                    time.sleep(delay_secs)
+                else:
+                    logger.error(f"All {n} attempts failed. Giving up.")
+                    return f"Failed to load exemplars for {label}"
+
+    return f"Loaded {num_loaded} labels"
 
 
 # Beam pipeline
@@ -97,7 +124,6 @@ def run_pipeline(argv=None):
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav_901902" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--skip_clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
-    parser.add_argument("--skip_crop", required=False, default=100, help="Skip cropping of ROIs")
     parser.add_argument("--batch_size", required=False, default=3, help="Batch size")
     args, beam_args = parser.parse_known_args(argv)
 
@@ -109,14 +135,16 @@ def run_pipeline(argv=None):
 
     options = PipelineOptions(beam_args)
 
+    if not args.skip_clean:
+        clean(base_path)
+
     with beam.Pipeline(options=options) as p:
-        if not args.skip_clean:
-            p | "Start clean" >> beam.Create([base_path]) | "Clean previously downloaded data" >> beam.Map(clean)
         (
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, config_dict=config_dict, additional_args=download_args)
             | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict)
+            | "Generate views" >> beam.Map(generate_multicrop_views)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=4))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict)
