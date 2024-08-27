@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.2.0 (2024-08-27)
+
+### Build
+
+* build: added missing pip install to install recipe ([`e4bf1d2`](https://github.com/mbari-org/aipipeline/commit/e4bf1d2b9d5544e659dae01adf8529f7c4340feb))
+
+### Feature
+
+* feat: added confusion matrix and more cleaning of metrics code ([`d205072`](https://github.com/mbari-org/aipipeline/commit/d2050720ab279b5dfd4d2ed4d462d115b987270e))
+
 ## v0.1.2 (2024-08-26)
 
 ### Documentation
