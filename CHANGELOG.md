@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.3.0 (2024-08-27)
+
+### Feature
+
+* feat: added simclr_augmentations like augmentation and other minor formatting changes ([`0d4493d`](https://github.com/mbari-org/aipipeline/commit/0d4493d93fe614ae27f46d6be7dff85c8c63e4e5))
+
 ## v0.2.0 (2024-08-27)
 
 ### Build
