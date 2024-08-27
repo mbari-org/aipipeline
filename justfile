@@ -13,6 +13,7 @@ install:
     python -m pip install --upgrade pip
     python -m pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
     git submodule update --init --recursive
+    python -m pip install submodules/aidata/requirements.txt
 
 # Update the environment. Run this command after checking out any code changes
 update:
