@@ -34,3 +34,10 @@
 #/mnt/UAV/Level-1/trinity-2_20240119T190337_Seymour/SONY_DSC-RX1RM2,2024/01/Seymour
 #/mnt/UAV/Level-1/trinity-2_20240119T180355_Seymour/SONY_DSC-RX1RM2,2024/01/Seymour
 #/mnt/UAV/Level-1/trinity-2_20240111T193453_Seymour/SONY_DSC-RX1RM2,2024/01/Seymour
+#/mnt/UAV/Level-1/trinity-2_20240820T233850_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton,
+#/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/Seymour
+#/mnt/UAV/Level-1/trinity-2_20240809T233952_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
+#/mnt/UAV/Level-1/trinity-2_20240808T171312_Davenport/SONY_DSC-RX1RM2,2024/08/Davenport
+#/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
+#/mnt/UAV/Level-1/trinity-2_20240703T164523_Davenport/SONY_DSC-RX1RM2,2024/07/Davenport
+#/mnt/UAV/Level-1/trinity-2_20240703T153256_Seymour/SONY_DSC-RX1RM2,2024/07/Seymour
