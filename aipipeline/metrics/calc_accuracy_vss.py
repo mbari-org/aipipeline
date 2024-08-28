@@ -6,6 +6,7 @@ from datetime import datetime
 
 import dotenv
 import logging
+import numpy as np
 
 from aidata.predictors.process_vits import ViTWrapper
 from aipipeline.config_setup import setup_config
@@ -25,12 +26,7 @@ from sklearn.metrics import precision_score, recall_score, accuracy_score
 import redis
 
 def calc_accuracy(config: dict, base_dir: str, password: str):
-    labels = []
-    labels_dir = Path(base_dir)
-    # Get all the labels from the directory names
-    for label in labels_dir.iterdir():
-        if label.is_dir():
-            labels.append(label.name)
+    labels = config["data"]["labels"].split(",")
 
     base_path = Path(base_dir)
     project = config["tator"]["project"]
@@ -95,10 +91,14 @@ def calc_accuracy(config: dict, base_dir: str, password: str):
     from sklearn.metrics import confusion_matrix
     import matplotlib.pyplot as plt
     import seaborn as sns
-    import numpy as np
+
+    # Normalize the encoded
     cm = confusion_matrix(true_labels_encoded, top1_predicted_labels_encoded)
+    # Normalize the confusion matrix to range 0-1
+    cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
     plt.figure(figsize=(10, 10))
-    sns.heatmap(cm, annot=True, fmt="d", xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
+    sns.heatmap(cm_normalized, annot=True, fmt=".2f", xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_, cmap='Blues')
     plt.xlabel("Predicted")
     plt.ylabel("True")
     plt.title("Confusion Matrix")
@@ -106,6 +106,7 @@ def calc_accuracy(config: dict, base_dir: str, password: str):
     d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
     plt.title(d)
     plt.savefig(f"confusion_matrix_{project}_{d}.png")
+    logger.info(f"Confusion matrix saved to confusion_matrix_{project}_{d}.png")
 
 
 def main(argv=None):
