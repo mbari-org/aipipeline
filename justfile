@@ -40,21 +40,21 @@ init-vss project='uav':
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Cluster mission in aipipeline/projects/uav/data/missions2process.txt file
+# Cluster mission in aipipeline/projects/uav/data/missions2process.txt
 cluster-uav:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster-_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt
 
-# Detect mission in aipipeline/projects/uav/data/missions2process.txt file
+# Detect mission in aipipeline/projects/uav/data/missions2process.txt
 detect-uav:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt
 
-# Detect mission data in aipipeline/projects/uav/data/missions2process.txt file on Mac
+# Detect mission data in aipipeline/projects/uav/data/missions2process.txt
 detect-uav-test:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
@@ -63,7 +63,8 @@ detect-uav-test:
     echo $TEST_DIR/data/trinity-2_20240702T162557_Seacliff/SONY_DSC-RX1RM2 > $TEST_DIR/data/missions2process.txt
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py --missions $TEST_DIR/data/missions2process.txt --config $TEST_DIR/config/config_macos.yml
 
-load-uav:
+# Load uav mission images in aipipeline/projects/uav/data/missions2process.txt
+load-uav-images:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
