@@ -3,18 +3,15 @@
 # Description: Batch load images for missions
 import os
 from datetime import datetime
-from pathlib import Path
-from typing import Dict
 
 import apache_beam as beam
 import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
-import re
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
-from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS
+from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -39,25 +36,14 @@ def load_images(element) -> str:
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
-    mission, config_dict = element
-    mission_parts = mission.split(",")
-    mission_dir = mission_parts[0]
-    section = mission_parts[1]
-    # # The mission name is the string that includes a regexp with the platform name, e.g. trinity-<anything>
-    mission_name = None
-    for p in POSSIBLE_PLATFORMS:
-        search = re.findall(fr'{p}-.*/', mission_dir)
-        if search:
-            mission_name = search[0].replace("/", "")
-            break
+    line, config_dict = element
+    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     if not mission_name:
-        logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
-        return f"Could not find mission name in path: {mission_dir}"
+        logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
+        return f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}"
 
     logger.info(f"Mission name: {mission_name}")
-    start_image = mission_parts[2] if len(mission_parts) > 2 else None
-    end_image = mission_parts[3] if len(mission_parts) > 3 else None
 
     project = config_dict["tator"]["project"]
 
@@ -87,13 +73,13 @@ def load_images(element) -> str:
         bind_volumes=config_dict["docker"]["bind_volumes"]
     )
     if container:
-        logger.info(f"Images loading for {mission}...")
+        logger.info(f"Images loading for {mission_name}...")
         container.wait()
-        logger.info(f"Images loaded for {mission}")
-        return f"Mission {mission} images loaded."
+        logger.info(f"Images loaded for {mission_name}")
+        return f"Mission {mission_name} images loaded."
     else:
-        logger.error(f"Failed to load images for {mission}")
-        return f"Failed to load images for {mission}"
+        logger.error(f"Failed to load images for {mission_name}")
+        return f"Failed to load images for {mission_name}"
 
 
 

@@ -4,14 +4,13 @@
 import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict
 
 import apache_beam as beam
 import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
-from aipipeline.projects.uav.args_common import parse_args
+from aipipeline.projects.uav.args_common import parse_args, parse_mission_string, POSSIBLE_PLATFORMS
 from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
 
@@ -38,24 +37,28 @@ if not TATOR_TOKEN:
     exit(-1)
 
 
-def process_mission(element, config_dict: Dict):
+def process_mission(element) -> str:
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
-    mission = element
+    logger.info(f"Processing element {element}")
+    line, config_dict = element
+    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+
+    if not mission_name:
+        logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
+        return f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}"
+
+    logger.info(f"Mission name: {mission_name}")
 
     project = config_dict["tator"]["project"]
     version = config_dict["data"]["version"]
     base_dir = Path(config_dict["data"]["processed_path"]) / "seedDetections"
-    mission_parts = mission.split(",")
-    mission_dir = mission_parts[0]
-    mission_name = mission_dir.parts[1]
-
     det_dir = Path(base_dir) / mission_name / "detections" / "combined" / "hustvl" / "yolos-tiny" / "clusters"
 
     if not det_dir.exists():
         logger.error(f"Could not find directory: {det_dir}")
-        return
+        return f"Could not find directory: {det_dir}"
 
     # Find the first cluster file
     for det_index, det_file in enumerate(det_dir.glob("*cluster*.csv")):

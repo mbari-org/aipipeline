@@ -11,7 +11,7 @@ import logging
 import sys
 
 from aipipeline.docker.utils import run_docker
-from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS
+from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 from config_setup import setup_config
 
 logger = logging.getLogger(__name__)
@@ -27,22 +27,23 @@ logger.addHandler(handler)
 ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 
-def process_mission(element, config_dict):
+def process_mission(element):
+    # Data is in the format
+    # <path>,<tator section>,<start image>,<end image>
+    # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
+    logger.info(f"Processing element {element}")
+    line, config_dict = element
+    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+
     base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
     project = config_dict["tator"]["project"]
     clu_det_ini = config_dict["sdcat"]["clu_det_ini"]
     model = config_dict["sdcat"]["model"]
-    mission = element
 
-    mission_parts = mission.split(",")
-    mission_dir = mission_parts[0]
-    parts = list(Path(mission_dir).parts)
+    if not mission_name:
+        logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
+        return f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}"
 
-    # Find the first part that starts with a platform name
-    for part in parts:
-        if any([part.startswith(p) for p in POSSIBLE_PLATFORMS]):
-            mission_name = part
-            break
 
     det_dir = base_path / mission_name / "detections" / "combined" / model / "det_filtered"
     save_dir = base_path / mission_name / "detections" / "combined" / model / "clusters"
