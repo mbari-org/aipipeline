@@ -82,7 +82,7 @@ def load_exemplars(data, config_dict=Dict) -> str:
             "--password",
             REDIS_PASSWD,
             "--config",
-            f"/tmp/config_{project}.yml",
+            f"/tmp/{project}/config.yml",
             "--token",
             TATOR_TOKEN,
         ]
