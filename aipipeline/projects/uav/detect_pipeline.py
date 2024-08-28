@@ -11,7 +11,7 @@ from pathlib import Path
 import logging
 
 from aipipeline.docker.utils import run_docker
-from aipipeline.projects.uav_901902.args_common import parse_args, POSSIBLE_PLATFORMS
+from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS
 from config_setup import setup_config
 
 logger = logging.getLogger(__name__)
