@@ -3,16 +3,18 @@
 # Description: Batch load images for missions
 import os
 from datetime import datetime
+from pathlib import Path
 from typing import Dict
 
 import apache_beam as beam
 import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
+import re
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
-from aipipeline.projects.uav.args_common import parse_args
+from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -22,37 +24,49 @@ handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+# Also log to the console
+console = logging.StreamHandler()
+logger.addHandler(console)
+logger.setLevel(logging.INFO)
 
 # Constants
 dotenv.load_dotenv()
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
-def load_images(element, config_dict: Dict) -> str:
+def load_images(element) -> str:
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
-    mission = element
+    logger.info(f"Processing element {element}")
+    mission, config_dict = element
     mission_parts = mission.split(",")
     mission_dir = mission_parts[0]
-    # The mission name is the string that includes trinity
-    mission_path = mission_dir.split("/")
-    for i, part in enumerate(mission_path):
-        if "trinity" in part:
-            mission_name = part
+    section = mission_parts[1]
+    # # The mission name is the string that includes a regexp with the platform name, e.g. trinity-<anything>
+    mission_name = None
+    for p in POSSIBLE_PLATFORMS:
+        search = re.findall(fr'{p}-.*/', mission_dir)
+        if search:
+            mission_name = search[0].replace("/", "")
             break
-    section = mission_dir.parts[1]
+
+    if not mission_name:
+        logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
+        return f"Could not find mission name in path: {mission_dir}"
+
+    logger.info(f"Mission name: {mission_name}")
     start_image = mission_parts[2] if len(mission_parts) > 2 else None
     end_image = mission_parts[3] if len(mission_parts) > 3 else None
 
     project = config_dict["tator"]["project"]
 
-    logger.info(f"Loading images for {input}")
+    logger.info(f"Loading images in {mission_dir} to Tator project {project} in section {section}")
     args = [
         "load",
         "images",
         "--input",
-        input,
+        mission_dir,
         "--config",
         f"/tmp/{project}/config.yml",
         "--token",

@@ -69,16 +69,16 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 just list
 ```
 
-| Recipe             | Description                                                                       |
-|--------------------|-----------------------------------------------------------------------------------|
- |   list                         | List recipes |
- |   install                      | Setup the environment |
- |   update                       | Update the environment. Run this command after checking out any code changes |
- |   reset-vss project='uav' | Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav` |
- |   init-vss project='uav' | Initialize the VSS database for the UAV project |
- |   cluster-uav                  | Cluster mission in aipipeline/projects/uav/data/missions2process.txt file |
- |   detect-uav                   | Detect mission in aipipeline/projects/uav/data/missions2process.txt file |
- |   detect-uav-test              | Detect mission data in aipipeline/projects/uav/data/missions2process.txt file on Mac |
+| Recipe                        | Description                                                                       |
+|-------------------------------|-----------------------------------------------------------------------------------|
+ | `just list`                   | List recipes |
+ | `just install`                | Setup the environment |
+ | `just update`                 | Update the environment. Run this command after checking out any code changes |
+ | `just reset-vss project='uav'` | Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav` |
+ | `just init-vss project='uav' ` | Initialize the VSS database for the UAV project |
+ | `just cluster-uav`             | Cluster mission in aipipeline/projects/uav/data/missions2process.txt file |
+ | `just detect-uav`              | Detect mission in aipipeline/projects/uav/data/missions2process.txt file |
+ | `just detect-uav-test`         | Detect mission data in aipipeline/projects/uav/data/missions2process.txt file on Mac |
 --
 
 ### Related projects
