@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav-901902/src/cluster-pipeline.py
+# Filename: projects/uav/args_common.py
 # Description: Batch process missions with sdcat clustering
 from pathlib import Path
 import os
@@ -26,3 +26,20 @@ def parse_args(argv, logger):
         raise FileNotFoundError(f"Config yaml {args.config} not found")
 
     return args, beam_args
+
+def parse_mission_string(line: str):
+    import re
+    mission_parts = line.split(",")
+    mission_dir = mission_parts[0]
+    section = mission_parts[1]
+    # # The mission name is the string that includes a regexp with the platform name, e.g. trinity-<anything>
+    mission_name = None
+    for p in POSSIBLE_PLATFORMS:
+        search = re.findall(fr'{p}-.*/', mission_dir)
+        if search:
+            mission_name = search[0].replace("/", "")
+            break
+
+    start_image = mission_parts[2] if len(mission_parts) > 2 else None
+    end_image = mission_parts[3] if len(mission_parts) > 3 else None
+    return mission_name, mission_dir, section, start_image, end_image

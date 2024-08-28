@@ -11,7 +11,7 @@ from pathlib import Path
 import logging
 
 from aipipeline.docker.utils import run_docker
-from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS
+from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 from config_setup import setup_config
 
 logger = logging.getLogger(__name__)
@@ -28,11 +28,14 @@ logger.addHandler(handler)
 ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 
-def process_mission(element, config_dict: dict) -> str:
-    mission = element
-    if mission is None:
-        logger.error("No mission provided.")
-        return "No mission provided."
+def process_mission(element) -> str:
+
+    # Data is in the format
+    # <path>,<tator section>,<start image>,<end image>
+    # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
+    logger.info(f"Processing element {element}")
+    line, config_dict = element
+    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
     project = config_dict["tator"]["project"]
@@ -40,22 +43,9 @@ def process_mission(element, config_dict: dict) -> str:
     model = config_dict["sdcat"]["model"]
     config_ini = f"/tmp/{project}/{clu_det_ini}"
 
-    mission_parts = mission.split(",")
-    mission_dir = mission_parts[0]
-    parts = list(Path(mission_dir).parts)
-
-    # Find the first part that starts with a platform name
-    for part in parts:
-        if any([part.startswith(p) for p in POSSIBLE_PLATFORMS]):
-            mission_name = part
-            break
-
     if not mission_name:
         logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
         return f"Could not find mission name in path: {mission_dir}"
-
-    start_image = mission_parts[2] if len(mission_parts) > 2 else None
-    end_image = mission_parts[3] if len(mission_parts) > 3 else None
 
     save_dir = base_path / mission_name / "detections" / "combined"
     if not os.path.exists(mission_dir):
