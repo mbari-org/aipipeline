@@ -283,7 +283,7 @@ def download(labels: List[str], config_dict: Dict, additional_args: List[str] = 
         "--token",
         TATOR_TOKEN,
         "--config",
-        f"/tmp/config_{project}.yml",
+        f"/tmp/{project}/config.yml",
         "--base-path",
         processed_data,
         "--version",

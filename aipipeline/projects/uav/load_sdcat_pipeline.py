@@ -11,7 +11,7 @@ import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
-from aipipeline.projects.uav_901902.args_common import parse_args
+from aipipeline.projects.uav.args_common import parse_args
 from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
 

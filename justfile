@@ -27,6 +27,13 @@ reset-vss project='uav':
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config $PROJECT_DIR/config/config.yml
 
 # Initialize the VSS database for the UAV project
+init-vss-small project='uav':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config_dcline.yml
+
+# Initialize the VSS database for the UAV project
 init-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
@@ -56,3 +63,8 @@ detect-uav-test:
     echo $TEST_DIR/data/trinity-2_20240702T162557_Seacliff/SONY_DSC-RX1RM2 > $TEST_DIR/data/missions2process.txt
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py --missions $TEST_DIR/data/missions2process.txt --config $TEST_DIR/config/config_macos.yml
 
+load-uav:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/uav
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_image_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
