@@ -97,11 +97,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
 
     logger.info(f"Clustering {num_images} images in {crop_dir} ....")
     # Scale the min-cluster-size based on the number of images
-    if num_images > 1000:
-        min_cluster_size = 7
-    elif num_images > 500:
-        min_cluster_size = 4
-    elif num_images > 100:
+    if num_images > 100:
         min_cluster_size = 3
     else:
         min_cluster_size = 2
