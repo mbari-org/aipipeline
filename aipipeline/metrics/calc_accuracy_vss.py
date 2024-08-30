@@ -108,9 +108,10 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
     plt.suptitle(f"CM {project} exemplars. Top-1 Accuracy: {accuracy_top1:.2f}, Top-3 Accuracy: {accuracy_top3:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}")
     d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
     plt.title(d)
-    plt.savefig(f"confusion_matrix_{project}_{d}.png")
+    plot_name = f"confusion_matrix_{project}_{datetime.now():%Y-%m-%d %H%M%S}.png"
+    logger.info(f"Saving confusion matrix to {plot_name}")
+    plt.savefig(plot_name)
     plt.close()
-    logger.info(f"Confusion matrix saved to confusion_matrix_{project}_{d}.png")
 
 
 def main(argv=None):

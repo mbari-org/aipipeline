@@ -5,6 +5,7 @@ import time
 from datetime import datetime
 
 import dotenv
+import glob
 import os
 from pathlib import Path
 import apache_beam as beam
@@ -137,6 +138,13 @@ def run_pipeline(argv=None):
 
     if not args.skip_clean:
         clean(base_path)
+
+    # Always remove any previous augmented data before starting
+    logger.info("Removing any previous augmented data")
+    pattern = os.path.join(processed_data, '*.*.png')
+    files = glob.glob(pattern)
+    for file in files:
+        os.remove(file)
 
     with beam.Pipeline(options=options) as p:
         (
