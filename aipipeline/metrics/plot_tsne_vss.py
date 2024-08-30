@@ -103,7 +103,7 @@ def plot_tsne(config: dict, password: str):
         logging.info(f"t-SNE completed on {len(v)} vectors")
 
         # Plot the t-SNE results, colored by class
-        plt.figure(figsize=(6, 5))
+        plt.figure(figsize=(12, 12))
 
         colors = [
             (1, 0, 0),
