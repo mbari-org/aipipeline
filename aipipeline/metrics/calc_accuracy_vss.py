@@ -25,10 +25,13 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import precision_score, recall_score, accuracy_score
 import redis
 
-def calc_accuracy(config: dict, base_dir: str, password: str):
+def calc_accuracy(config: dict, image_dir: str, password: str):
     labels = config["data"]["labels"].split(",")
+    # If there are no labels, or the labels are "all", then we need to get the labels from the directory structure
+    if not labels or labels == ["all"]:
+        labels = [d.name for d in Path(image_dir).iterdir() if d.is_dir()]
 
-    base_path = Path(base_dir)
+    base_path = Path(image_dir)
     project = config["tator"]["project"]
     r = redis.Redis(
         host=config["redis"]["host"],
@@ -97,15 +100,16 @@ def calc_accuracy(config: dict, base_dir: str, password: str):
     # Normalize the confusion matrix to range 0-1
     cm_normalized = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 
-    plt.figure(figsize=(10, 10))
-    sns.heatmap(cm_normalized, annot=True, fmt=".2f", xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_, cmap='Blues')
+    plt.figure(figsize=(12, 12))
+    sns.heatmap(cm_normalized, annot=True, fmt=".1f", xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_, cmap='Blues')
     plt.xlabel("Predicted")
     plt.ylabel("True")
     plt.title("Confusion Matrix")
-    plt.suptitle(f"CM {project} exemplars")
+    plt.suptitle(f"CM {project} exemplars. Top-1 Accuracy: {accuracy_top1:.2f}, Top-3 Accuracy: {accuracy_top3:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}")
     d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
     plt.title(d)
     plt.savefig(f"confusion_matrix_{project}_{d}.png")
+    plt.close()
     logger.info(f"Confusion matrix saved to confusion_matrix_{project}_{d}.png")
 
 
@@ -115,7 +119,7 @@ def main(argv=None):
     example_project = Path(__file__).resolve().parent.parent / "projects" / "biodiversity" / "config" / "config.yml"
     parser = argparse.ArgumentParser(description="Calculate the accuracy of the vss")
     parser.add_argument("--config", required=False, help="Config file path", default=example_project)
-    parser.add_argument("--crops", required=True, help="Path to crops")
+    parser.add_argument("--images", required=False, help="Path to images")
     args = parser.parse_args(argv)
 
     _, config_dict = setup_config(args.config)
@@ -124,7 +128,15 @@ def main(argv=None):
         logger.error("REDIS_PASSWD environment variable is not set.")
         return
 
-    calc_accuracy(config_dict, args.crops, REDIS_PASSWD)
+    if not args.images:
+        # Get the crops from the config_dict if not provided
+        processed_data = config_dict["data"]["processed_path"]
+        base_path = os.path.join(processed_data, config_dict["data"]["version"])
+        image_path = os.path.join(base_path, "crops")
+        logger.error(f"Crops path is not set. Using {image_path}")
+    else:
+        image_path = args.images
+    calc_accuracy(config_dict, image_path, REDIS_PASSWD)
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,25 @@
+# aipipeline/config.yml
+# Config file for aippipeline library components
+# These can be overridden by the project config.yml
+docker:
+  aidata: 'mbari/aidata:1.14.0-cuda124'
+  sdcat: 'mbari/sdcat:1.9.4-cuda124'
+  voccropper: 'mbari/voc-imagecropper:0.4.1'
+
+  bind_volumes:
+    /mnt/ML_SCRATCH:
+      bind: /mnt/ML_SCRATCH
+      mode: rw
+    /tmp:
+      bind: /tmp
+      mode: rw
+
+data:
+  labels: "all"
+  download_args: [ "--verified" ]
+
+vss:
+  url: "http://doris.shore.mbari.org/knn"
+
+tator:
+  url_load: "http://mantis.shore.mbari.org:8001/label/id"
