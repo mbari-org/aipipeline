@@ -4,11 +4,14 @@ redis:
   host: "doris.shore.mbari.org"
   port: 6380
 
+docker:
+  bind_volumes:
+
 data:
   raw_data_path: "/mnt/CFElab/"
-  processed_data_path: "/mnt/CFElab/machineLearning/"
+  processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
-  labels: "Diatom,Aggregation,Copepod"
+  labels: "all"
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -16,8 +19,8 @@ sdcat:
   exemplar_ini: "sdcat_exemplar.ini"
 
 vss:
+  project: "cfe"
   threshold: 0.6
-  url: "http://doris.shore.mbari.org/knn"
 
 mounts:
   - name: "image"
@@ -28,8 +31,4 @@ mounts:
 tator:
   project: "902111-CFE"
   host: "mantis.shore.mbari.org"
-
-docker:
-  aidata: 'mbari/aidata:1.12.2-cuda124'
-  sdcat: 'mbari/sdcat:1.9.4-cuda124'
-  voccropper: 'mbari/voc-imagecropper:0.3.7'
+  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"

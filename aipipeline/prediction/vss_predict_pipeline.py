@@ -47,7 +47,7 @@ def process_image_batch(batch, config_dict):
     project = config_dict["tator"]["project"]
     vss_threshold = config_dict["vss"]["threshold"]
     url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
-    url_load = config_dict["tator"]["bulk_url"]
+    url_load = config_dict["tator"]["url_load"]
 
     num_loaded = 0
     files = []
