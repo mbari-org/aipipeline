@@ -9,3 +9,4 @@ scikit-learn
 matplotlib
 albumentations
 torch
+apache-beam
