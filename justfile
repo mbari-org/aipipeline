@@ -19,7 +19,7 @@ install:
 update:
     conda env update --file environment.yml --prune
 
-# Generate a tsne plot
+# Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
