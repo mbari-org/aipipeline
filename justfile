@@ -19,6 +19,20 @@ install:
 update:
     conda env update --file environment.yml --prune
 
+# Generate a tsne plot
+plot-tsne-vss project='uav':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/plot_tsne_vss.py --config $PROJECT_DIR/config/config.yml
+
+# Calculate the accuracy of the VSS database
+calc-acc-vss project='uav':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/calc_accuracy_vss.py --config $PROJECT_DIR/config/config.yml
+
 # Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav`
 reset-vss project='uav':
     #!/usr/bin/env bash
