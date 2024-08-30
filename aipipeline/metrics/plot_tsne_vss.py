@@ -102,6 +102,9 @@ def plot_tsne(config: dict, password: str):
         vectors_2d = tsne.fit_transform(v)
         logging.info(f"t-SNE completed on {len(v)} vectors")
 
+        # Get the width of the vectors
+        vector_width = len(v[0]) - 1
+
         # Plot the t-SNE results, colored by class
         plt.figure(figsize=(12, 12))
 
@@ -135,9 +138,8 @@ def plot_tsne(config: dict, password: str):
 
         # Customize and place the legend outside the plot
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5), title="Classes")
-        plt.suptitle(f"t-SNE of 768-dimensional vectors {project} exemplars")
-        d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
-        plt.title(d)
+        plt.suptitle(f"t-SNE of {vector_width}-dimensional vectors {project} exemplars")
+        plt.title(f"{datetime.now():%Y-%m-%d %H:%M:%S}")
 
         # Plot the t-SNE results, colored by class
         for i, class_name in enumerate(class_names):
@@ -145,8 +147,9 @@ def plot_tsne(config: dict, password: str):
             idx = np.where(np.unique(class_names) == class_name)[0][0]
             plt.scatter(x, y, c=colors[idx], label=class_name, s=10, alpha=0.5)
 
-        logging.info(f"Saving plot to tsne_plot_{project}_{d}.png")
-        plt.savefig(f"tsne_plot_{project}_{d}.png")
+        plot_name = f"tsne_plot_{project}_{datetime.now():%Y-%m-%d %H%M%S}.png"
+        logging.info(f"Saving plot to {plot_name}")
+        plt.savefig(plot_name)
         plt.show()
     except Exception as e:
         logging.exception(f"Error: {e}")
