@@ -6,12 +6,13 @@ e.g. accuracy, precision, recall, F1 score. This may include object detection,
 clustering, classification, and vector search algorithms. It is designed to be used for a number of projects at MBARI 
 that require advanced workflows to process large amounts of images or video.
 
-### See the [MBARI AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and  services used in the pipelines.
+### See the [MBARI AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and services used in the pipelines.
 
 ---
-Example plots from the t-SNE analysis of the data.
+Example plots from the t-SNE, confusion matrix and accuracy analysis of examplar data.
 
-![example plots](docs/imgs/tsne_plot_example.png)
+![example tsne plots](docs/imgs/tsne_plot_example.png)
+![example cm_ac](docs/imgs/cm_ac_example.png)
 
 --- 
 ## Requirements
@@ -69,17 +70,19 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 just list
 ```
 
-| Recipe                         | Description                                                                    |
-|--------------------------------|--------------------------------------------------------------------------------|
- | `just list`                    | List recipes |
- | `just install`                 | Setup the environment |
- | `just update`                  | Update the environment. Run this command after checking out any code changes |
+| Recipe                         | Description                                                                                                       |
+|--------------------------------|-------------------------------------------------------------------------------------------------------------------|
+ | `just list`                    | List recipes                                                                                                      |
+ | `just install`                 | Setup the environment                                                                                             |
+ | `just plot-tsne-vss]`          | Generate a tsne plot of the VSS database                                                                          |
+ | `just gen-acc-vss]`            | Calculate the accuracy of the VSS database                                                                       |
+ | `just update`                  | Update the environment. Run this command after checking out any code changes                                      |
  | `just reset-vss project='uav'` | Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav` |
- | `just init-vss project='uav' ` | Initialize the VSS database for the UAV project |
- | `just cluster-uav`             | Cluster mission in aipipeline/projects/uav/data/missions2process.txt |
- | `just detect-uav`              | Detect mission in aipipeline/projects/uav/data/missions2process.txt |
- | `just detect-uav-test`         | Detect mission data in aipipeline/projects/uav/data/missions2process.txt |
- | `just load-uav-images`         | Load uav mission images in aipipeline/projects/uav/data/missions2process.txt |
+ | `just init-vss project='uav' ` | Initialize the VSS database for the UAV project                                                                   |
+ | `just cluster-uav`             | Cluster mission in aipipeline/projects/uav/data/missions2process.txt                                              |
+ | `just detect-uav`              | Detect mission in aipipeline/projects/uav/data/missions2process.txt                                               |
+ | `just detect-uav-test`         | Detect mission data in aipipeline/projects/uav/data/missions2process.txt                                          |
+ | `just load-uav-images`         | Load uav mission images in aipipeline/projects/uav/data/missions2process.txt                                      |
  
 --
 
