@@ -25,7 +25,7 @@ data:
   raw_path: "/mnt/UAV/"
   processed_path: "/mnt/ML_SCRATCH/uav-901902/"
   version: "Baseline"
-  labels: "Pinniped,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
+  labels: "Pinniped,Poop,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
   download_args: ["--verified"]
 
 sdcat:
