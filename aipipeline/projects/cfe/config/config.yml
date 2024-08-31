@@ -2,7 +2,7 @@
 # Config file for CFE project production
 redis:
   host: "doris.shore.mbari.org"
-  port: 6380
+  port: 6382
 
 docker:
   bind_volumes:
