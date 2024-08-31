@@ -30,7 +30,7 @@ plot-tsne-vss project='uav':
 calc-acc-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
-    export PYTHONPATH=.
+    export PYTHONPATH=.:submodules/aidata
     time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/calc_accuracy_vss.py --config $PROJECT_DIR/config/config.yml
 
 # Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav`
@@ -83,3 +83,15 @@ load-uav-images:
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_image_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
+
+# Download and crop detections
+download-crop project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_download_crop_pipeline.py --config ./aipipeline/projects/{{project}}/config/config.yml --skip_clean True
+
+# Predict images using the VSS database
+predict-vss project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/vss_predict_pipeline.py --config ./aipipeline/projects/{{project}}/config/config.yml
