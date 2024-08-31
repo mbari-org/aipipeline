@@ -141,9 +141,10 @@ def run_pipeline(argv=None):
 
     # Always remove any previous augmented data before starting
     logger.info("Removing any previous augmented data")
-    pattern = os.path.join(processed_data, '*.*.png')
+    pattern = os.path.join(processed_data, '*.*.jpg')
     files = glob.glob(pattern)
     for file in files:
+        logger.info(f"Removing augmented {file}")
         os.remove(file)
 
     with beam.Pipeline(options=options) as p:

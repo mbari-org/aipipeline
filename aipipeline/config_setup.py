@@ -65,7 +65,7 @@ def setup_config(config_yml: str) -> Tuple[Dict, Dict]:
                 if isinstance(merged[key], dict) and isinstance(value, dict):
                     merged[key] = merge_dicts(merged[key], value)  # Recursively merge nested dictionaries
                 else:
-                    logger.info(f"Warning duplicate ey {merged.get(key, 0)} with value {value}")
+                    logger.info(f"Warning duplicate key {merged.get(key, 0)} with value {value}")
             else:
                 merged[key] = value
         return merged

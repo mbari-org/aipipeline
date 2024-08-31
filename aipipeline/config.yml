@@ -14,10 +14,6 @@ docker:
       bind: /tmp
       mode: rw
 
-data:
-  labels: "all"
-  download_args: [ "--verified" ]
-
 vss:
   url: "http://doris.shore.mbari.org/knn"
 
