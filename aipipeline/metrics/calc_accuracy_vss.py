@@ -1,6 +1,7 @@
 # aipipeline, Apache-2.0 license
 # Filename: aipipeline/metrics/calc_accuracy.py
 # Description: Calculate accuracy of models. Useful for measuring model performance, drift, etc.
+import glob
 import os
 from datetime import datetime
 
@@ -129,14 +130,24 @@ def main(argv=None):
         logger.error("REDIS_PASSWD environment variable is not set.")
         return
 
+    processed_data = config_dict["data"]["processed_path"]
+    base_path = os.path.join(processed_data, config_dict["data"]["version"])
+
     if not args.images:
         # Get the crops from the config_dict if not provided
-        processed_data = config_dict["data"]["processed_path"]
-        base_path = os.path.join(processed_data, config_dict["data"]["version"])
         image_path = os.path.join(base_path, "crops")
         logger.error(f"Crops path is not set. Using {image_path}")
     else:
         image_path = args.images
+
+    # Remove any previous augmented data before starting
+    logger.info("Removing any previous augmented data")
+    pattern = os.path.join(processed_data, '*.*.png')
+    files = glob.glob(pattern)
+    for file in files:
+        logger.info(f"Removing augmented {file}")
+        os.remove(file)
+
     calc_accuracy(config_dict, image_path, REDIS_PASSWD)
 
 if __name__ == "__main__":
