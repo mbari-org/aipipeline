@@ -1,0 +1,55 @@
+# Config file for i2map project with bulk data
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6380
+
+data:
+  processed_path: "/mnt/ML_SCRATCH/i2map"
+  version: "dino_vits8_20240207_022529"
+  labels: "Bathochordaeus sinkers,Euphausiacea,Nanomia bijuga,Chaetognatha,Bolinopsis,Acanthamunnopsis,Thalassocaylce,Pyrosoma,Krill molt,Acanthamunnopsis milleri,Solmissus,Eusergestes similis,Pasiphaea,Actinopterygii,Merluccius productus,Cydippida,Salpa fusiformis,Thalassocaylce inconstans,Radiozoa"
+  download_args: [""]
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  clu_det_ini: "sdcat_clu_det.ini"
+  exemplar_ini: "sdcat_exemplar.ini"
+
+vss:
+  project: "i2map"
+  threshold: 0.4
+
+tator:
+  project: "i2map"
+  host: "i2map.shore.mbari.org"
+  bulk_url: "http://i2map.shore.mbari.org:8001/label/id"
+
+  image:
+    attributes:
+      iso_datetime:
+        type: string
+      depth:
+        type: int
+
+  box:
+    attributes:
+      Label:
+        type: string
+      concept:
+        type: string
+      score:
+        type: float
+      cluster:
+        type: string
+      saliency:
+        type: float
+      group:
+        type: string
+      obs_uuid:
+        type: string
+      exemplar:
+        type: bool
+      verified:
+        type: bool
+
+
+ffmpeg_path: "/usr/bin/ffmpeg"
