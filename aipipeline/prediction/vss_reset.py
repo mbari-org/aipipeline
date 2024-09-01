@@ -39,13 +39,14 @@ def run_pipeline(argv=None):
 
     config_files, config_dict = setup_config(args.config)
     conf_temp = config_files["config"]
+    project = config_dict["vss"]["project"]
 
     if not os.getenv("REDIS_PASSWD"):
         logger.error("REDIS_PASSWD environment variable is not set.")
         return
 
     args = ["db", "reset", "--redis-password", REDIS_PASSWD, "--config", conf_temp]
-    run_docker(config_dict["docker"]["aidata"], "vss-reset", args, config_dict["docker"]["bind_volumes"])
+    run_docker(config_dict["docker"]["aidata"], f'vss-reset_{project}', args, config_dict["docker"]["bind_volumes"])
 
 
 if __name__ == "__main__":
