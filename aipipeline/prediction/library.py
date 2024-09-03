@@ -52,8 +52,8 @@ def generate_multicrop_views(elements) -> List[tuple]:
             continue
 
         logger.info(f"Augmenting {count} crops in {crop_path}....")
+        num_aug = 0
         for image_path in Path(crop_path).glob("*.jpg"):
-            num_aug = 0
             image = cv2.imread(image_path)
             if image is None:
                 logger.error(f"Failed to read {image_path}")
@@ -76,14 +76,13 @@ def generate_multicrop_views(elements) -> List[tuple]:
                 save_file = image_path.parent / f"{image_path.stem}.{i}.jpg"
                 logger.info(f"Saving {save_file}")
                 cv2.imwrite(save_file.as_posix(), augmented_image)
-            num_aug += 1
+                num_aug += 1
         data.append((num_aug, crop_path, save_path))
     return data
 
 
 def cluster(data, config_dict: Dict) -> List[tuple]:
-    logger.info(data)
-    logger.info(config_dict)
+    logger.info(f'Clustering {data}')
     num_images, crop_dir, cluster_dir = data
     project = config_dict["tator"]["project"]
     sdcat_config = config_dict["sdcat"]["clu_det_ini"]
@@ -129,7 +128,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
         if container:
             logger.info(f"Clustering {label}....")
             container.wait()
-            logger.info(f"Done clustering for {label}....")
+            logger.info(f"Done clustering {label}....")
             if not Path(cluster_dir).exists():
                 logger.error(f"Failed to cluster {label}")
                 return []
@@ -148,7 +147,10 @@ class ProcessClusterBatch(beam.DoFn):
         self.config_dict = config_dict
 
     def process(self, batch):
-        num_processes = min(1, len(batch))
+        if len(batch) > 1:
+            num_processes = min(2, len(batch))
+        else:
+            num_processes = 1
         with multiprocessing.Pool(num_processes) as pool:
             args = [(data, self.config_dict) for data in batch]
             results = pool.starmap(cluster, args)
@@ -266,9 +268,12 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], config_dict: Dict, additional_args: List[str] = []) -> List[str]:
+def download(labels: List[str], config_dict: Dict, additional_args: List[str] = [], download_dir: str=None) -> List[str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
-    processed_data = config_dict["data"]["processed_path"]
+    if download_dir is None:
+        processed_data = config_dict["data"]["processed_path"]
+    else:
+        processed_data = download_dir
     version = config_dict["data"]["version"]
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
