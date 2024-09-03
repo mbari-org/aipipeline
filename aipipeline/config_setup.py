@@ -25,16 +25,24 @@ def check_config(config_dict: Dict) -> bool:
             return False
 
     # Required keys for the data section
-    required_keys = ["labels", "processed_path"]
+    required_keys = ["labels", "processed_path", "download_args"]
     for key in required_keys:
         if key not in config_dict["data"]:
             logger.error(f"Missing key {key} in data section of configuration file")
             return False
 
+    # Check if the .ini files are present in the configuration
+    if "sdcat" in config_dict:
+        if "exemplar_ini" not in config_dict["sdcat"]:
+            logger.error("Missing exemplar .ini file in configuration file")
+            return False
+        if "clu_det_ini" not in config_dict["sdcat"]:
+            logger.error("Missing cluster .ini file in configuration file")
+            return False
     return True
 
 
-def setup_config(config_yml: str) -> Tuple[Dict, Dict]:
+def setup_config(config_yml: str, silent=False) -> Tuple[Dict, Dict]:
     config_path_yml = Path(config_yml)
     if not config_path_yml.exists():
         logger.error(f"Cannot find {config_path_yml}")
@@ -64,8 +72,6 @@ def setup_config(config_yml: str) -> Tuple[Dict, Dict]:
             if key in merged:
                 if isinstance(merged[key], dict) and isinstance(value, dict):
                     merged[key] = merge_dicts(merged[key], value)  # Recursively merge nested dictionaries
-                else:
-                    logger.info(f"Warning duplicate key {merged.get(key, 0)} with value {value}")
             else:
                 merged[key] = value
         return merged
@@ -74,9 +80,10 @@ def setup_config(config_yml: str) -> Tuple[Dict, Dict]:
     merged_dict = merge_dicts(base_conf_dict, config_dict)
 
     # Pretty print the configuration
-    logger.info("Configuration:")
-    for key, value in merged_dict.items():
-        logger.info(f"{key}: {value}\n")
+    if not silent:
+        logger.info("Configuration:")
+        for key, value in merged_dict.items():
+            logger.info(f"{key}: {value}\n")
 
     # Copy the config files to /tmp/project - project names are generally unique so no collision should occur
     project = merged_dict["tator"]["project"]
