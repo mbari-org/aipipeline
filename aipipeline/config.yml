@@ -4,7 +4,7 @@
 docker:
   aidata: 'mbari/aidata:1.17.0-cuda124'
   sdcat: 'mbari/sdcat:1.10.3-cuda124'
-  voccropper: 'mbari/voc-imagecropper:0.4.1'
+  voccropper: 'mbari/voc-imagecropper:0.4.3'
 
   bind_volumes:
     /mnt/ML_SCRATCH:
@@ -15,7 +15,7 @@ docker:
       mode: rw
 
 vss:
-  url: "http://doris.shore.mbari.org/knn"
+  url: "http://doris.shore.mbari.org:8000/knn"
 
 tator:
   url_load: "http://mantis.shore.mbari.org:8001/label/id"

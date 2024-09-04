@@ -84,7 +84,7 @@ def run_pipeline(argv=None):
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, config_dict=config_dict, additional_args=download_args, download_dir=args.download_dir)
-            | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict)
+            | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict, processed_dir=args.download_dir)
             | "Log results" >> beam.Map(logger.info)
         )
 
