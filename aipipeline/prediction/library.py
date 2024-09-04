@@ -20,14 +20,25 @@ formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # Also log to the console
 console = logging.StreamHandler()
 logger.addHandler(console)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 # # and log to file
 now = datetime.now()
-log_filename = f"library-{now:%Y%m%d}.log"
+log_filename = f"pred_lib_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+MULTIVIEW_SUFFIX = "view"
+
+
+def remove_multicrop_views(data_dir: str):
+    data_path = Path(data_dir)
+    search = f"*{MULTIVIEW_SUFFIX}*.jpg"
+    logger.info(f"Removing augmented data matching {search} in {data_dir}")
+    for file in data_path.rglob(search):
+        logger.info(f"Removing augmented {file}")
+        file.unlink()
 
 
 def simclr_augmentations(image_size):
@@ -73,7 +84,7 @@ def generate_multicrop_views(elements) -> List[tuple]:
 
                 # Save the augmented image using the same name as the original image with an index
                 # This avoids overwriting the original image and allows the loader to still use the database index stem
-                save_file = image_path.parent / f"{image_path.stem}.{i}.jpg"
+                save_file = image_path.parent / f"{image_path.stem}{MULTIVIEW_SUFFIX}{i}.jpg"
                 logger.info(f"Saving {save_file}")
                 cv2.imwrite(save_file.as_posix(), augmented_image)
                 num_aug += 1
@@ -148,7 +159,7 @@ class ProcessClusterBatch(beam.DoFn):
 
     def process(self, batch):
         if len(batch) > 1:
-            num_processes = min(2, len(batch))
+            num_processes = min(1, len(batch))
         else:
             num_processes = 1
         with multiprocessing.Pool(num_processes) as pool:
@@ -181,10 +192,13 @@ def gen_machine_friendly_label(label: str) -> str:
     return label_machine_friendly
 
 
-def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
+def crop_rois(labels: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
-    processed_data = config_dict["data"]["processed_path"]
+    if processed_dir is None:
+        processed_data = config_dict["data"]["processed_path"]
+    else:
+        processed_data = processed_dir
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
     args = [
         "-d",
@@ -231,7 +245,7 @@ def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
                 return []
 
     # Find the file stats.txt and read it as a json file
-    stats_file = Path(f"{base_path}/crops/stats.txt")
+    stats_file = Path(f"{base_path}/crops/stats.json")
     if not stats_file.exists():
         logger.error(f"Cannot find {stats_file}. Did voc-cropper run successfully?")
         return []
@@ -240,10 +254,10 @@ def crop_rois(labels: List[str], config_dict: Dict) -> List[tuple]:
     with stats_file.open("r") as f:
         stats = json.load(f)
         logger.info(f"Found stats: {stats}")
-        total_concepts = stats["total_concepts"]
-        labels = list(total_concepts.keys())
+        total_labels = stats["total_labels"]
+        labels = list(total_labels.keys())
         logger.info(f"Found labels: {labels}")
-        for label, count in total_concepts.items():
+        for label, count in total_labels.items():
             if count == 0:
                 logger.info(f"Skipping label {label} with 0 crops")
                 continue
@@ -268,7 +282,8 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], config_dict: Dict, additional_args: List[str] = [], download_dir: str=None) -> List[str]:
+def download(labels: List[str], config_dict: Dict, additional_args: List[str] = [], download_dir: str = None) -> List[
+    str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
     if download_dir is None:
         processed_data = config_dict["data"]["processed_path"]
