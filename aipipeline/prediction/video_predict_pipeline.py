@@ -22,7 +22,7 @@ from config_setup import setup_config
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 now = datetime.now()
-log_filename = f"video-predict-pipeline_{now:%Y%m%d}.log"
+log_filename = f"video_predict_pipeline_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
