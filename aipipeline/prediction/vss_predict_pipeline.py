@@ -14,17 +14,17 @@ from pathlib import Path
 import dotenv
 
 from aipipeline.prediction.utils import top_majority
-from config_setup import setup_config
+from aipipeline.config_setup import setup_config
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # Also log to the console
 console = logging.StreamHandler()
 logger.addHandler(console)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 # and log to file
 now = datetime.now()
-log_filename = f"vss-predict-pipeline_{now:%Y%m%d}.log"
+log_filename = f"vss_predict_pipeline_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -44,11 +44,12 @@ def read_image(readable_file):
 
 def process_image_batch(batch, config_dict):
     top_k = 3
+    logger.info(f"Processing {len(batch)} images")
     project = config_dict["tator"]["project"]
-    vss_threshold = config_dict["vss"]["threshold"]
+    vss_threshold = float(config_dict["vss"]["threshold"])
     url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
     url_load = config_dict["tator"]["url_load"]
-
+    logger.debug(f"URL: {url_vs} threshold: {vss_threshold}")
     num_loaded = 0
     files = []
     for img, path in batch:
@@ -71,6 +72,19 @@ def process_image_batch(batch, config_dict):
         img_failed = [x[0] for x in batch]
         return [f"No predictions found for {img_failed} images"]
 
+    # Workaround for bogus prediction output - put the predictions in a list
+    # 3 predictions per image
+    ###
+    batch_size = len(batch)
+    predictions = [predictions[i:i + top_k] for i in range(0, batch_size * top_k, top_k)]
+    ####
+    # Skip if rhizaria, larvacean, copepod, fecal_pellet, centric_diatom, football, or larvacean are in the predictions
+    low_confidence_labels = ["rhizaria", "copepod", "fecal_pellet", "centric_diatom", "football", "larvacean"]
+    low_confidence_labels = ["copepod"]
+    if not any([x in low_confidence_labels for x in predictions]):
+        logger.info(f"=======>Did not find {low_confidence_labels}")
+        return 0
+
     file_paths = [x[1][0] for x in files]
     for i, element in enumerate(zip(scores, predictions)):
         score, pred = element
@@ -86,8 +100,6 @@ def process_image_batch(batch, config_dict):
 
         # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
         database_id = int(Path(file_paths[i]).stem)
-
-        best_pred = f"__label__{best_pred}"
 
         headers = {
             "accept": "application/json",
@@ -117,31 +129,23 @@ def run_pipeline(argv=None):
         / "config"
         / "config.yml"
     )
-    parser.add_argument(
-        "--input",
-        required=True,
-        help="Input image match, e.g. /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/",
+    parser.add_argument("--image_dir", required=True,
+        help="Input image directory, e.g. /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/",
     )
-    parser.add_argument("--config", required=False, default=default_project.as_posix(), help="Config yaml file path")
+    parser.add_argument("--config", required=False, default=default_project.as_posix(),
+                        help="Config yaml file path")
     parser.add_argument("--batch_size", required=False, default=3, help="Batch size")
+    parser.add_argument("--max_images", required=False,  help="Maximum number of images to process")
     args, beam_args = parser.parse_known_args(argv)
+    options = PipelineOptions(beam_args)
+    conf_files, config_dict = setup_config(args.config, silent=True)
 
-    config_files, config_dict = setup_config(args.config)
-
-    if not os.path.exists(args.input):
-        logger.error(f"Input file {args.input} does not exist")
-        return
-
-    if not os.path.exists(args.config):
-        logger.error(f"Config file {args.config} does not exist")
-        return
-
-    pipeline_options = PipelineOptions(beam_args)
-
-    with beam.Pipeline(options=pipeline_options) as p:
+    with beam.Pipeline(options=options) as p:
         (
             p
-            | "MatchFiles" >> MatchFiles(patterns=f"{args.input}.*(JPG|jpg|png|PNG|jpeg|JPEG)")
+            | "MatchFiles" >> MatchFiles(file_pattern=f"{args.image_dir}*")
+            | 'Limit Matches' >> beam.combiners.Sample.FixedSizeGlobally(int(args.max_images))
+            | "FlattenMatches" >> beam.FlatMap(lambda x: x)
             | "ReadFiles" >> ReadMatches()
             | "ReadImages" >> beam.Map(read_image)
             | "BatchImages" >> beam.BatchElements(min_batch_size=3, max_batch_size=3)

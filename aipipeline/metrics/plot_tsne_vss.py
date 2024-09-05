@@ -132,7 +132,7 @@ def plot_tsne(config: dict, password: str):
         # Customize and place the legend outside the plot
         plt.legend(loc="center left", bbox_to_anchor=(1, 0.5), title="Classes")
         plt.suptitle(f"t-SNE of {vector_width}-dimensional vectors {project} exemplars")
-        plt.title(f"{datetime.now():%Y-%m-%d %H:%M:%S}")
+        plt.title(f"{datetime.now():%Y-%m-%d %H%M%S}")
 
         # Plot the t-SNE results, colored by class
         for i, class_name in enumerate(class_names):
