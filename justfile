@@ -33,6 +33,15 @@ calc-acc-vss project='uav':
     export PYTHONPATH=.:submodules/aidata
     time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/calc_accuracy_vss.py --config $PROJECT_DIR/config/config.yml
 
+reset-vss-all:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    projects=(uav cfe bio i2map)
+    for project in ${projects[@]}; do
+      project_dir=./aipipeline/projects/$project
+      time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config ${project_dir}/config/config.yml
+    done
+
 # Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav`
 reset-vss project='uav':
     #!/usr/bin/env bash
@@ -41,18 +50,11 @@ reset-vss project='uav':
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config $PROJECT_DIR/config/config.yml
 
 # Initialize the VSS database for the UAV project
-init-vss-small project='uav':
+init-vss project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config_dcline.yml
-
-# Initialize the VSS database for the UAV project
-init-vss project='uav':
-    #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/{{project}}
-    export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config.yml
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config.yml {{more_args}}
 
 # Cluster mission in aipipeline/projects/uav/data/missions2process.txt
 cluster-uav:
@@ -85,13 +87,19 @@ load-uav-images:
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_image_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
 
 # Download and crop detections
-download-crop project='uav':
+download-crop project='uav' label='Unknown' download_dir='/tmp/download':
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_download_crop_pipeline.py --config ./aipipeline/projects/{{project}}/config/config.yml --skip_clean True
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml \
+        --skip_clean True \
+        --label {{label}} \
+        --download_dir {{download_dir}}
 
 # Predict images using the VSS database
-predict-vss project='uav':
+predict-vss project='uav' image_dir='/tmp/download':
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/vss_predict_pipeline.py --config ./aipipeline/projects/{{project}}/config/config.yml
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_predict_pipeline.py \
+    --config ./aipipeline/projects/{{project}}/config/config.yml \
+    --image_dir {{image_dir}}
