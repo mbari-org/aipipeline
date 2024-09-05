@@ -5,7 +5,6 @@ import time
 from datetime import datetime
 
 import dotenv
-import glob
 import os
 from pathlib import Path
 import apache_beam as beam
@@ -23,7 +22,7 @@ from aipipeline.prediction.library import (
     gen_machine_friendly_label,
     clean,
     batch_elements,
-    ProcessClusterBatch,
+    ProcessClusterBatch, remove_multicrop_views,
 )
 
 logger = logging.getLogger(__name__)
@@ -31,10 +30,10 @@ formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # Also log to the console
 console = logging.StreamHandler()
 logger.addHandler(console)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 # and log to file
 now = datetime.now()
-log_filename = f"vss-_init_pipeline_{now:%Y%m%d}.log"
+log_filename = f"vss_init_pipeline_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -46,9 +45,9 @@ REDIS_PASSWD = os.getenv("REDIS_PASSWD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
-# Load exemplars into Visual Search Server
+# Load exemplars into Vector Search Server
 def load_exemplars(data, config_dict=Dict) -> str:
-    project = config_dict["tator"]["project"]
+    project = str(config_dict["tator"]["project"])
     short_name = get_short_name(project)
 
     logger.info(data)
@@ -58,10 +57,13 @@ def load_exemplars(data, config_dict=Dict) -> str:
         # Grab the most recent file
         all_exemplars = list(Path(save_dir).rglob("*_exemplars.csv"))
         exemplar_file = sorted(all_exemplars, key=os.path.getmtime, reverse=True)[0] if all_exemplars else None
-        exemplar_count = 0
-        if exemplar_file is not None:
-            with open(exemplar_file, "r") as f:
-                exemplar_count = len(f.readlines())
+
+        if exemplar_file is None:
+            logger.info(f"No exemplar file found for {label}")
+            continue
+
+        with open(exemplar_file, "r") as f:
+            exemplar_count = len(f.readlines())
 
         if exemplar_count < 10 or exemplar_file is None:
             all_detections = list(Path(save_dir).rglob("*_detections.csv"))
@@ -93,16 +95,17 @@ def load_exemplars(data, config_dict=Dict) -> str:
         for attempt in range(1, n + 1):
             try:
                 container = run_docker(
-                    config_dict["docker"]["aidata"],
+                    str(config_dict["docker"]["aidata"]),
                     f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
                     args,
-                    config_dict["docker"]["bind_volumes"],
+                    dict(config_dict["docker"]["bind_volumes"]),
                 )
                 if container:
                     logger.info(f"Loading cluster exemplars for {label}...")
                     container.wait()
                     logger.info(f"Loaded cluster exemplars for {label}")
                     num_loaded += 1
+                    break
                 else:
                     logger.error(f"Failed to load cluster exemplars for {label}")
             except Exception as e:
@@ -140,12 +143,7 @@ def run_pipeline(argv=None):
         clean(base_path)
 
     # Always remove any previous augmented data before starting
-    logger.info("Removing any previous augmented data")
-    pattern = os.path.join(processed_data, '*.*.jpg')
-    files = glob.glob(pattern)
-    for file in files:
-        logger.info(f"Removing augmented {file}")
-        os.remove(file)
+    remove_multicrop_views(processed_data)
 
     with beam.Pipeline(options=options) as p:
         (
@@ -154,7 +152,7 @@ def run_pipeline(argv=None):
             | "Download labeled data" >> beam.Map(download, config_dict=config_dict, additional_args=download_args)
             | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
-            | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=4))
+            | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
