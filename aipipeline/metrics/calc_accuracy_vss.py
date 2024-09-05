@@ -7,6 +7,7 @@ from datetime import datetime
 import dotenv
 import logging
 import numpy as np
+import pandas as pd
 from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -63,6 +64,9 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
 
     true_labels = []
     predicted_labels = []
+    true_ids = []
+    predicted_ids = []
+    predicted_scores = []
 
     for l in labels_unique:
         logger.info(f"Processing {l}")
@@ -85,15 +89,17 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
         if len(image_paths) == 0:
             logger.debug(f"No images left for {l}")
             continue
-            continue
 
         logger.info(f"Predicting top-3 {len(image_paths)} images for {l}")
         for image_path in image_paths:
             logger.debug(f"Processing {image_path}")
-            predictions, scores, pred_exemplar_ids = v.predict([str(image_path)], top_n=3)
+            predictions, scores, ids = v.predict([str(image_path)], top_n=3)
             logger.debug(f"True: {l} predictions: {predictions}")
             predicted_labels.append(predictions)
             true_labels.append(l)
+            true_ids.append(image_path.stem)
+            predicted_ids.append(ids[0])
+            predicted_scores.append(scores[0])
 
     if not true_labels:
         logger.error(f"No images found to calculate accuracy in {base_path}")
@@ -147,12 +153,36 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
     plt.suptitle(
         f"CM {project} exemplars. Top-1 Accuracy: {accuracy_top1:.2f}, Top-3 Accuracy: {accuracy_top3:.2f}, "
         f"Precision: {precision:.2f}, Recall: {recall:.2f}")
-    d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
+    d = f"{datetime.now():%Y-%m-%d %H%M%S}"
     plt.title(d)
-    plot_name = f"confusion_matrix_{project}_{datetime.now():%Y-%m-%d %H%M%S}.png"
+    plot_name = f"confusion_matrix_{project}_{d}.png"
     logger.info(f"Saving confusion matrix to {plot_name}")
     plt.savefig(plot_name)
     plt.close()
+
+    # Export the confusion matrix to a csv file
+    cm_df = pd.DataFrame(cm, columns=label_encoder.classes_, index=label_encoder.classes_)
+    cm_df.to_csv(f"confusion_matrix_{project}_{d}.csv")
+
+    # Print a report of all the confused id
+    df = pd.DataFrame({"true_label": true_labels,
+                       "pred_label": [preds[0] for preds in predicted_labels],
+                       "true_id": true_ids, 'predicted_id': predicted_ids,
+                       "predicted_score": [1. - float(preds[0]) for preds in predicted_scores]})
+    # Only save the confused labels, those where the true label is not the same as the predicted label
+    confused = df[df["true_label"] != df["pred_label"]]
+
+    def add_comment(x):
+        if float(x["predicted_score"]) > 0.9:
+            return f"Very similar to {x['pred_label']}"
+
+    # Add another column noting creating a comment if the predicted score is above 0.9
+    confused["comment"] = confused.apply(add_comment, axis=1)
+    confused = confused.groupby("true_label").apply(lambda x: x.sort_values("pred_label"))
+    confused = confused.reset_index(drop=True)
+    confused["predicted_score"] = confused["predicted_score"].map("{:.2f}".format)
+    confused.to_csv(f"confused_ids_{project}_{d}.csv")
+    logger.info(f"Saved confused labels to confused_{project}_{d}.csv")
 
 
 def main(argv=None):
