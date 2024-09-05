@@ -11,7 +11,8 @@ data:
   raw_data_path: "/mnt/CFElab/"
   processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
-  labels: "all"
+  labels: "artifact,aggregate,centric_diatom,copepod,diatom_chain,fecal_pellet,football,phaeocystis,rhizaria,centric_diatom"
+  download_args: ["--verified"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -20,7 +21,7 @@ sdcat:
 
 vss:
   project: "cfe"
-  threshold: 0.6
+  threshold: 0.04
 
 mounts:
   - name: "image"
