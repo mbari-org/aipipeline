@@ -19,7 +19,7 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 # and log to file
 now = datetime.now()
-log_filename = f"vss-reset_{now:%Y%m%d}.log"
+log_filename = f"vss_reset_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
