@@ -30,7 +30,7 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 # and log to file
 now = datetime.now()
-log_filename = f"vss-plot-tsne_vss_{now:%Y%m%d}.log"
+log_filename = f"vss_plot_tsne{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -44,11 +44,6 @@ def convert_redis_vector_to_float(vector_np):
     return np.frombuffer(vector_np, dtype=np.float32)
 
 
-def extract_name(input_str):
-    match = re.match(r"^(.*?)(?=_[0-9]+)", input_str)
-    return match.group(1) if match else None
-
-
 def download_data(r: redis.Redis, page_size=50):
     # Get all hashes from the index
     query = Query("*").return_fields("id").return_field("vector", decode_field=False)
@@ -59,7 +54,7 @@ def download_data(r: redis.Redis, page_size=50):
         query.paging(offset, page_size)
         results = r.ft("index").search(query)
         vectors = [convert_redis_vector_to_float(result.vector) for result in results.docs]
-        names = [extract_name(result.id.split("doc:")[-1]) for result in results.docs]
+        names = [re.split(r":", result.id)[1] for result in results.docs]
         total_vectors.extend(vectors)
         total_class_names.extend(names)
         if len(vectors) < page_size:
@@ -144,6 +139,17 @@ def plot_tsne(config: dict, password: str):
             x, y = vectors_2d[i]
             idx = np.where(np.unique(class_names) == class_name)[0][0]
             plt.scatter(x, y, c=colors[idx], label=class_name, s=10, alpha=0.5)
+
+        # Plot the class labels at the mean of the vectors for each class
+        label_points = {}
+        unique_class_names = np.unique(class_names)
+        for i, class_name in enumerate(unique_class_names):
+            idx = np.where(np.unique(class_names) == class_name)[0][0]
+            x, y = vectors_2d[class_idx == idx].mean(axis=0)
+            label_points[class_name] = (x, y)
+
+        for label in unique_class_names:
+            plt.text(label_points[label][0], label_points[label][1], label, ha='center', va='center', color='grey')
 
         plot_name = f"tsne_plot_{project}_{datetime.now():%Y-%m-%d %H%M%S}.png"
         logging.info(f"Saving plot to {plot_name}")
