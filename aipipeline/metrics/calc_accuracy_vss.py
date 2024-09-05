@@ -13,13 +13,14 @@ import seaborn as sns
 
 from aidata.predictors.process_vits import ViTWrapper
 from aipipeline.config_setup import setup_config
+from aipipeline.prediction.library import remove_multicrop_views
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # and log to file
 now = datetime.now()
-log_filename = f"vss-calc-acc_vss_{now:%Y%m%d}.log"
+log_filename = f"vss_calc_acc{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -50,49 +51,67 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
 
     labels_unique = list(set(labels))
     logger.info(f"Classes: {labels_unique}")
-    # Get all the classes that have only one exemplar
-    single_exemplar_classes = [c for c in labels_unique if labels.count(c) == 1]
-    logger.info(f"Single exemplar classes: {single_exemplar_classes}")
 
-    # Create a dictionary to encode the labels
-    label_encoder = LabelEncoder()
-    label_encoder.fit(labels)
-    label_dict = {label: i for i, label in enumerate(label_encoder.classes_)}
+    # Get all the classes that have less than 10 exemplars - we want to keep these
+    low_sample_exemplars = [c for c in labels_unique if labels.count(c) < 10]
+    logger.info(f"Low exemplar classes: {low_sample_exemplars}")
+    # Get the ids for each class - we will use these to remove exemplars from the test set
+    exemplar_ids = {c: [i for i, l in zip(ids, labels) if l == c] for c in labels_unique}
+    # Print a summary of the classes and exemplars
+    for label, exemplar_id in exemplar_ids.items():
+        logger.info(f"Class {label} has {len(exemplar_id)} exemplars")
 
-    LABELS_VAL = ", ".join(labels)
     true_labels = []
     predicted_labels = []
 
     for l in labels_unique:
         logger.info(f"Processing {l}")
         image_root = base_path / l
-        image_paths = list(image_root.rglob("*.jpg"))
-        image_ids = [int(image_path.stem) for image_path in image_paths]
+        image_paths = list(image_root.glob("*.jpg"))
         if not image_paths:
             logger.info(f"No images found in {image_root}")
             continue
 
-        # Predict the top 3 labels for each image
-        logger.info(f"Predicting {len(image_paths)} images")
-        predictions, scores, exemplar_ids = v.predict([str(image_path) for image_path in image_paths], top_n=3)
-        for i, prediction in enumerate(predictions):
-            class_name = image_paths[i].parent.name  # Correctly handle spaces in directory names
-            # Exclude exemplars from the accuracy calculation, except for classes with only one exemplar
-            if image_ids[i] not in ids or class_name in single_exemplar_classes:
-                predicted_labels.append(prediction)
-                true_labels.append(class_name)
+        logger.info(f"Found {len(image_paths)} images for {l}")
+        # Remove any images that are in the exemplar list by id, unless
+        # the class has less than 10 exemplars
+        if l not in low_sample_exemplars:
+            for image_path in image_paths:
+                if image_path.stem in exemplar_ids[l]:
+                    logger.info(f"Removing exemplar {image_path}")
+                    image_paths.remove(image_path)
+
+        # If there are no images left, alert and continue
+        if len(image_paths) == 0:
+            logger.debug(f"No images left for {l}")
+            continue
+            continue
+
+        logger.info(f"Predicting top-3 {len(image_paths)} images for {l}")
+        for image_path in image_paths:
+            logger.debug(f"Processing {image_path}")
+            predictions, scores, pred_exemplar_ids = v.predict([str(image_path)], top_n=3)
+            logger.debug(f"True: {l} predictions: {predictions}")
+            predicted_labels.append(predictions)
+            true_labels.append(l)
 
     if not true_labels:
         logger.error(f"No images found to calculate accuracy in {base_path}")
         return
 
-    true_labels_encoded = [label_dict[label] for label in true_labels]
+    # Create a dictionary to encode the labels
+    label_encoder = LabelEncoder()
+    # Combine both the found labels and the database labels in case there are missing labels
+    combined = predicted_labels + [labels]
+    flattened = [item for sublist in combined for item in sublist]
+    unique_labels = list(set(flattened))
+    label_encoder.fit(unique_labels)
+    label_dict = {label: i for i, label in enumerate(label_encoder.classes_)}
+    LABELS_VAL = ", ".join(unique_labels)
 
     # Convert predictions to encoded labels
+    true_labels_encoded = [label_dict[label] for label in true_labels]
     predicted_labels_encoded = [[label_dict[label] for label in preds] for preds in predicted_labels]
-
-    logger.info(true_labels_encoded)
-    logger.info(predicted_labels_encoded)
 
     # Calculate top-3 accuracy
     correct_predictions = sum(
@@ -121,11 +140,13 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
     plt.figure(figsize=(12, 12))
     sns.heatmap(cm_normalized, annot=True, fmt=".1f", xticklabels=label_encoder.classes_,
                 yticklabels=label_encoder.classes_, cmap='Blues')
+
     plt.xlabel("Predicted")
     plt.ylabel("True")
     plt.title("Confusion Matrix")
     plt.suptitle(
-        f"CM {project} exemplars. Top-1 Accuracy: {accuracy_top1:.2f}, Top-3 Accuracy: {accuracy_top3:.2f}, Precision: {precision:.2f}, Recall: {recall:.2f}")
+        f"CM {project} exemplars. Top-1 Accuracy: {accuracy_top1:.2f}, Top-3 Accuracy: {accuracy_top3:.2f}, "
+        f"Precision: {precision:.2f}, Recall: {recall:.2f}")
     d = f"{datetime.now():%Y-%m-%d %H:%M:%S}"
     plt.title(d)
     plot_name = f"confusion_matrix_{project}_{datetime.now():%Y-%m-%d %H%M%S}.png"
@@ -160,12 +181,7 @@ def main(argv=None):
         image_path = args.images
 
     # Remove any previous augmented data before starting
-    logger.info("Removing augmented data")
-    pattern = os.path.join(processed_data, '*.*.png')
-    files = glob.glob(pattern)
-    for file in files:
-        logger.info(f"Removing augmented {file}")
-        os.remove(file)
+    remove_multicrop_views(image_path)
 
     calc_accuracy(config_dict, image_path, REDIS_PASSWD)
 
