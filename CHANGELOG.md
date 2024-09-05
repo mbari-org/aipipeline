@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.6.0 (2024-09-05)
+
+### Feature
+
+* feat: export confused predictions and comments to a csv for further processing ([`9457a3b`](https://github.com/mbari-org/aipipeline/commit/9457a3bf038675a8bd8399b98e63ec1447f01380))
+
 ## v0.5.0 (2024-09-05)
 
 ### Feature
