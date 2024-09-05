@@ -7,7 +7,7 @@ redis:
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
   version: "Baseline"
-  labels: "Aegina,Gymnopraia lapislazula,Nanomia,Poeobius,Solmissus,Solmundella bitentaculata"
+  labels: "all"
   download_args: ["--group NMS --verified"]
 
 sdcat:

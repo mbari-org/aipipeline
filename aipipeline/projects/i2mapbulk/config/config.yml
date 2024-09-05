@@ -4,9 +4,9 @@ redis:
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/i2map"
+  processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
   version: "dino_vits8_20240207_022529"
-  labels: "Bathochordaeus sinkers,Euphausiacea,Nanomia bijuga,Chaetognatha,Bolinopsis,Acanthamunnopsis,Thalassocaylce,Pyrosoma,Krill molt,Acanthamunnopsis milleri,Solmissus,Eusergestes similis,Pasiphaea,Actinopterygii,Merluccius productus,Cydippida,Salpa fusiformis,Thalassocaylce inconstans,Radiozoa"
+  labels: "Hastigerinella digitata,Bathochordaeus sinkers,Euphausiacea,Nanomia bijuga,Chaetognatha,Bolinopsis,Acanthamunnopsis,Thalassocaylce,Pyrosoma,Krill molt,Acanthamunnopsis milleri,Solmissus,Eusergestes similis,Pasiphaea,Actinopterygii,Merluccius productus,Cydippida,Salpa fusiformis,Thalassocaylce inconstans,Radiozoa"
   download_args: [""]
 
 sdcat:
