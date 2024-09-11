@@ -17,7 +17,8 @@ sdcat:
 
 vss:
   project: "i2map"
-  threshold: 0.4
+  threshold: 0.9
+  model: "google/vit-base-patch16-224"
 
 tator:
   project: "901103-biodiversity"

@@ -21,7 +21,8 @@ sdcat:
 
 vss:
   project: "cfe"
-  threshold: 0.04
+  threshold: 0.9
+  model: "google/vit-base-patch16-224"
 
 mounts:
   - name: "image"
