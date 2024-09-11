@@ -119,14 +119,11 @@ def max_score_p(model_predictions: List[str], model_scores: List[float]):
     return best_pred, max_score
 
 
-def top_majority(model_predictions, model_scores, threshold: float, max_p: bool = True, majority_count=-1):
+def top_majority(model_predictions, model_scores, threshold: float, majority_count=-1):
     """Find the top prediction"""
 
     # Only keep predictions with scores above the threshold
-    if max_p is True:
-        data = [(pred, score) for pred, score in zip(model_predictions, model_scores) if float(score) >= threshold]
-    else:
-        data = [(pred, score) for pred, score in zip(model_predictions, model_scores) if float(score) <= threshold]
+    data = [(pred, score) for pred, score in zip(model_predictions, model_scores) if float(score) >= threshold]
 
     if len(data) == 0:
         return None, None

@@ -46,7 +46,7 @@ def process_image_batch(batch, config_dict):
     top_k = 3
     logger.info(f"Processing {len(batch)} images")
     project = config_dict["tator"]["project"]
-    vss_threshold = float(config_dict["vss"]["threshold"])
+    vss_threshold = 1. - float(config_dict["vss"]["threshold"]) # vss returns 1 - score, so we need to invert it
     url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
     url_load = config_dict["tator"]["url_load"]
     logger.debug(f"URL: {url_vs} threshold: {vss_threshold}")
@@ -65,6 +65,8 @@ def process_image_batch(batch, config_dict):
 
     predictions = response.json()["predictions"]
     scores = response.json()["scores"]
+    # Scores are  1 - score so we need to invert them
+    scores = [[1 - x for x in y] for y in scores]
     logger.debug(f"Predictions: {predictions}")
     logger.debug(f"Scores: {scores}")
 
@@ -90,7 +92,7 @@ def process_image_batch(batch, config_dict):
         score, pred = element
         score = [float(x) for x in score]
         logger.info(f"Prediction: {pred} with score {score} for image {file_paths[i]}")
-        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, max_p=False, majority_count=-1)
+        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=-1)
 
         if best_pred is None:
             logger.error(f"No majority prediction for {file_paths[i]}")
