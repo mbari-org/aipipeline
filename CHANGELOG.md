@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.7.0 (2024-09-11)
+
+### Feature
+
+* feat: added support for more config checks and some refactoring ([`300b46f`](https://github.com/mbari-org/aipipeline/commit/300b46f62613d0734a8b2f62f3c49133b22f15fc))
+
+### Performance
+
+* perf: added support for block size 39 and std of 5.0 for uav ([`6e7fbe6`](https://github.com/mbari-org/aipipeline/commit/6e7fbe699819e2afebc22a9af7a03dbe1c43e592))
+
 ## v0.6.0 (2024-09-05)
 
 ### Feature
