@@ -23,7 +23,7 @@ plugins:
 
 data:
   raw_path: "/mnt/UAV/"
-  processed_path: "/mnt/ML_SCRATCH/uav-901902/"
+  processed_path: "/mnt/UAV/machineLearning/"
   version: "Baseline"
   labels: "Pinniped,Poop,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
   download_args: ["--verified"]
@@ -35,7 +35,8 @@ sdcat:
 
 vss:
   project: "uav"
-  threshold: 0.2
+  threshold: 0.9
+  model: "google/vit-base-patch16-224"
 
 tator:
   project: "901902-uavs"
