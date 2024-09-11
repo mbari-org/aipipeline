@@ -12,13 +12,13 @@ import logging
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
-from config_setup import setup_config
+from aipipeline.config_setup import setup_config, CLUSTER_DETECT_KEY
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 now = datetime.now()
-log_filename = f"uav-detect-pipeline-{now:%Y%m%d}.log"
+log_filename = f"uav_detect_pipeline_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -34,14 +34,11 @@ def process_mission(element) -> str:
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
-    line, config_dict = element
+    line, config_dict,conf_files = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
-    project = config_dict["tator"]["project"]
-    clu_det_ini = config_dict["sdcat"]["clu_det_ini"]
     model = config_dict["sdcat"]["model"]
-    config_ini = f"/tmp/{project}/{clu_det_ini}"
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
@@ -60,7 +57,7 @@ def process_mission(element) -> str:
         "--device",
         "cuda:0",
         "--config-ini",
-        config_ini,
+        conf_files[CLUSTER_DETECT_KEY],
         "--scale-percent",
         "40",
         "--model",
@@ -119,7 +116,7 @@ def run_pipeline(argv=None):
             p
             | "Read missions" >> ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
-            | "Create elements" >> beam.Map(lambda line: (line, config_dict))
+            | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
             | "Process missions (cluster)" >> beam.Map(process_mission)
         )
 
