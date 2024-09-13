@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.7.1 (2024-09-13)
+
+### Fix
+
+* fix: add metadata fix for UAV images, correct path for sdcat config and updated missions2process.txt ([`fc42612`](https://github.com/mbari-org/aipipeline/commit/fc4261284ca77d1c939b6e3e11dd606dbaf56a0f))
+
 ## v0.7.0 (2024-09-11)
 
 ### Feature
