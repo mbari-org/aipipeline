@@ -12,7 +12,7 @@ import logging
 
 from aipipeline.projects.uav.args_common import parse_args, parse_mission_string, POSSIBLE_PLATFORMS
 from aipipeline.docker.utils import run_docker
-from aipipeline.config_setup import setup_config, CLUSTER_DETECT_KEY
+from aipipeline.config_setup import setup_config, CONFIG_KEY
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -54,7 +54,10 @@ def process_mission(element) -> str:
     version = config_dict["data"]["version"]
     model = config_dict["sdcat"]["model"]
     base_dir = Path(config_dict["data"]["processed_path"]) / "seedDetections"
-    load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / type
+    if type == "detect":
+        load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
+    elif type == "cluster":
+        load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "clusters"
 
     if not load_dir.exists():
         logger.error(f"Could not find directory: {load_dir}")
@@ -69,7 +72,7 @@ def process_mission(element) -> str:
             "--input",
             load_file.as_posix(),
             "--config",
-            config_files[CLUSTER_DETECT_KEY],
+            config_files[CONFIG_KEY],
             "--token",
             TATOR_TOKEN,
             "--version",
@@ -99,16 +102,22 @@ def run_pipeline(argv=None):
     config_file, config_dict = setup_config(args.config)
 
     # Must have a type
-    if not beam_args.type:
-        logger.error("Type must be specified, e.g. --type=detect or --type=cluster")
+    if '--type' not in beam_args:
+        logger.error("Type must be specified, e.g. --type detect or --type cluster")
+        return
+
+    # Convert extra args to a dictionary, e.g. --type detect -> {'--type': 'detect'}
+    beam_args_dict = {}
+    for i in range(0, len(beam_args), 2):
+        beam_args_dict[beam_args[i]] = beam_args[i + 1]
 
     with beam.Pipeline(options=options) as p:
         (
             p
             | "Read missions" >> beam.io.ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
-            | "Create elements" >> beam.Map(lambda line: (line, config_file, config_dict, beam_args.type))
-            | "Process missions (Cluster)" >> beam.Map(process_mission)
+            | "Create elements" >> beam.Map(lambda line: (line, config_file, config_dict, beam_args_dict['--type']))
+            | f"Load missions ({beam_args_dict['--type']})" >> beam.Map(process_mission)
             | "Log results" >> beam.Map(logger.info)
         )
 
