@@ -12,7 +12,7 @@ import sys
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
-from config_setup import setup_config
+from aipipeline.config_setup import setup_config
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -66,7 +66,7 @@ def process_mission(element):
         str(save_dir),
         "--min-cluster-size",
         "3",
-        "--gpu-device",
+        "--device",
         "cuda:0",
     ]
 

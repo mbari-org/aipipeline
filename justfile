@@ -61,14 +61,14 @@ cluster-uav:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster-_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
 
 # Detect mission in aipipeline/projects/uav/data/missions2process.txt
 detect-uav:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
 
 # Detect mission data in aipipeline/projects/uav/data/missions2process.txt
 detect-uav-test:
@@ -85,6 +85,19 @@ load-uav-images:
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_image_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
+
+# Load uav detections/clusters in aipipeline/projects/uav/data/missions2process.txt
+load-uav type="cluster":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/uav
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_sdcat_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml --type {{type}}
+
+fix-uav-metadata:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/uav
+    export PYTHONPATH=.:submodules/aidata
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/fix_metadata.py
 
 # Download and crop detections
 download-crop project='uav' label='Unknown' download_dir='/tmp/download':
