@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v0.7.2 (2024-09-16)
+
+### Fix
+
+* fix: correct path for config setup ([`acf25a2`](https://github.com/mbari-org/aipipeline/commit/acf25a23224c1539f2bbd81f0f245d2839905a33))
+
+* fix: pass through model name and skip if no labels for graceful exit ([`ffe5e1c`](https://github.com/mbari-org/aipipeline/commit/ffe5e1c00541c70ba13b38e5292dce23315d2e03))
+
 ## v0.7.1 (2024-09-13)
 
 ### Fix
