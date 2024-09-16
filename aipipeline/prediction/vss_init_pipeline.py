@@ -13,7 +13,7 @@ from typing import Dict
 import logging
 
 from aipipeline.docker.utils import run_docker
-from aipipeline.config_setup import extract_labels_config, setup_config
+from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
 from aipipeline.prediction.library import (
     download,
     crop_rois,
@@ -46,7 +46,7 @@ TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
 # Load exemplars into Vector Search Server
-def load_exemplars(data, config_dict=Dict) -> str:
+def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
     project = str(config_dict["tator"]["project"])
     short_name = get_short_name(project)
 
@@ -85,7 +85,7 @@ def load_exemplars(data, config_dict=Dict) -> str:
             "--password",
             REDIS_PASSWD,
             "--config",
-            f"/tmp/{project}/config.yml",
+            conf_files[CONFIG_KEY],
             "--token",
             TATOR_TOKEN,
         ]
@@ -143,7 +143,7 @@ def run_pipeline(argv=None):
         clean(base_path)
 
     # Always remove any previous augmented data before starting
-    remove_multicrop_views(processed_data)
+    remove_multicrop_views(base_path)
 
     with beam.Pipeline(options=options) as p:
         (
@@ -154,7 +154,7 @@ def run_pipeline(argv=None):
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
-            | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict)
+            | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)
             | "Log results" >> beam.Map(logger.info)
         )
 
