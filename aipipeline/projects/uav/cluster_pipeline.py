@@ -37,7 +37,7 @@ def process_mission(element):
 
     base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
     project = config_dict["tator"]["project"]
-    clu_det_ini = config_dict["sdcat"]["clu_det_ini"]
+    ini = config_dict["sdcat"]["ini"]
     model = config_dict["sdcat"]["model"]
 
     if not mission_name:
@@ -59,7 +59,7 @@ def process_mission(element):
         "cluster",
         "detections",
         "--config-ini",
-        f"/tmp/{project}/{clu_det_ini}",
+        f"/tmp/{project}/{ini}",
         "--det-dir",
         str(det_dir),
         "--save-dir",

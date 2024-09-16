@@ -96,7 +96,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
     logger.info(f'Clustering {data}')
     num_images, crop_dir, cluster_dir = data
     project = config_dict["tator"]["project"]
-    sdcat_config = config_dict["sdcat"]["clu_det_ini"]
+    sdcat_config = config_dict["sdcat"]["ini"]
     cluster_results = []
     tmp_config = Path('/tmp') / project / sdcat_config
     if not tmp_config.exists():

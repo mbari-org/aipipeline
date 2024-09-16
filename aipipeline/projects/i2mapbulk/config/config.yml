@@ -1,18 +1,19 @@
-# Config file for i2map project with bulk data
+# aipipeline/projects/i2map/config.yml
+# Config file for i2map project production
 redis:
   host: "doris.shore.mbari.org"
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
-  version: "dino_vits8_20240207_022529"
-  labels: "Hastigerinella digitata,Bathochordaeus sinkers,Euphausiacea,Nanomia bijuga,Chaetognatha,Bolinopsis,Acanthamunnopsis,Thalassocaylce,Pyrosoma,Krill molt,Acanthamunnopsis milleri,Solmissus,Eusergestes similis,Pasiphaea,Actinopterygii,Merluccius productus,Cydippida,Salpa fusiformis,Thalassocaylce inconstans,Radiozoa"
-  download_args: [""]
+  processed_path: "/mnt/ML_SCRATCH/i2map"
+  version: "Baseline"
+#  labels: "all"
+  labels: "Atolla"
+  download_args: ["--group NMS --verified"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
-  clu_det_ini: "sdcat_clu_det.ini"
-  exemplar_ini: "sdcat_exemplar.ini"
+  sdcat_ini: "sdcat.ini"
 
 vss:
   project: "i2map"
@@ -20,16 +21,16 @@ vss:
   model: "google/vit-base-patch16-224"
 
 tator:
-  project: "i2map"
-  host: "i2map.shore.mbari.org"
-  bulk_url: "http://i2map.shore.mbari.org:8001/label/id"
+  project: "901103-biodiversity"
+  host: "mantis.shore.mbari.org"
+  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
 
   image:
     attributes:
-      iso_datetime:
+      date:
         type: string
-      depth:
-        type: int
+      time:
+        type: string
 
   box:
     attributes:

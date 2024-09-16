@@ -11,17 +11,16 @@ data:
   raw_data_path: "/mnt/CFElab/"
   processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
-  labels: "artifact,aggregate,centric_diatom,copepod,diatom_chain,fecal_pellet,football,phaeocystis,rhizaria,centric_diatom"
+  labels: "long_particle_blur,diatom_chain,aggregate,artifact,phaeocystis,copepod,rhizaria,particle_blur,larvacean,fecal_pellet,football,centric_diatom,gelatinous"
   download_args: ["--verified"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
-  clu_det_ini: "sdcat_clu_det.ini"
-  exemplar_ini: "sdcat_exemplar.ini"
+  ini: "sdcat.ini"
 
 vss:
-  project: "cfe"
-  threshold: 0.9
+  project: "902111-CFE"
+  threshold: 0.92
   model: "google/vit-base-patch16-224"
 
 mounts:

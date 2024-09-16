@@ -10,8 +10,7 @@ import os
 
 from aipipeline.prediction.utils import logger
 
-EXEMPLAR_KEY = "exemplar"
-CLUSTER_DETECT_KEY = "cd"
+SDCAT_KEY = "sdcat"
 CONFIG_KEY = "config"
 
 def extract_labels_config(config_dict) -> List[str]:
@@ -36,11 +35,8 @@ def check_config(config_dict: Dict) -> bool:
 
     # Check if the .ini files are present in the configuration
     if "sdcat" in config_dict:
-        if "exemplar_ini" not in config_dict["sdcat"]:
+        if "ini" not in config_dict["sdcat"]:
             logger.error("Missing exemplar .ini file in configuration file")
-            return False
-        if "clu_det_ini" not in config_dict["sdcat"]:
-            logger.error("Missing cluster .ini file in configuration file")
             return False
     return True
 
@@ -90,25 +86,23 @@ def setup_config(config_yml: str, silent=False) -> Tuple[Dict, Dict]:
 
     # Copy the config files to /tmp/project - project names are generally unique so no collision should occur
     project = merged_dict["tator"]["project"]
+    ini = merged_dict["sdcat"]["ini"]
 
     config_root = Path(f"/tmp/{project}")
     config_root.mkdir(parents=True, exist_ok=True)
 
-    ex_ini_path = Path(config_path_yml).parent / f"sdcat_exemplar.ini"
-    sd_ini_path = Path(config_path_yml).parent / f"sdcat_clu_det.ini"
+    sdcat_ini_path = Path(config_path_yml).parent / ini
 
     # Check all the files are present
-    for file in [config_path_yml, ex_ini_path, sd_ini_path]:
+    for file in [config_path_yml, sdcat_ini_path]:
         if not file.exists():
             logger.error(f"Cannot find {file}")
             exit(1)
 
     shutil.copyfile(config_path_yml.as_posix(), f"/tmp/{project}/{config_path_yml.name}")
-    shutil.copyfile(ex_ini_path.as_posix(), f"/tmp/{project}/{ex_ini_path.name}")
-    shutil.copyfile(ex_ini_path.as_posix(), f"/tmp/{project}/{sd_ini_path.name}")
+    shutil.copyfile(sdcat_ini_path.as_posix(), f"/tmp/{project}/{sdcat_ini_path.name}")
 
     config_files = {CONFIG_KEY: f"/tmp/{project}/{config_path_yml.name}",
-                    EXEMPLAR_KEY: f"/tmp/{project}/{ex_ini_path.name}",
-                    CLUSTER_DETECT_KEY: f"/tmp/{project}/{sd_ini_path.name}"}
+                    SDCAT_KEY: f"/tmp/{project}/{sdcat_ini_path.name}"}
 
     return config_files, merged_dict
