@@ -44,11 +44,17 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
         port=config["redis"]["port"],
         password=password,
     )
-    v = ViTWrapper(r, "cuda:0", False, 32)
+    model_name = config["vss"]["model"]
+    v = ViTWrapper(r, "cuda:0", model_name=model_name,reset=False, batch_size=32)
 
     # Get all the class names and exemplar ids from the redis server
     logger.info("Getting all class names and exemplar ids")
     labels, ids = v.get_ids()
+
+    # If there are no labels, return
+    if not labels:
+        logger.info("No labels found in the redis server")
+        return
 
     labels_unique = list(set(labels))
     logger.info(f"Classes: {labels_unique}")
