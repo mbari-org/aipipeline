@@ -33,6 +33,7 @@ calc-acc-vss project='uav':
     export PYTHONPATH=.:submodules/aidata
     time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/calc_accuracy_vss.py --config $PROJECT_DIR/config/config.yml
 
+# Reset the VSS database, removing all data. Proceed with caution!!
 reset-vss-all:
     #!/usr/bin/env bash
     export PYTHONPATH=.
