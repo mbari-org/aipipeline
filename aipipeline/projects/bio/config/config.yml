@@ -7,15 +7,14 @@ redis:
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
   version: "Baseline"
-  labels: "all"
-  download_args: ["--group NMS --verified"]
+  labels: "Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
+  download_args: ["--verified"]
 
 sdcat:
-  exemplar_ini: "sdcat_exemplar.ini"
-  clu_det_ini: "sdcat_clu_det.ini"
+  ini: "sdcat.ini"
 
 vss:
-  project: "bio"
+  project: "901103-biodiversity"
   threshold: 0.9
   model: "google/vit-base-patch16-224"
 

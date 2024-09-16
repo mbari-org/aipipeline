@@ -12,7 +12,7 @@ import logging
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
-from aipipeline.config_setup import setup_config, CLUSTER_DETECT_KEY
+from aipipeline.config_setup import setup_config, SDCAT_KEY
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -57,7 +57,7 @@ def process_mission(element) -> str:
         "--device",
         "cuda:0",
         "--config-ini",
-        conf_files[CLUSTER_DETECT_KEY],
+        conf_files[SDCAT_KEY],
         "--scale-percent",
         "40",
         "--model",
