@@ -13,7 +13,7 @@ data:
 
 sdcat:
   model: "hustvl/yolos-tiny"
-  sdcat_ini: "sdcat.ini"
+  ini: "sdcat.ini"
 
 vss:
   project: "i2map"
@@ -22,15 +22,15 @@ vss:
 
 tator:
   project: "901103-biodiversity"
-  host: "mantis.shore.mbari.org"
-  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
+  host: "i2map.shore.mbari.org"
+  bulk_url: "http://i2map.shore.mbari.org:8001/label/id"
 
   image:
     attributes:
-      date:
+      iso_datetime:
         type: string
-      time:
-        type: string
+      depth:
+        type: int
 
   box:
     attributes:
