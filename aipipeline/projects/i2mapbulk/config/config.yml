@@ -17,13 +17,13 @@ sdcat:
 
 vss:
   project: "i2map"
-  threshold: 0.9
+  threshold: 0.95
   model: "google/vit-base-patch16-224"
 
 tator:
-  project: "901103-biodiversity"
+  project: "i2map"
   host: "i2map.shore.mbari.org"
-  bulk_url: "http://i2map.shore.mbari.org:8001/label/id"
+  url_load: "http://i2map.shore.mbari.org:8001/label/id"
 
   image:
     attributes:

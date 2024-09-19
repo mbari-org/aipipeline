@@ -22,7 +22,7 @@ vss:
 tator:
   project: "901103-biodiversity"
   host: "mantis.shore.mbari.org"
-  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
+  url_load: "http://mantis.shore.mbari.org:8001/label/id"
 
   image:
     attributes:
