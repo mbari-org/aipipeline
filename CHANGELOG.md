@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.7.4 (2024-09-19)
+
+### Fix
+
+* fix: correct config for i2map host ([`bd0a2be`](https://github.com/mbari-org/aipipeline/commit/bd0a2beef954c3d24cd9220b471f8c13be845528))
+
+### Performance
+
+* perf:  exit on error during predict ([`b747deb`](https://github.com/mbari-org/aipipeline/commit/b747debeb6e2d234786d397034094ca950ba03cc))
+
+* perf: skip over sdcat grid creation ([`095761c`](https://github.com/mbari-org/aipipeline/commit/095761c93f809cc39e00ceac191ed67347cb8885))
+
 ## v0.7.3 (2024-09-19)
 
 ### Fix
