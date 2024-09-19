@@ -116,6 +116,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
     args = [
         "cluster",
         "roi",
+        "--skip-visualization",
         "--config-ini",
         tmp_config.as_posix(),
         "--min-cluster-size",
