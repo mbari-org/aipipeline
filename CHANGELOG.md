@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.7.3 (2024-09-19)
+
+### Fix
+
+* fix: correct threshold for scoring vss ([`a7cb0db`](https://github.com/mbari-org/aipipeline/commit/a7cb0db12ccd9cf4aa4f7aa4ca94cd024faadade))
+
 ## v0.7.2 (2024-09-16)
 
 ### Fix
