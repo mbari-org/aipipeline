@@ -1,0 +1,35 @@
+# aipipeline/projects/cfe/config.yml
+# Config file for CFE project production
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6382
+
+docker:
+  bind_volumes:
+
+data:
+  raw_data_path: "/mnt/CFElab/"
+  processed_path: "/mnt/ML_SCRATCH/902111-CFE"
+  version: "Baseline"
+  labels: "Unknown"
+  download_args: [""]
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  ini: "sdcat.ini"
+
+vss:
+  project: "902111-CFE"
+  threshold: 0.92
+  model: "google/vit-base-patch16-224"
+
+mounts:
+  - name: "image"
+    path: "/mnt/CFElab"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/CFElab"
+
+tator:
+  project: "902111-CFE"
+  host: "mantis.shore.mbari.org"
+  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
