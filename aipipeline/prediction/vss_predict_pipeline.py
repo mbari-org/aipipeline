@@ -115,6 +115,7 @@ def process_image_batch(batch, config_dict):
             num_loaded += 1
         else:
             logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
+            exit(1)
 
     return num_loaded
 
