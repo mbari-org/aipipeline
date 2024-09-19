@@ -12,7 +12,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
   labels: "Unknown"
-  download_args: [""]
+  download_args: ["--section 25000_depth_v1"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
