@@ -68,7 +68,7 @@ def plot_tsne(config: dict, password: str):
     try:
         host = config["redis"]["host"]
         port = config["redis"]["port"]
-        project = config["tator"]["project"]
+        project = config["vss"]["project"]
 
         logging.info(f"Connecting to Redis at {host}:{port}")
         # Get the redis connection

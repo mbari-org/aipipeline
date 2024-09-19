@@ -38,7 +38,7 @@ import redis
 
 def calc_accuracy(config: dict, image_dir: str, password: str):
     base_path = Path(image_dir)
-    project = config["tator"]["project"]
+    project = config["vss"]["project"]
     r = redis.Redis(
         host=config["redis"]["host"],
         port=config["redis"]["port"],
