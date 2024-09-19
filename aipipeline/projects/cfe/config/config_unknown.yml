@@ -32,4 +32,4 @@ mounts:
 tator:
   project: "902111-CFE"
   host: "mantis.shore.mbari.org"
-  bulk_url: "http://mantis.shore.mbari.org:8001/label/id"
+  url_load: "http://mantis.shore.mbari.org:8001/label/id"
