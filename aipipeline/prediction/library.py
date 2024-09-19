@@ -15,6 +15,8 @@ from aipipeline.docker.utils import run_docker
 import apache_beam as beam
 from albumentations.pytorch import ToTensorV2
 
+from aipipeline.config_setup import CONFIG_KEY
+
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # Also log to the console
@@ -283,7 +285,7 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], config_dict: Dict, additional_args: List[str] = [], download_dir: str = None) -> List[
+def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_args: List[str] = [], download_dir: str = None) -> List[
     str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
     if download_dir is None:
@@ -300,7 +302,7 @@ def download(labels: List[str], config_dict: Dict, additional_args: List[str] = 
         "--token",
         TATOR_TOKEN,
         "--config",
-        f"/tmp/{project}/config.yml",
+        conf_files[CONFIG_KEY],
         "--base-path",
         processed_data,
         "--version",

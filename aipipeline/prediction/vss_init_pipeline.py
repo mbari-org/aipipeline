@@ -149,7 +149,7 @@ def run_pipeline(argv=None):
         (
             p
             | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, config_dict=config_dict, additional_args=download_args)
+            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
             | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
