@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.8.0 (2024-09-23)
+
+### Feature
+
+* feat: added isiis mine script ([`3105d01`](https://github.com/mbari-org/aipipeline/commit/3105d014a1f62f9e31de99d778ecace98dbf7f92))
+
 ## v0.7.4 (2024-09-19)
 
 ### Fix
