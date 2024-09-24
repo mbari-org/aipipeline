@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.8.1 (2024-09-24)
+
+### Fix
+
+* fix: correct termination ([`08e0f5e`](https://github.com/mbari-org/aipipeline/commit/08e0f5eb5eae4f089870fb22bee0ec7dd0442825))
+
 ## v0.8.0 (2024-09-23)
 
 ### Feature
