@@ -12,7 +12,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
   labels: "Unknown"
-  download_args: ["--section 25000_depth_v1"]
+  download_args: ["--section 25000_depth_v1 --min-saliency 800"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -20,7 +20,7 @@ sdcat:
 
 vss:
   project: "902111-CFE"
-  threshold: 0.92
+  threshold: 0.88
   model: "google/vit-base-patch16-224"
 
 mounts:
