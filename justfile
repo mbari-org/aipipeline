@@ -105,15 +105,16 @@ download-crop project='uav' label='Unknown' download_dir='/tmp/download':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
-        --config ./aipipeline/projects/{{project}}/config/config.yml \
+        --config ./aipipeline/projects/{{project}}/config/config_unknown.yml \
         --skip_clean True \
         --label {{label}} \
         --download_dir {{download_dir}}
 
 # Predict images using the VSS database
-predict-vss project='uav' image_dir='/tmp/download':
+predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_predict_pipeline.py \
     --config ./aipipeline/projects/{{project}}/config/config.yml \
-    --image_dir {{image_dir}}
+    --image_dir {{image_dir}} \
+    {{more_args}}
