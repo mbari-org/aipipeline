@@ -98,6 +98,10 @@ def process_image_batch(batch, config_dict):
             logger.error(f"No majority prediction for {file_paths[i]}")
             continue
 
+        if best_score < vss_threshold:
+            logger.error(f"Score {best_score} below threshold {vss_threshold} for {file_paths[i]}")
+            continue
+
         logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")
 
         # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
