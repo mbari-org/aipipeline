@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v0.8.2 (2024-09-24)
+
+### Build
+
+* build: add extra args to predict vss and correct download crop config ([`4d0864b`](https://github.com/mbari-org/aipipeline/commit/4d0864ba54aab4a0f92ad0f3743a02ee2cd9183d))
+
+### Fix
+
+* fix: skip over low scoring threshold ([`8bdc7bf`](https://github.com/mbari-org/aipipeline/commit/8bdc7bf8a1dc681d9f32c1f0de88e69852d7a521))
+
+* fix: better handling of missing exemplars ([`0b05c1a`](https://github.com/mbari-org/aipipeline/commit/0b05c1a664b6d70b501485e8bf6bfe8ea7494dba))
+
 ## v0.8.1 (2024-09-24)
 
 ### Fix
