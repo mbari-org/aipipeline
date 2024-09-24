@@ -66,11 +66,11 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
         while cap.isOpened():
             ret, frame = cap.read()
 
-            if frame_number >= total_frames:
-                return
-
             if not ret:
-                logger.error(f"Error reading frame at {frame_number} frame")
+                logger.error(f"Error reading frame at {frame_number} frame {total_frames} in {video_path}")
+                break
+
+            if frame_number >= total_frames:
                 break
 
             # Run basic blob detection on the frame which is in grayscale
