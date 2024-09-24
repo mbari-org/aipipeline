@@ -60,14 +60,19 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
 
         if exemplar_file is None:
             logger.info(f"No exemplar file found for {label}")
-            continue
-
-        with open(exemplar_file, "r") as f:
-            exemplar_count = len(f.readlines())
+            exemplar_count = 0
+        else:
+            with open(exemplar_file, "r") as f:
+                exemplar_count = len(f.readlines())
 
         if exemplar_count < 10 or exemplar_file is None:
             all_detections = list(Path(save_dir).rglob("*_detections.csv"))
             exemplar_file = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
+
+            if exemplar_file is None:
+                logger.info(f"No detections file found for {label}")
+                return f"No exemplar or detections file found for {label}"
+
             with open(exemplar_file, "r") as f:
                 exemplar_count = len(f.readlines())
             logger.info(f"To few exemplars, using detections file {exemplar_file} instead")
