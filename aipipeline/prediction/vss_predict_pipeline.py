@@ -13,8 +13,8 @@ from datetime import datetime
 from pathlib import Path
 import dotenv
 
-from aipipeline.prediction.utils import top_majority
 from aipipeline.config_setup import setup_config
+from aipipeline.prediction.library import run_vss
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -43,85 +43,44 @@ def read_image(readable_file):
 
 
 def process_image_batch(batch, config_dict):
-    top_k = 3
-    logger.info(f"Processing {len(batch)} images")
-    project = config_dict["tator"]["project"]
-    vss_threshold = float(config_dict["vss"]["threshold"])
-    url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
     url_load = config_dict["tator"]["url_load"]
-    logger.debug(f"URL: {url_vs} threshold: {vss_threshold}")
-    num_loaded = 0
-    files = []
-    for img, path in batch:
-        files.append(("files", (path, img)))
+    vss_threshold = float(config_dict["vss"]["threshold"])
+    project = config_dict["tator"]["project"]
+    num_processed = 0
+    import pdb;pdb.set_trace()
+    try:
+        file_paths, best_predictions, best_scores = run_vss(batch, config_dict, top_k=3)
+        for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
+            if best_pred is None:
+                logger.error(f"No majority prediction for {file_path}")
+                continue
 
-    logger.info(f"Processing {len(files)} images with {url_vs}")
-    response = requests.post(url_vs, headers={"accept": "application/json"}, files=files)
-    logger.debug(f"Response: {response.status_code}")
+            if best_score < vss_threshold:
+                logger.error(f"Score {best_score} below threshold {vss_threshold} for {file_path}")
+                continue
 
-    if response.status_code != 200:
-        logger.error(f"Error processing images: {response.text}")
-        return [f"Error processing images: {response.text}"]
+            logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_path}")
 
-    predictions = response.json()["predictions"]
-    scores = response.json()["scores"]
-    # Scores are  1 - score, so we need to invert them
-    scores = [[1 - float(x) for x in y] for y in scores]
-    logger.debug(f"Predictions: {predictions}")
-    logger.debug(f"Scores: {scores}")
+            # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
+            database_id = int(Path(file_path).stem)
 
-    if len(predictions) == 0:
-        img_failed = [x[0] for x in batch]
-        return [f"No predictions found for {img_failed} images"]
+            headers = {
+                "accept": "application/json",
+                "Content-Type": "application/json",
+            }
+            data = {"loc_id": database_id, "project_name": project, "dry_run": False, "score": best_score}
+            logger.debug(f"{url_load}/{best_pred}")
+            response = requests.post(f"{url_load}/{best_pred}", headers=headers, json=data)
+            if response.status_code == 200:
+                logger.debug(f"Assigned label {best_pred} to {database_id}")
+                num_processed += 1
+            else:
+                logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
+                exit(1)
+    except Exception as ex:
+        return 0
 
-    # Workaround for bogus prediction output - put the predictions in a list
-    # 3 predictions per image
-    ###
-    batch_size = len(batch)
-    predictions = [predictions[i:i + top_k] for i in range(0, batch_size * top_k, top_k)]
-    ####
-    # Skip if rhizaria, larvacean, copepod, fecal_pellet, centric_diatom, football, or larvacean are in the predictions
-    # low_confidence_labels = ["rhizaria", "copepod", "fecal_pellet", "centric_diatom", "football", "larvacean"]
-    # low_confidence_labels = ["copepod"]
-    # if not any([x in low_confidence_labels for x in predictions]):
-    #     logger.info(f"=======>Did not find {low_confidence_labels}")
-    #     return 0
-
-    file_paths = [x[1][0] for x in files]
-    for i, element in enumerate(zip(scores, predictions)):
-        score, pred = element
-        score = [float(x) for x in score]
-        logger.info(f"Prediction: {pred} with score {score} for image {file_paths[i]}")
-        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=-1)
-
-        if best_pred is None:
-            logger.error(f"No majority prediction for {file_paths[i]}")
-            continue
-
-        if best_score < vss_threshold:
-            logger.error(f"Score {best_score} below threshold {vss_threshold} for {file_paths[i]}")
-            continue
-
-        logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")
-
-        # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
-        database_id = int(Path(file_paths[i]).stem)
-
-        headers = {
-            "accept": "application/json",
-            "Content-Type": "application/json",
-        }
-        data = {"loc_id": database_id, "project_name": project, "dry_run": False, "score": best_score}
-        logger.debug(f"{url_load}/{best_pred}")
-        response = requests.post(f"{url_load}/{best_pred}", headers=headers, json=data)
-        if response.status_code == 200:
-            logger.debug(f"Assigned label {best_pred} to {database_id}")
-            num_loaded += 1
-        else:
-            logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
-            exit(1)
-
-    return num_loaded
+    return num_processed
 
 
 def run_pipeline(argv=None):
@@ -132,7 +91,7 @@ def run_pipeline(argv=None):
         Path(__file__).resolve().parent.parent.parent
         / "aipipeline"
         / "projects"
-        / "uav-901902"
+        / "uav"
         / "config"
         / "config.yml"
     )

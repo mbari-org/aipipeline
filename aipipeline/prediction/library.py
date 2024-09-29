@@ -10,12 +10,14 @@ from pathlib import Path
 from typing import Dict, List
 
 import cv2
+import requests
 
 from aipipeline.docker.utils import run_docker
 import apache_beam as beam
 from albumentations.pytorch import ToTensorV2
 
 from aipipeline.config_setup import CONFIG_KEY
+from aipipeline.prediction.utils import top_majority
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -55,9 +57,26 @@ def simclr_augmentations(image_size):
     ])
 
 
+def generate_multicrop_views2(image) -> List[tuple]:
+    data = []
+    small_crop_augmentations = simclr_augmentations(image_size=190)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    multicrop = [small_crop_augmentations(image=image)['image'] for _ in range(2)]
+    for i, crop in enumerate(multicrop):
+        # Extract the augmented image and convert it back to BGR
+        augmented_image = crop.numpy()
+        mean = np.array([0.485, 0.456, 0.406])
+        std = np.array([0.229, 0.224, 0.225])
+        augmented_image = std[:, None, None] * augmented_image + mean[:, None, None]
+        augmented_image = np.clip(augmented_image.transpose(1, 2, 0) * 255, 0, 255).astype(np.uint8)
+        augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
+        data.append(augmented_image)
+    return data
+
+
 def generate_multicrop_views(elements) -> List[tuple]:
     data = []
-    small_crop_augmentations = simclr_augmentations(image_size=112)
+    small_crop_augmentations = simclr_augmentations(image_size=224)
     for count, crop_path, save_path in elements:
         if count > 100:
             logger.info(f"Skipping {count} crops in {crop_path}")
@@ -108,11 +127,7 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
     logger.info(data)
 
     logger.info(f"Clustering {num_images} images in {crop_dir} ....")
-    # Scale the min-cluster-size based on the number of images
-    if num_images > 100:
-        min_cluster_size = 3
-    else:
-        min_cluster_size = 2
+    min_cluster_size = 2
 
     logger.info(f"Running clustering on {num_images} images with min-cluster-size=2")
     args = [
@@ -195,7 +210,7 @@ def gen_machine_friendly_label(label: str) -> str:
     return label_machine_friendly
 
 
-def crop_rois(labels: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
+def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
     if processed_dir is None:
@@ -285,7 +300,8 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_args: List[str] = [], download_dir: str = None) -> List[
+def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_args: List[str] = [],
+             download_dir: str = None) -> List[
     str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
     if download_dir is None:
@@ -327,3 +343,59 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
         logger.error(f"Failed to download data for labels: {labels}....")
 
     return labels
+
+
+def run_vss(image_batch: List[str], config_dict: dict, top_k: int = 3):
+    """
+    Run vector similarity
+    :param image_batch: batch of images to process, maximum of TBD as supported by the inference
+    :param config_dict: dictionary of config for vss server
+    :param top_k: number of vss to use for prediction; 1, 3, 5 etc.
+    :return:
+    """
+    logger.info(f"Processing {len(image_batch)} images")
+    project = config_dict["tator"]["project"]
+    vss_threshold = float(config_dict["vss"]["threshold"])
+    url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
+    logger.debug(f"URL: {url_vs} threshold: {vss_threshold}")
+    files = []
+    for img, path in image_batch:
+        files.append(("files", (path, img)))
+
+    logger.info(f"Processing {len(files)} images with {url_vs}")
+    response = requests.post(url_vs, headers={"accept": "application/json"}, files=files)
+    logger.debug(f"Response: {response.status_code}")
+
+    if response.status_code != 200:
+        logger.error(f"Error processing images: {response.text}")
+        return [f"Error processing images: {response.text}"]
+
+    predictions = response.json()["predictions"]
+    scores = response.json()["scores"]
+    # Scores are  1 - score, so we need to invert them
+    scores = [[1 - float(x) for x in y] for y in scores]
+    logger.debug(f"Predictions: {predictions}")
+    logger.debug(f"Scores: {scores}")
+
+    if len(predictions) == 0:
+        img_failed = [x[0] for x in image_batch]
+        return [f"No predictions found for {img_failed} images"]
+
+    # Workaround for bogus prediction output - put the predictions in a list
+    # 3 predictions per image
+    batch_size = len(image_batch)
+    predictions = [predictions[i:i + top_k] for i in range(0, batch_size * top_k, top_k)]
+    file_paths = [x[1][0] for x in files]
+    best_predictions = []
+    best_scores = []
+    for i, element in enumerate(zip(scores, predictions)):
+        score, pred = element
+        score = [float(x) for x in score]
+        logger.info(f"Prediction: {pred} with score {score} for image {file_paths[i]}")
+        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=-1)
+
+        best_predictions.append(best_pred)
+        best_scores.append(best_score)
+        logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")
+
+    return file_paths, best_predictions, best_scores
