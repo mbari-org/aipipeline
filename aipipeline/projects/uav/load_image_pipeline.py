@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav-901902/src/load-image-pipeline.py
+# Filename: projects/uav/src/load-image-pipeline.py
 # Description: Batch load images for missions
 import os
 from datetime import datetime

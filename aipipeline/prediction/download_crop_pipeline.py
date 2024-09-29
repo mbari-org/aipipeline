@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav-901902/scripts/vss-download-crop-pipeline.py
+# Filename: projects/uav/scripts/vss-download-crop-pipeline.py
 # Description: Download dataset of images and prepare them running vss pipelines
 import glob
 from datetime import datetime
@@ -12,7 +12,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
 from aipipeline.config_setup import extract_labels_config, setup_config
-from aipipeline.prediction.library import download, crop_rois, clean
+from aipipeline.prediction.library import download, crop_rois_voc, clean
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -84,7 +84,7 @@ def run_pipeline(argv=None):
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args, download_dir=args.download_dir)
-            | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict, processed_dir=args.download_dir)
+            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=args.download_dir)
             | "Log results" >> beam.Map(logger.info)
         )
 

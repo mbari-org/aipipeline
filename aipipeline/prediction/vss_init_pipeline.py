@@ -16,7 +16,7 @@ from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
 from aipipeline.prediction.library import (
     download,
-    crop_rois,
+    crop_rois_voc,
     generate_multicrop_views,
     get_short_name,
     gen_machine_friendly_label,
@@ -155,7 +155,7 @@ def run_pipeline(argv=None):
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
-            | "Crop ROI" >> beam.Map(crop_rois, config_dict=config_dict)
+            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
