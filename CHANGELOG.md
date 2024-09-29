@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.9.1 (2024-09-29)
+
+### Fix
+
+* fix(cfe): replace depth by name in CFE images ([`d41cba0`](https://github.com/mbari-org/aipipeline/commit/d41cba058e33ac52fd02538fdf54959a593d6baf))
+
 ## v0.9.0 (2024-09-29)
 
 ### Feature
