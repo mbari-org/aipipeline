@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.9.0 (2024-09-29)
+
+### Feature
+
+* feat(uav): added vss to predict pipeline ([`ca52762`](https://github.com/mbari-org/aipipeline/commit/ca52762800576ed408523606b091cf5d605ae3bf))
+
 ## v0.8.2 (2024-09-24)
 
 ### Build
