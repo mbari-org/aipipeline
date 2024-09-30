@@ -345,10 +345,10 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
     return labels
 
 
-def run_vss(image_batch: List[str], config_dict: dict, top_k: int = 3):
+def run_vss(image_batch: List[tuple[np.array,str]], config_dict: dict, top_k: int = 3):
     """
     Run vector similarity
-    :param image_batch: batch of images to process, maximum of TBD as supported by the inference
+    :param image_batch: batch of images path/binary tuples to process, maximum of 3 as supported by the inference
     :param config_dict: dictionary of config for vss server
     :param top_k: number of vss to use for prediction; 1, 3, 5 etc.
     :return:
@@ -382,7 +382,7 @@ def run_vss(image_batch: List[str], config_dict: dict, top_k: int = 3):
         return [f"No predictions found for {img_failed} images"]
 
     # Workaround for bogus prediction output - put the predictions in a list
-    # 3 predictions per image
+    # top_k predictions per image
     batch_size = len(image_batch)
     predictions = [predictions[i:i + top_k] for i in range(0, batch_size * top_k, top_k)]
     file_paths = [x[1][0] for x in files]
@@ -393,7 +393,6 @@ def run_vss(image_batch: List[str], config_dict: dict, top_k: int = 3):
         score = [float(x) for x in score]
         logger.info(f"Prediction: {pred} with score {score} for image {file_paths[i]}")
         best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=-1)
-
         best_predictions.append(best_pred)
         best_scores.append(best_score)
         logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")

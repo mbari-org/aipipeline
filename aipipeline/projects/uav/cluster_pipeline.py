@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/src/cluster-pipeline.py
+# Filename: projects/uav/cluster-pipeline.py
 # Description: Batch process missions with sdcat clustering
 import os
 from datetime import datetime
@@ -35,7 +35,7 @@ def process_mission(element):
     line, config_dict = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
-    base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
+    base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     project = config_dict["tator"]["project"]
     ini = config_dict["sdcat"]["ini"]
     model = config_dict["sdcat"]["model"]
