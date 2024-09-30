@@ -130,7 +130,7 @@ def run_pipeline(argv=None):
     import argparse
 
     parser = argparse.ArgumentParser(description="Process images with VSS")
-    example_project = Path(__file__).resolve().parent.parent / "projects" / "uav_901902" / "config" / "config.yml"
+    example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--skip_clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
     parser.add_argument("--batch_size", required=False, default=3, help="Batch size")
