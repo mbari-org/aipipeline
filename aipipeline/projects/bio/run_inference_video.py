@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/bio-901103/run_inference_video.py
+# Filename: projects/bio/run_inference_video.py
 # Description: commands related to running inference on video every TBD seconds with REDIS queue based load
 import argparse
 import json

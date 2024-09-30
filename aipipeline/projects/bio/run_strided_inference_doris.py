@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/bio-901103/run_strided_inference.py
+# Filename: projects/bio/run_strided_inference.py
 # Description: commands related to running inference on strided video with REDIS queue based load
 import argparse
 import json
