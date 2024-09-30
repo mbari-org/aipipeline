@@ -47,7 +47,6 @@ def process_image_batch(batch, config_dict):
     vss_threshold = float(config_dict["vss"]["threshold"])
     project = config_dict["tator"]["project"]
     num_processed = 0
-    import pdb;pdb.set_trace()
     try:
         file_paths, best_predictions, best_scores = run_vss(batch, config_dict, top_k=3)
         for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
@@ -72,7 +71,7 @@ def process_image_batch(batch, config_dict):
             logger.debug(f"{url_load}/{best_pred}")
             response = requests.post(f"{url_load}/{best_pred}", headers=headers, json=data)
             if response.status_code == 200:
-                logger.debug(f"Assigned label {best_pred} to {database_id}")
+                logger.debug(f"Assigned label {best_pred} score {best_score} to {database_id}")
                 num_processed += 1
             else:
                 logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
