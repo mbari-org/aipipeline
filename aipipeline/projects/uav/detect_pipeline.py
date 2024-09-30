@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/src/detect-pipeline.py
+# Filename: projects/uav/detect-pipeline.py
 # Description: Batch process missions with sdcat detection
 import os
 import uuid
@@ -11,11 +11,14 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.io import ReadFromText
 from pathlib import Path
 import logging
+import io
+import tqdm
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 from aipipeline.config_setup import setup_config, SDCAT_KEY
-from prediction.library import run_vss, crop_square_image
+from aipipeline.prediction.library import run_vss
+from aipipeline.prediction.utils import crop_square_image
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -107,6 +110,12 @@ def run_mission_detect(element) -> str:
     return f"Mission {mission_name} processed."
 
 
+def read_image(file_path: str) -> tuple[bytes, str]:
+    with open(file_path, 'rb') as file:
+        img = io.BytesIO(file.read()).getvalue()
+        return img, file_path
+
+
 def run_mission_vss(element) -> str:
 
     # Data is in the format
@@ -116,10 +125,9 @@ def run_mission_vss(element) -> str:
     line, config_dict, conf_files = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
-    base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
+    base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     model = config_dict["sdcat"]["model"]
     vss_threshold = float(config_dict["vss"]["threshold"])
-    project = config_dict["tator"]["project"]
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
@@ -139,28 +147,38 @@ def run_mission_vss(element) -> str:
     if not det_csv:
         return f"No detections found in {det_csv}"
 
-    det_df = pd.concat([pd.read_csv(d) for d in det_csv])
+    det_df = pd.DataFrame()
+    for d in det_csv:
+        df = pd.read_csv(d)
+        logger.info(f"Found {len(df)} detections in {d}")
+        df['csv_file'] = d
+        det_df = pd.concat([det_df, df])
 
     # Add in a column for the unique crop name for each detection with a unique id
-    # create a unique uuid based on the md5 hash of the box in the row
+    # unique uuid is based on the md5 hash of the box in the row
     det_df['crop_path'] = det_df.apply(lambda
                                    row: f"{crop_path}/{uuid.uuid5(uuid.NAMESPACE_DNS, str(row['x']) + str(row['y']) + str(row['xx']) + str(row['xy']))}.png",
                                axis=1)
 
-    for index, row in det_df.iterrows():
+    # iterate through the detections 8 at a time
+    batch_size = 8
+    for i in tqdm.tqdm(range(0, len(det_df), batch_size), desc=f"Processing {mission_name}"):
         try:
-            # Crop images for prediction
-            crop_square_image(row, 224)
+            # Read the images for the batch prediction
+            batch = det_df.iloc[i:i+batch_size]
+            images = []
+            for index, row in batch.iterrows():
+                crop_square_image(row, 224)
+                images.append(read_image(row['crop_path']))
 
-            # Run VSS prediction 8 at a time
-            df_batch = det_df.iloc[index:index+8]
-            batch = df_batch['crop_path'].tolist()
+            # Run the vss prediction
+            file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
 
-            file_paths, best_predictions, best_scores = run_vss(batch, config_dict, top_k=3)
+            # Update the dataframe with the best prediction
             for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
                 if best_pred is None:
                     logger.error(f"No majority prediction for {file_paths}")
-                    df_batch.loc[df_batch['crop_path'] == file_path, 'class'] = "Unknown"
+                    det_df.loc[det_df['crop_path'] == file_path, 'class'] = "Unknown"
                     continue
 
                 if best_score < vss_threshold:
@@ -169,14 +187,17 @@ def run_mission_vss(element) -> str:
 
                 logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_path}")
 
-                df_batch.loc[df_batch['crop_path'] == file_path, 'class'] = best_pred
-                df_batch.loc[df_batch['crop_path'] == file_path, 'score'] = best_score
-
-            # Merge the batch back into the main dataframe
-            det_df.update(df_batch)
+                det_df.loc[det_df['crop_path'] == file_path, 'class'] = best_pred
+                det_df.loc[det_df['crop_path'] == file_path, 'score'] = best_score
 
         except Exception as ex:
-            return ex
+            return str(ex)
+
+    # Save the results back to the csv files
+    for csv_file in det_csv:
+        df_csv = det_df[det_df['csv_file'] == csv_file.as_posix()]
+        df_csv.drop(columns=['csv_file'], inplace=True)
+        df_csv.to_csv(csv_file.as_posix(), index=False)
 
     return f"Mission {mission_name} processed."
 
@@ -188,13 +209,13 @@ def run_pipeline(argv=None):
 
     logger.info("Starting detect pipeline...")
     with beam.Pipeline(options=options) as p:
-        # (
-        #     p
-        #     | "Read missions" >> ReadFromText(args.missions)
-        #     | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
-        #     | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
-        #     | "Process missions (detect)" >> beam.Map(run_mission_detect)
-        # )
+        (
+            p
+            | "Read missions" >> ReadFromText(args.missions)
+            | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
+            | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
+            | "Process missions (detect)" >> beam.Map(run_mission_detect)
+        )
 
         # If --vss specified, run with vss prediction
         if '--vss' in beam_args:
