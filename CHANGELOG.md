@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.10.1 (2024-09-30)
+
+### Performance
+
+* perf(uav): faster vss with multiproc crop, correct handling of csv output and pipeline conditional ([`4b6f4f1`](https://github.com/mbari-org/aipipeline/commit/4b6f4f1fb9428b08cc2fb4371fefed9351d5764d))
+
 ## v0.10.0 (2024-09-30)
 
 ### Feature
