@@ -148,10 +148,12 @@ def top_majority(model_predictions, model_scores, threshold: float, majority_cou
 
     best_pred = majority_predictions[0]
     best_score = 0.0
+    num_majority = 0
     # Sum all the scores for the majority predictions
     for pred, score in zip(model_predictions, model_scores):
         if pred in majority_predictions:
             best_score += float(score)
-    best_score /= len(model_predictions)
+            num_majority += 1
+    best_score /= num_majority
 
     return best_pred, best_score
