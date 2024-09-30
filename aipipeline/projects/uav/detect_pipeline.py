@@ -4,12 +4,14 @@
 import os
 import uuid
 from datetime import datetime
+from typing import Any
 
 import apache_beam as beam
 import pandas as pd
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.io import ReadFromText
 from pathlib import Path
+from multiprocessing import Pool
 import logging
 import io
 import tqdm
@@ -34,16 +36,16 @@ logger.addHandler(handler)
 ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 
-def run_mission_detect(element) -> str:
+def run_mission_detect(element) -> Any:
 
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
-    logger.info(f"Processing element {element}")
-    line, config_dict,conf_files = element
+    logger.info(f"Running mission detect {element}")
+    line, config_dict, conf_files = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
-    base_path = Path(config_dict["data"]["processed_path"]) / "seedDetections"
+    base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     model = config_dict["sdcat"]["model"]
 
     if not mission_name:
@@ -107,7 +109,7 @@ def run_mission_detect(element) -> str:
     container.wait()
     logger.info(f"Container {container.name} finished.")
 
-    return f"Mission {mission_name} processed."
+    return element
 
 
 def read_image(file_path: str) -> tuple[bytes, str]:
@@ -121,7 +123,12 @@ def run_mission_vss(element) -> str:
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
-    logger.info(f"Processing element {element}")
+    logger.info(f"Running mission vss {element}")
+    # If the element is not a tuple, return - this is a failed mission
+    if not isinstance(element, tuple):
+        logger.error(f"Failed mission: {element}")
+        return f"Failed mission: {element}"
+
     line, config_dict, conf_files = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
@@ -151,7 +158,7 @@ def run_mission_vss(element) -> str:
     for d in det_csv:
         df = pd.read_csv(d)
         logger.info(f"Found {len(df)} detections in {d}")
-        df['csv_file'] = d
+        df['csv_file'] = d.as_posix()
         det_df = pd.concat([det_df, df])
 
     # Add in a column for the unique crop name for each detection with a unique id
@@ -160,15 +167,19 @@ def run_mission_vss(element) -> str:
                                    row: f"{crop_path}/{uuid.uuid5(uuid.NAMESPACE_DNS, str(row['x']) + str(row['y']) + str(row['xx']) + str(row['xy']))}.png",
                                axis=1)
 
-    # iterate through the detections 8 at a time
-    batch_size = 8
+    logger.info(f"Cropping {len(det_df)} detections for {mission_name}")
+    with Pool() as pool:
+        args = [(row, 224) for index, row in det_df.iterrows()]
+        pool.starmap(crop_square_image, args)
+    logger.info(f"Crop {len(det_df)} detections completed {mission_name}")
+
+    # iterate through the detections 32 at a time
+    batch_size = 32
     for i in tqdm.tqdm(range(0, len(det_df), batch_size), desc=f"Processing {mission_name}"):
         try:
             # Read the images for the batch prediction
-            batch = det_df.iloc[i:i+batch_size]
             images = []
-            for index, row in batch.iterrows():
-                crop_square_image(row, 224)
+            for index, row in det_df.iloc[i:i+batch_size].iterrows():
                 images.append(read_image(row['crop_path']))
 
             # Run the vss prediction
@@ -177,7 +188,7 @@ def run_mission_vss(element) -> str:
             # Update the dataframe with the best prediction
             for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
                 if best_pred is None:
-                    logger.error(f"No majority prediction for {file_paths}")
+                    logger.debug(f"No majority prediction for {file_path}")
                     det_df.loc[det_df['crop_path'] == file_path, 'class'] = "Unknown"
                     continue
 
@@ -209,7 +220,7 @@ def run_pipeline(argv=None):
 
     logger.info("Starting detect pipeline...")
     with beam.Pipeline(options=options) as p:
-        (
+        detect = (
             p
             | "Read missions" >> ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
@@ -219,13 +230,7 @@ def run_pipeline(argv=None):
 
         # If --vss specified, run with vss prediction
         if '--vss' in beam_args:
-            (
-                p
-                | "Read missions" >> ReadFromText(args.missions)
-                | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
-                | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
-                | "Process missions (detect)" >> beam.Map(run_mission_vss)
-            )
+            detect | "Process missions (vss)" >> beam.Map(run_mission_vss)
 
 
 if __name__ == "__main__":
