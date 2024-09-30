@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.10.0 (2024-09-30)
+
+### Feature
+
+* feat: working two-stage vss pipeline detect for UAV ([`d9c288e`](https://github.com/mbari-org/aipipeline/commit/d9c288e154e2950f130eaa1ea9e2fd5a0864ff29))
+
+### Fix
+
+* fix: correct best score average ([`2dff7f3`](https://github.com/mbari-org/aipipeline/commit/2dff7f324d19a04251c8d4dae9c2f3328bf839f2))
+
+### Performance
+
+* perf: reduce min_std to 2.0 to find more elusive detections like batrays ([`45777ff`](https://github.com/mbari-org/aipipeline/commit/45777ff004c363bceb0997f34a1602cc5c5425c9))
+
 ## v0.9.1 (2024-09-29)
 
 ### Fix
