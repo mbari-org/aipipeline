@@ -1,6 +1,7 @@
 # aipipeline, Apache-2.0 license
 # Filename: projects/uav/detect-pipeline.py
 # Description: Batch process missions with sdcat detection
+import multiprocessing
 import os
 import uuid
 from datetime import datetime
@@ -67,13 +68,13 @@ def run_mission_detect(element) -> Any:
         "--config-ini",
         conf_files[SDCAT_KEY],
         "--scale-percent",
-        "40",
+        "50",
         "--model",
         model,
         "--slice-size-width",
-        "900",
+        "1280",
         "--slice-size-height",
-        "900",
+        "1280",
         "--conf",
         "0.1",
         "--save-dir",
@@ -133,6 +134,7 @@ def run_mission_vss(element) -> str:
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
+    base_path_scratch = Path(config_dict["data"]["processed_path"])
     model = config_dict["sdcat"]["model"]
     vss_threshold = float(config_dict["vss"]["threshold"])
 
@@ -144,14 +146,14 @@ def run_mission_vss(element) -> str:
     if not os.path.exists(det_dir):
         return f"Could not find directory: {det_dir}"
 
-    crop_path = base_path / mission_name / "detections" / "combined" / model / "crops"
+    crop_path = base_path_scratch / model / "crops"
     if not os.path.exists(crop_path):
         os.makedirs(crop_path)
 
     # Get the file paths from the csv files, and run the vss prediction
     det_csv = list(det_dir.rglob("*.csv"))
 
-    if not det_csv:
+    if len(det_csv) == 0:
         return f"No detections found in {det_csv}"
 
     det_df = pd.DataFrame()
@@ -164,13 +166,22 @@ def run_mission_vss(element) -> str:
     # Add in a column for the unique crop name for each detection with a unique id
     # unique uuid is based on the md5 hash of the box in the row
     det_df['crop_path'] = det_df.apply(lambda
-                                   row: f"{crop_path}/{uuid.uuid5(uuid.NAMESPACE_DNS, str(row['x']) + str(row['y']) + str(row['xx']) + str(row['xy']))}.png",
-                               axis=1)
+                                    row: f"{crop_path}/{uuid.uuid5(uuid.NAMESPACE_DNS, str(row['x']) + str(row['y']) + str(row['xx']) + str(row['xy']))}.png",
+                                    axis=1)
+
+    # Only run if the class is "Unknown" with a saliency score greater than 300
+    det_df = det_df[(det_df['class'] == "Unknown") & (det_df['saliency'] > 300)]
+    if len(det_df) == 0:
+        return f"No unknown detections found in {det_csv}"
 
     logger.info(f"Cropping {len(det_df)} detections for {mission_name}")
-    with Pool() as pool:
-        args = [(row, 224) for index, row in det_df.iterrows()]
-        pool.starmap(crop_square_image, args)
+    for i in range(0, len(det_df), 500):
+        df = det_df.iloc[i:i+500]
+        num_processes = min(multiprocessing.cpu_count(), len(df))
+        with Pool(num_processes) as pool:
+            args = [(row, 224) for index, row in df.iterrows()]
+            pool.starmap(crop_square_image, args)
+        logger.info(f"Crop {i+500} of {len(det_df)} detections completed {mission_name}")
     logger.info(f"Crop {len(det_df)} detections completed {mission_name}")
 
     # iterate through the detections 32 at a time
@@ -182,7 +193,6 @@ def run_mission_vss(element) -> str:
             for index, row in det_df.iloc[i:i+batch_size].iterrows():
                 images.append(read_image(row['crop_path']))
 
-            # Run the vss prediction
             file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
 
             # Update the dataframe with the best prediction
@@ -207,7 +217,7 @@ def run_mission_vss(element) -> str:
     # Save the results back to the csv files
     for csv_file in det_csv:
         df_csv = det_df[det_df['csv_file'] == csv_file.as_posix()]
-        df_csv.drop(columns=['csv_file'], inplace=True)
+        df_csv = df_csv.drop(columns=['csv_file'])
         df_csv.to_csv(csv_file.as_posix(), index=False)
 
     return f"Mission {mission_name} processed."
@@ -225,12 +235,12 @@ def run_pipeline(argv=None):
             | "Read missions" >> ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
             | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
-            | "Process missions (detect)" >> beam.Map(run_mission_detect)
+            | "Process missions (detect)" >> beam.Map(run_mission_vss)
         )
 
         # If --vss specified, run with vss prediction
-        if '--vss' in beam_args:
-            detect | "Process missions (vss)" >> beam.Map(run_mission_vss)
+        # if '--vss' in beam_args:
+        #     detect | "Process missions (vss)" >> beam.Map(run_mission_vss)
 
 
 if __name__ == "__main__":
