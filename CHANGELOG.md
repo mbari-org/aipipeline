@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.10.3 (2024-10-01)
+
+### Performance
+
+* perf(uav): add Kelp,Bird pass through ([`0c152eb`](https://github.com/mbari-org/aipipeline/commit/0c152eb52deeac1e983d670491a94f0e2e68f10d))
+
 ## v0.10.2 (2024-10-01)
 
 ### Performance
