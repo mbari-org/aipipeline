@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.10.2 (2024-10-01)
+
+### Performance
+
+* perf(uav): more memory efficient multiproc crop ([`eab6f5d`](https://github.com/mbari-org/aipipeline/commit/eab6f5dd9c0abb1df6c15a7e4ada833a5ede7b27))
+
 ## v0.10.1 (2024-09-30)
 
 ### Performance
