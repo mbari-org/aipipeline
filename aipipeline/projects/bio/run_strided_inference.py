@@ -5,6 +5,7 @@ import argparse
 import json
 import logging
 import multiprocessing
+import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -14,6 +15,12 @@ import cv2
 import pandas as pd
 import redis
 import requests
+import tator
+
+from aipipeline.config_setup import setup_config
+from db_utils import init_api_project, get_version_id
+
+CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -140,7 +147,8 @@ def run_inference(
                         if loc["class_name"] == class_name:
                             # For low confidence detections, run through the vss model
                             if loc["confidence"] < 0.5:
-                                logger.info(f"Running VSS model on low confidence detection")
+                                logger.info(f"Running VSS model on low confidence {class_name} detection {loc['confidence']}")
+
                             if not queued_video:
                                 queued_video = True
                                 # Only queue the video if we have a valid localization to queue
@@ -218,6 +226,7 @@ def parse_args():
         """),
         formatter_class=argparse.RawTextHelpFormatter,
     )
+    parser.add_argument("--config", required=True, help=f"Configuration files. For example: {CONFIG_YAML}")
     parser.add_argument("--video", help="Video file or directory.", required=False, type=str)
     parser.add_argument(
         "--tsv",
@@ -239,13 +248,6 @@ def parse_args():
         default="http://localhost:8000/predict",
         type=str,
     )
-    parser.add_argument(
-        "--version_id",
-        help="Version ID to store the localizations to in Tator.",
-        default=0,
-        required=True,
-        type=int,
-    )
     parser.add_argument("--flush", help="Flush the REDIS database.", action="store_true")
     return parser.parse_args()
 
@@ -254,6 +256,18 @@ i
 if __name__ == "__main__":
 
     args = parse_args()
+    _, config_dict = setup_config(args.config)
+
+    # Get the version id from the database
+    project = config_dict["tator"]["project"]
+    host = config_dict["tator"]["host"]
+    version = config_dict["data"]["version"]
+    token = os.getenv("TATOR_TOKEN")
+    api, project = init_api_project(host=host, token=token, project=project)
+    version_id = get_version_id(api, project, version)
+    if version_id is None:
+        logger.error(f"Failed to get version id for {version}")
+        exit(1)
 
     # Need to have a video or TSV file with video paths to process
     if not args.video and not args.tsv:
@@ -281,7 +295,7 @@ if __name__ == "__main__":
                 args.stride,
                 args.endpoint_url,
                 args.class_name,
-                args.version_id,
+                version_id,
             )
         elif video_path.is_dir():
             # Fanout to number of CPUs
@@ -292,7 +306,7 @@ if __name__ == "__main__":
                 args.stride,
                 args.endpoint_url,
                 args.class_name,
-                args.version_id,
+                version_id,
             )
         else:
             logger.error(f"Invalid video path: {video_path}")
@@ -309,5 +323,5 @@ if __name__ == "__main__":
             args.stride,
             args.endpoint_url,
             args.class_name,
-            args.version_id,
+            version_id,
         )
