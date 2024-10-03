@@ -154,7 +154,7 @@ def run_inference(
                     for loc in data:
                         if loc["class_name"] == class_name:
                             # For low confidence detections, run through the vss model
-                            if loc["confidence"] < 0.5:
+                            if loc["confidence"] < 0.6:
                                 logger.info(f"Running VSS model on low confidence {class_name} detection {loc['confidence']}")
                                 images = [read_image(temp_file.name)]
                                 file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
