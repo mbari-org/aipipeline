@@ -2,6 +2,7 @@
 # Filename: projects/bio/run_strided_inference.py
 # Description: commands related to running inference on strided video with REDIS queue based load
 import argparse
+import io
 import json
 import logging
 import multiprocessing
@@ -15,10 +16,10 @@ import cv2
 import pandas as pd
 import redis
 import requests
-import tator
 
 from aipipeline.config_setup import setup_config
 from db_utils import init_api_project, get_version_id
+from aipipeline.prediction.library import run_vss
 
 CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
 
@@ -71,10 +72,17 @@ def get_video_metadata(video_name):
         return None
 
 
+def read_image(file_path: str) -> tuple[bytes, str]:
+    with open(file_path, 'rb') as file:
+        img = io.BytesIO(file.read()).getvalue()
+        return img, file_path
+
+
 def run_inference(
     video_file: str,
     stride: int,
     endpoint_url: str,
+    config_dict: dict,
     class_name: str,
     version_id: int = 0,
 ):
@@ -148,6 +156,14 @@ def run_inference(
                             # For low confidence detections, run through the vss model
                             if loc["confidence"] < 0.5:
                                 logger.info(f"Running VSS model on low confidence {class_name} detection {loc['confidence']}")
+                                images = [read_image(temp_file.name)]
+                                file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
+                                if len(best_predictions) == 0:
+                                    logger.info(f"No predictions from VSS model. Skipping this detection.")
+                                    continue
+                                if best_predictions[0] != class_name:
+                                    logger.info(f"VSS model prediction {best_predictions[0]} does not match {class_name}. Skipping this detection.")
+                                    continue
 
                             if not queued_video:
                                 queued_video = True
@@ -206,12 +222,12 @@ def run_inference(
     cap.release()
 
 
-def process_videos(video_files, stride, endpoint_url, class_name, version_id):
+def process_videos(video_files, stride, endpoint_url, config_dict, class_name, version_id):
     num_cpus = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=num_cpus)
     pool.starmap(
         run_inference,
-        [(v, stride, endpoint_url, class_name, version_id) for v in video_files],
+        [(v, stride, endpoint_url, config_dict, class_name, version_id) for v in video_files],
     )
     pool.close()
     pool.join()
@@ -294,6 +310,7 @@ if __name__ == "__main__":
                 video_path.as_posix(),
                 args.stride,
                 args.endpoint_url,
+                config_dict,
                 args.class_name,
                 version_id,
             )
@@ -305,6 +322,7 @@ if __name__ == "__main__":
                 video_files,
                 args.stride,
                 args.endpoint_url,
+                config_dict,
                 args.class_name,
                 version_id,
             )
