@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.12.3 (2024-10-03)
+
+### Fix
+
+* fix(bio): added missing yaml entry and fix typo ([`811b988`](https://github.com/mbari-org/aipipeline/commit/811b9889283e8cf26ec4196a6cbe8d7454f061aa))
+
 ## v0.12.2 (2024-10-03)
 
 ### Performance
