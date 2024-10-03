@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.13.1 (2024-10-03)
+
+### Documentation
+
+* docs(bio): updated README with command line changes ([`1aa0b69`](https://github.com/mbari-org/aipipeline/commit/1aa0b69aecc078a1b8b5bfd1fc3644f054aac279))
+
+### Performance
+
+* perf(bio): more conservative threshold for second stage vss ([`d8be83f`](https://github.com/mbari-org/aipipeline/commit/d8be83fceff21fb0b3dfe290d34772e962a13b6e))
+
 ## v0.13.0 (2024-10-03)
 
 ### Feature
