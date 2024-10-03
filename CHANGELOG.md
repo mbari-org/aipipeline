@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.12.2 (2024-10-03)
+
+### Performance
+
+* perf(uav):  final assigment for UAV version saliency_MBARI/uav-yolov5-30k_VSS ([`5a8b2e8`](https://github.com/mbari-org/aipipeline/commit/5a8b2e8090a2bce6dc651834b466b2b3cdb1fd14))
+
 ## v0.12.1 (2024-10-03)
 
 ### Performance
