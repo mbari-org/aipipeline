@@ -12,6 +12,7 @@ data:
   download_args: ["--verified"]
 
 sdcat:
+  model: "hustvl/yolos-tiny"
   ini: "sdcat.ini"
 
 vss:
