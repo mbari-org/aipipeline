@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.11.0 (2024-10-03)
+
+### Feature
+
+* feat(bio): added support to grab data version by name ([`10a5c09`](https://github.com/mbari-org/aipipeline/commit/10a5c09dd4b09d0a2a6868b5273b90d9815e862f))
+
 ## v0.10.5 (2024-10-03)
 
 ### Fix
