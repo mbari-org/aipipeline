@@ -16,7 +16,7 @@ sdcat:
 
 vss:
   project: "i2map"
-  threshold: 0.95
+  threshold: 0.50
   model: "google/vit-base-patch16-224"
 
 tator:
