@@ -11,7 +11,7 @@ data:
   raw_data_path: "/mnt/CFElab/"
   processed_path: "/mnt/ML_SCRATCH/902111-CFE"
   version: "Baseline"
-  labels: "long_particle_blur,diatom_chain,aggregate,artifact,phaeocystis,copepod,rhizaria,particle_blur,larvacean,fecal_pellet,football,centric_diatom,gelatinous"
+  labels: "bloom,long_particle_blur,diatom_chain,aggregate,artifact,phaeocystis,copepod,rhizaria,particle_blur,larvacean,fecal_pellet,football,centric_diatom,gelatinous"
   download_args: ["--verified"]
 
 sdcat:
@@ -20,7 +20,7 @@ sdcat:
 
 vss:
   project: "902111-CFE"
-  threshold: 0.92
+  threshold: 0.8
   model: "google/vit-base-patch16-224"
 
 mounts:
