@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.12.0 (2024-10-03)
+
+### Feature
+
+* feat(bio): added vss second stage ([`c5defea`](https://github.com/mbari-org/aipipeline/commit/c5defea579060ee732132019cc0acf9ab928b97f))
+
 ## v0.11.0 (2024-10-03)
 
 ### Feature
