@@ -1,6 +1,6 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/bio/run_inference_video.py
-# Description: commands related to running inference on video every TBD seconds with REDIS queue based load
+# Filename: projects/bio/run_strided_inference.py
+# Description: commands related to running inference on strided video with REDIS queue based load
 import argparse
 import json
 import logging
@@ -8,14 +8,12 @@ import multiprocessing
 import tempfile
 from datetime import datetime
 from pathlib import Path
-import pandas as pd
 from textwrap import dedent
 
 import cv2
+import pandas as pd
 import redis
 import requests
-import sys
-
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -25,11 +23,12 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 # and log to file
 now = datetime.now()
-log_filename = f"vss-reset_{now:%Y%m%d}.log"
+log_filename = f"run_strided_inference_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
 
 # Global variables
 idv = 1  # video index
@@ -76,10 +75,28 @@ def run_inference(
     Run inference on a video file and queue the localizations in REDIS
     """
     global idl, idv, redis_queue
-
     queued_video = False
+    try:
+        video_path = Path(video_file)
+        md = get_video_metadata(video_path.name)
+        if md is None:
+            logger.error(f"Failed to get video metadata for {video_path}")
+            return
+        # Queue the video first
+        video_ref_uuid = md["video_reference_uuid"]
+        iso_start = md["start_timestamp"]
+        video_url = md["uri"]
+        logger.info(f"video_ref_uuid: {video_ref_uuid}")
+        r.hset(f"video_refs_start:{video_ref_uuid}", "start_timestamp", iso_start)
+        r.hset(f"video_refs_load:{video_ref_uuid}", "video_uri", video_url)
+    except Exception as e:
+        logger.info(f"Error: {e}")
+        # Remove the video reference from the queue
+        r.delete(f"video_refs_start:{video_ref_uuid}")
+        r.delete(f"video_refs_load:{video_ref_uuid}")
+        return
 
-    cap = cv2.VideoCapture(video_file)
+    cap = cv2.VideoCapture(video_path.as_posix())
     fps = cap.get(cv2.CAP_PROP_FPS)
     frame_interval_ms = int(1000 * stride)
     current_time_ms = 0
@@ -105,19 +122,23 @@ def run_inference(
         with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
             cv2.imwrite(temp_file.name, frame)
             files = {"file": open(temp_file.name, "rb")}
-            logger.info(f"Processing frame in {video_file} at {current_time_ms / 1000} seconds")
+            logger.info(f"Processing frame at {current_time_ms / 1000} seconds")
             response = requests.post(endpoint_url, files=files)
 
             if response.status_code == 200:
                 frame_num = int(current_time_ms / 1000 * fps)
-                logger.info(f"Frame in {video_file} at {current_time_ms / 1000} seconds processed successfully")
+                logger.info(f"Frame at {current_time_ms / 1000} seconds processed successfully")
                 logger.debug(response.text)
                 logger.info(f"resp: {response}")
                 data = json.loads(response.text)
                 if len(data) > 0:
                     logger.info(data)
+
                     for loc in data:
                         if loc["class_name"] == class_name:
+                            # For low confidence detections, run through the vss model
+                            if loc["confidence"] < 0.5:
+                                logger.info(f"Running VSS model on low confidence detection")
                             if not queued_video:
                                 queued_video = True
                                 # Only queue the video if we have a valid localization to queue
@@ -185,15 +206,14 @@ def process_videos(video_files, stride, endpoint_url, class_name, version_id):
     pool.close()
     pool.join()
 
-
 def parse_args():
     parser = argparse.ArgumentParser(
         description=dedent("""\
-    Run model on video with REDIS queue based load.
+        Run model on video with REDIS queue based load.
 
-    Example: 
-    python3 run_cteno_inference_test.py /path/to/video.mp4
-    """),
+        Example: 
+        python3 run_inference_video.py /path/to/video.mp4
+        """),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument("--video", help="Video file or directory.", required=False, type=str)
@@ -219,7 +239,7 @@ def parse_args():
     )
     parser.add_argument(
         "--version_id",
-        help="Version ID of the model.",
+        help="Version ID to store the localizations to in Tator.",
         default=0,
         required=True,
         type=int,
@@ -228,6 +248,7 @@ def parse_args():
     return parser.parse_args()
 
 
+i
 if __name__ == "__main__":
     global redis_queue
 
@@ -279,7 +300,7 @@ if __name__ == "__main__":
         df = pd.read_csv(args.tsv, sep="\t")
         # The 5th column is the video path
         video_files = df.iloc[:, 4].tolist()
-        # Make sure the files are unique -there may be duplicates but we don't want to process them multiple times
+        # Make sure the files are unique -there may be duplicates, but we don't want to process them multiple times
         video_files = list(set(video_files))
         # Fanout to number of CPUs
         process_videos(
