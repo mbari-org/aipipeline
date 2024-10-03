@@ -169,11 +169,6 @@ def run_mission_vss(element) -> str:
                                     row: f"{crop_path}/{uuid.uuid5(uuid.NAMESPACE_DNS, str(row['x']) + str(row['y']) + str(row['xx']) + str(row['xy']))}.png",
                                     axis=1)
 
-    # Only run if the class is "Unknown" with a saliency score greater than 300
-    det_df = det_df[(det_df['class'] == "Unknown") & (det_df['saliency'] > 300)]
-    if len(det_df) == 0:
-        return f"No unknown detections found in {det_csv}"
-
     logger.info(f"Cropping {len(det_df)} detections for {mission_name}")
     for i in range(0, len(det_df), 500):
         df = det_df.iloc[i:i+500]
@@ -191,19 +186,26 @@ def run_mission_vss(element) -> str:
             # Read the images for the batch prediction
             images = []
             for index, row in det_df.iloc[i:i+batch_size].iterrows():
+                # Skip over Kelp or Bird detections > 0.5 confidence
+                if row['class'] == 'Kelp' or row['class'] == 'Bird' and row['score'] > 0.5:
+                    continue
                 images.append(read_image(row['crop_path']))
+
+            if len(images) == 0:
+                continue
 
             file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
 
             # Update the dataframe with the best prediction
             for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
-                if best_pred is None:
+                if best_pred is None or best_pred == 'Poop' or best_score < 0.92:
                     logger.debug(f"No majority prediction for {file_path}")
                     det_df.loc[det_df['crop_path'] == file_path, 'class'] = "Unknown"
                     continue
 
                 if best_score < vss_threshold:
                     logger.error(f"Score {best_score} below threshold {vss_threshold} for {file_path}")
+                    det_df.loc[det_df['crop_path'] == file_path, 'class'] = "Unknown"
                     continue
 
                 logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_path}")
@@ -212,6 +214,7 @@ def run_mission_vss(element) -> str:
                 det_df.loc[det_df['crop_path'] == file_path, 'score'] = best_score
 
         except Exception as ex:
+            print(f"Error processing {mission_name}: {ex}")
             return str(ex)
 
     # Save the results back to the csv files
@@ -235,12 +238,12 @@ def run_pipeline(argv=None):
             | "Read missions" >> ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
             | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
-            | "Process missions (detect)" >> beam.Map(run_mission_vss)
+            | "Process missions (detect)" >> beam.Map(run_mission_detect())
         )
 
         # If --vss specified, run with vss prediction
-        # if '--vss' in beam_args:
-        #     detect | "Process missions (vss)" >> beam.Map(run_mission_vss)
+        if '--vss' in beam_args:
+            detect | "Process missions (vss)" >> beam.Map(run_mission_vss)
 
 
 if __name__ == "__main__":
