@@ -238,7 +238,7 @@ def run_pipeline(argv=None):
             | "Read missions" >> ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
             | "Create elements" >> beam.Map(lambda line: (line, config_dict, conf_files))
-            | "Process missions (detect)" >> beam.Map(run_mission_detect())
+            | "Process missions (detect)" >> beam.Map(run_mission_detect)
         )
 
         # If --vss specified, run with vss prediction
