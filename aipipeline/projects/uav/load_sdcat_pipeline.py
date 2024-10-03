@@ -53,18 +53,23 @@ def process_mission(element) -> str:
 
     version = config_dict["data"]["version"]
     model = config_dict["sdcat"]["model"]
-    base_dir = Path(config_dict["data"]["processed_path"]) / "seedDetections"
+    base_dir = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     if type == "detect":
         load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
+        glob_str = f"*.csv"
     elif type == "cluster":
         load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "clusters"
+        glob_str = f"*cluster*.csv"
+    else:
+        logger.error(f"Type {type} not supported")
+        return f"Type {type} not supported"
 
     if not load_dir.exists():
         logger.error(f"Could not find directory: {load_dir}")
         return f"Could not find directory: {load_dir}"
 
     # Find the first load file
-    for det_index, load_file in enumerate(load_dir.glob(f"*{type}*.csv")):
+    for det_index, load_file in enumerate(load_dir.rglob(glob_str)):
         logger.info(f"Loading {load_file}")
         args = [
             "load",
