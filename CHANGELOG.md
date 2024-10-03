@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.13.0 (2024-10-03)
+
+### Feature
+
+* feat(bio): added expc metadata docker build and test data ([`8d49c73`](https://github.com/mbari-org/aipipeline/commit/8d49c73cbe1bc41d55d490de9e3ea05b101df2f6))
+
 ## v0.12.3 (2024-10-03)
 
 ### Fix
