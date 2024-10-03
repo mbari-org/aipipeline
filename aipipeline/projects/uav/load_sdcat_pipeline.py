@@ -68,34 +68,32 @@ def process_mission(element) -> str:
         logger.error(f"Could not find directory: {load_dir}")
         return f"Could not find directory: {load_dir}"
 
-    # Find the first load file
-    for det_index, load_file in enumerate(load_dir.rglob(glob_str)):
-        logger.info(f"Loading {load_file}")
-        args = [
-            "load",
-            "boxes",
-            "--input",
-            load_file.as_posix(),
-            "--config",
-            config_files[CONFIG_KEY],
-            "--token",
-            TATOR_TOKEN,
-            "--version",
-            version,
-        ]
+    logger.info(f"Loading {load_dir}")
+    args = [
+        "load",
+        "boxes",
+        "--input",
+        load_dir.as_posix(),
+        "--config",
+        config_files[CONFIG_KEY],
+        "--token",
+        TATOR_TOKEN,
+        "--version",
+        version,
+    ]
 
-        container = run_docker(
-            config_dict["docker"]["aidata"],
-            name=f"aidata-sdcat-load-{type}-{mission_name}",
-            args_list=args,
-            bind_volumes=config_dict["docker"]["bind_volumes"],
-        )
-        if container:
-            logger.info(f"Loading {mission_name}....")
-            container.wait()
-            logger.info(f"Done loading {mission_name}....")
-        else:
-            logger.error(f"Failed to load {mission_name}....")
+    container = run_docker(
+        config_dict["docker"]["aidata"],
+        name=f"aidata-sdcat-load-{type}-{mission_name}",
+        args_list=args,
+        bind_volumes=config_dict["docker"]["bind_volumes"],
+    )
+    if container:
+        logger.info(f"Loading {mission_name}....")
+        container.wait()
+        logger.info(f"Done loading {mission_name}....")
+    else:
+        logger.error(f"Failed to load {mission_name}....")
 
     return f"Mission {mission_name} processed."
 
