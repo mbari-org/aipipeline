@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.10.5 (2024-10-03)
+
+### Fix
+
+* fix(bio):  fixed refactoring bugs ([`9f85436`](https://github.com/mbari-org/aipipeline/commit/9f854363f0247f375ba46cad109994812b8145d9))
+
 ## v0.10.4 (2024-10-03)
 
 ### Performance
