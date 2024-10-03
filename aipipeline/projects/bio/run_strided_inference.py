@@ -76,6 +76,7 @@ def run_inference(
     """
     global idl, idv, redis_queue
     queued_video = False
+    video_ref_uuid = None
     try:
         video_path = Path(video_file)
         md = get_video_metadata(video_path.name)
@@ -87,13 +88,14 @@ def run_inference(
         iso_start = md["start_timestamp"]
         video_url = md["uri"]
         logger.info(f"video_ref_uuid: {video_ref_uuid}")
-        r.hset(f"video_refs_start:{video_ref_uuid}", "start_timestamp", iso_start)
-        r.hset(f"video_refs_load:{video_ref_uuid}", "video_uri", video_url)
+        redis_queue.hset(f"video_refs_start:{video_ref_uuid}", "start_timestamp", iso_start)
+        redis_queue.hset(f"video_refs_load:{video_ref_uuid}", "video_uri", video_url)
     except Exception as e:
         logger.info(f"Error: {e}")
         # Remove the video reference from the queue
-        r.delete(f"video_refs_start:{video_ref_uuid}")
-        r.delete(f"video_refs_load:{video_ref_uuid}")
+        if video_ref_uuid:
+            redis_queue.delete(f"video_refs_start:{video_ref_uuid}")
+            redis_queue.delete(f"video_refs_load:{video_ref_uuid}")
         return
 
     cap = cv2.VideoCapture(video_path.as_posix())
@@ -250,7 +252,6 @@ def parse_args():
 
 i
 if __name__ == "__main__":
-    global redis_queue
 
     args = parse_args()
 
