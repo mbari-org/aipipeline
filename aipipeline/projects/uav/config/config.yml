@@ -25,17 +25,17 @@ data:
   raw_path: "/mnt/UAV/"
   processed_path_sdcat: "/mnt/UAV/machineLearning/"
   processed_path: "/mnt/ML_SCRATCH/UAV/"
-  version: "Baseline"
+  version: "saliency_MBARI/uav-yolov5-30k_VSS"
   labels: "Pinniped,Poop,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
   download_args: ["--verified"]
 
 sdcat:
-  model: "hustvl/yolos-tiny"
+  model: "MBARI/uav-yolov5-30k"
   ini: "sdcat.ini"
 
 vss:
   project: "901902-uavs"
-  threshold: 0.9
+  threshold: 0.5
   model: "google/vit-base-patch16-224"
 
 tator:
