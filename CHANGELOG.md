@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.12.1 (2024-10-03)
+
+### Performance
+
+* perf(uav): load all detections in single docker instance ([`8d3c7c3`](https://github.com/mbari-org/aipipeline/commit/8d3c7c35a00a670e5b35ccbd9d67dffe1470591d))
+
 ## v0.12.0 (2024-10-03)
 
 ### Feature
