@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.10.4 (2024-10-03)
+
+### Performance
+
+* perf(cfe): reduce detections with saliency, min/max area adjustments ([`676a5e9`](https://github.com/mbari-org/aipipeline/commit/676a5e9f7d6c1813aedf23164fe877c628a4129d))
+
 ## v0.10.3 (2024-10-01)
 
 ### Performance
