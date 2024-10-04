@@ -18,7 +18,7 @@ import redis
 import requests
 
 from aipipeline.config_setup import setup_config
-from db_utils import init_api_project, get_version_id
+from aipipeline.db_utils import init_api_project, get_version_id
 from aipipeline.prediction.library import run_vss
 
 CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
@@ -77,6 +77,16 @@ def read_image(file_path: str) -> tuple[bytes, str]:
         img = io.BytesIO(file.read()).getvalue()
         return img, file_path
 
+
+def resolve_video_path(video_path: Path) -> Path:
+    # Resolve the video URI to a local path
+    md = get_video_metadata(video_path.name)
+    if md is None:
+        logger.error(f"Failed to get video metadata for {video_path}")
+        exit(1)
+
+    resolved_path = Path(f'/mnt/M3/mezzanine' + md['uri'].split('/mezzanine')[-1])
+    return resolved_path
 
 def run_inference(
     video_file: str,
@@ -213,7 +223,7 @@ def run_inference(
                             }
                             redis_queue.hset(f"locs:{video_ref_uuid}", str(idl), json.dumps(new_loc))
                             idl += 1
-                            logger.info(f"Found total possible {idl} ctenophore sp. A localizations")
+                            logger.info(f"Found total possible {idl} {class_name} localizations of {class_name}")
             else:
                 logger.error(f"Error processing frame at {current_time_ms / 1000} seconds: {response.text}")
 
@@ -268,7 +278,6 @@ def parse_args():
     return parser.parse_args()
 
 
-i
 if __name__ == "__main__":
 
     args = parse_args()
@@ -291,7 +300,9 @@ if __name__ == "__main__":
         exit(1)
 
     # Connect to Redis
-    redis_queue = redis.Redis(host="mantis.shore.mbari.org", port=6379, db=1)
+    redis_host = config_dict["redis"]["host"]
+    redis_port = config_dict["redis"]["port"]
+    redis_queue = redis.Redis(host=redis_host, port=redis_port, db=1)
 
     # Clear the database
     if args.flush:
@@ -299,6 +310,7 @@ if __name__ == "__main__":
 
     if args.video:
         video_path = Path(args.video)
+        video_path = resolve_video_path(video_path)
 
         if not video_path.exists():
             logger.error(f"Video does not exist: {video_path}")
@@ -335,6 +347,8 @@ if __name__ == "__main__":
         video_files = df.iloc[:, 4].tolist()
         # Make sure the files are unique -there may be duplicates, but we don't want to process them multiple times
         video_files = list(set(video_files))
+        # Convert to Path objects
+        video_files = [resolve_video_path(v) for v in video_files]
         # Fanout to number of CPUs
         process_videos(
             video_files,
