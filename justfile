@@ -128,3 +128,13 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     --config ./aipipeline/projects/{{project}}/config/config.yml \
     --image_dir {{image_dir}} \
     {{more_args}}
+
+# Run the strided inference on a single video
+run-ctenoA-test:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    --config ./aipipeline/projects/bio/config/config.yml \
+    --class_name "Ctenophora sp. A" \
+    --endpoint_url "http://localhost:8001/predict" \
+    --video http://m3.shore.mbari.org/videos/M3/mezzanine/DocRicketts/2022/05/1443/D1443_20220529T135615Z_h265.mp4
