@@ -2,9 +2,11 @@
 # Config file for aippipeline library components
 # These can be overridden by the project config.yml
 docker:
-  aidata: 'mbari/aidata:1.21.0-cuda124'
-  sdcat: 'mbari/sdcat:1.11.0-cuda124'
+  aidata: 'mbari/aidata:latest-cuda124'
+  sdcat: 'mbari/sdcat:latest-cuda124'
   voccropper: 'mbari/voc-imagecropper:0.4.3'
+  expd: 'get-expd-data'
+
 
   bind_volumes:
     /mnt/ML_SCRATCH:
