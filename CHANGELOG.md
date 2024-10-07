@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.1 (2024-10-07)
+
+### Fixes
+
+* fix(bio): minor correction to the endpoint ([`f22beeb`](https://github.com/mbari-org/aipipeline/commit/f22beeb6888757d38c04c10671c1d0cd72ecfaed))
+
+
 ## v0.16.0 (2024-10-07)
 
 ### Features
