@@ -17,12 +17,18 @@ MLDEVOPS_GID = os.getgid()
 ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 
-def run_docker(image: str, name: str, args_list: List[str], bind_volumes: dict):
+def run_docker(image: str, name: str, args_list: List[str], env_list: List[str] = None, bind_volumes: dict = None, auto_remove: bool = True):
     try:
         client = docker.from_env()
     except Exception as e:
         logger.error(f"Error connecting to docker: {e}. Is the docker daemon running?")
         exit(-1)
+
+    if bind_volumes is None:
+        bind_volumes = {}
+
+    if env_list is None:
+        env_list = []
 
     args = " ".join(args_list)
     logger.info(f'Running {image} with mount {bind_volumes} '
@@ -51,13 +57,14 @@ def run_docker(image: str, name: str, args_list: List[str], bind_volumes: dict):
                 image,
                 args,
                 name=name,
-                auto_remove=True,
+                auto_remove=auto_remove,
                 detach=True,
                 runtime="nvidia",
                 device_requests=[docker.types.DeviceRequest(count=1, capabilities=[["gpu"]])],
                 network_mode="host",
                 user=f"{MLDEVOPS_UID}:{MLDEVOPS_GID}",
                 volumes=bind_volumes,
+                environment=env_list,
             )
         else:
             # Run the container
@@ -65,10 +72,11 @@ def run_docker(image: str, name: str, args_list: List[str], bind_volumes: dict):
                 image,
                 args,
                 name=name,
-                auto_remove=True,
+                auto_remove=auto_remove,
                 detach=True,
                 network_mode="host",
                 user=f"{MLDEVOPS_UID}:{MLDEVOPS_GID}",
                 volumes=bind_volumes,
+                environment=env_list,
             )
         return c
