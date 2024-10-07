@@ -70,29 +70,29 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 just list
 ```
 
-| Recipe                         | Description                                                                                                       |
-|--------------------------------|-------------------------------------------------------------------------------------------------------------------|
- | `just list`                    | List recipes                                                                                                      |
- | `just install`                 | Setup the environment                                                                                             |
- | `just plot-tsne-vss]`          | Generate a tsne plot of the VSS database                                                                          |
- | `just gen-acc-vss]`            | Calculate the accuracy of the VSS database                                                                       |
- | `just update`                  | Update the environment. Run this command after checking out any code changes                                      |
- | `just reset-vss project='uav'` | Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav` |
- | `just init-vss project='uav' ` | Initialize the VSS database for the UAV project                                                                   |
- | `just cluster-uav`             | Cluster mission in aipipeline/projects/uav/data/missions2process.txt                                              |
- | `just detect-uav`              | Detect mission in aipipeline/projects/uav/data/missions2process.txt                                               |
- | `just detect-uav-test`         | Detect mission data in aipipeline/projects/uav/data/missions2process.txt                                          |
- | `just load-uav-images`         | Load uav mission images in aipipeline/projects/uav/data/missions2process.txt                                      |
+| Recipe                  | Description                                                                                                                        |
+|-------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+ | `just list`             | List recipes                                                                                                                       |
+ | `just install`          | Setup the environment                                                                                                              |
+ | `just plot-tsne-vss`    | Generate a tsne plot of the VSS database                                                                                           |
+ | `just gen-acc-vss`      | Calculate the accuracy of the VSS database                                                                                         |
+ | `just update`           | Update the environment. Run this command after checking out any code changes                                                       |
+ | `just reset-vss uav`    | Reset the VSS database, removing all data. Run befpre init-vss or when creating the REDIS database, e.g. to reset teh uav database |
+ | `just init-vss uav`     | Initialize the VSS database for the UAV project                                                                                    |
+ | `just cluster-uav`      | Cluster mission in aipipeline/projects/uav/data/missions2process.txt                                                               |
+ | `just detect-uav`       | Detect mission in aipipeline/projects/uav/data/missions2process.txt                                                                |
+ | `just detect-uav-test`  | Detect mission data in aipipeline/projects/uav/data/missions2process.txt                                                           |
+ | `just load-uav-images`  | Load uav mission images in aipipeline/projects/uav/data/missions2process.txt                                                       |
  
 --
 
 ### Related projects
 
 - [aidata](https://github.com/mbari-org/aidata) -A tool to extract, transform, load and download operations on AI data.
-- [sdcat](https://github.com/mbari-org/sdcat) - Sliced Detection and Clustering Analysis Toolkit.
+- [sdcat](https://github.com/mbari-org/sdcat) - Sliced Detection and Clustering Analysis Toolkit; a tool to detect and cluster objects in images.
 - [deepsea-ai](https://github.com/mbari-org/deepsea-ai) - A tool to train and run object detection and tracking on video at scale in the cloud (AWS).
 - [fastapi-yolov5](https://github.com/mbari-org/fastapi-yolov5) - A RESTful API for running YOLOv5 object detection models on images either locally or in the cloud (AWS).
 - [fastapi-vss](https://github.com/mbari-org/fastapi-vss) - A RESTful API for vector similarity search using foundational models.
 - [fastapi-tator](https://github.com/mbari-org/fastapi-tator) - A RESTful API server for bulk operations on Tator annotation database.
 
-**updated: 2024-08-26**
+**updated: 2024-10-07**
