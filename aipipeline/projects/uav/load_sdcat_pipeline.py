@@ -56,10 +56,8 @@ def process_mission(element) -> str:
     base_dir = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     if type == "detect":
         load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
-        glob_str = f"*.csv"
     elif type == "cluster":
         load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "clusters"
-        glob_str = f"*cluster*.csv"
     else:
         logger.error(f"Type {type} not supported")
         return f"Type {type} not supported"
