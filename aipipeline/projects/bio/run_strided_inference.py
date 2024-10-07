@@ -47,6 +47,7 @@ idl = 1  # localization index
 # Secrets
 dotenv.load_dotenv()
 REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
 def get_ancillary_data(platform: str, iso_datetime: datetime) -> dict:
@@ -356,6 +357,10 @@ if __name__ == "__main__":
 
     args = parse_args()
     config_files, config_dict = setup_config(args.config)
+
+    if TATOR_TOKEN is None:
+        logger.error("TATOR_TOKEN environment variable not set")
+        exit(1)
 
     if REDIS_PASSWD is None:
         logger.error("REDIS_PASSWD environment variable not set")
