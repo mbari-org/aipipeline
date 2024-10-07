@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.15.0 (2024-10-07)
+
+### Features
+
+* feat: support pass through of environment variables to docker ([`19de539`](https://github.com/mbari-org/aipipeline/commit/19de5392564838ba3870959321d8121576c5d433))
+
+
 ## v0.14.1 (2024-10-07)
 
 ### Fixes
