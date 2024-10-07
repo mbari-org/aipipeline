@@ -138,3 +138,13 @@ run-ctenoA-test:
     --class_name "Ctenophora sp. A" \
     --endpoint_url "http://localhost:8001/predict" \
     --video http://m3.shore.mbari.org/videos/M3/mezzanine/DocRicketts/2022/05/1443/D1443_20220529T135615Z_h265.mp4
+
+# Run the strided inference on a collection of videos in a TSV file
+run-ctenoA-prod:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    --config ./aipipeline/projects/bio/config/config.yml \
+    --class_name "Ctenophora sp. A" \
+    --endpoint_url "curl -X POST "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
+    --tsv ./aipipeline/projects/bio/data/videotables.tsv
