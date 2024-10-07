@@ -146,5 +146,5 @@ run-ctenoA-prod:
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
-    --endpoint_url "curl -X POST "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
-    --tsv ./aipipeline/projects/bio/data/videotables.tsv
+    --endpoint_url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
+    --tsv ./aipipeline/projects/bio/data/videotable.tsv
