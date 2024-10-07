@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.14.1 (2024-10-07)
+
+### Fixes
+
+* fix(bio): added missing TATOR_TOKEN ([`21fcd31`](https://github.com/mbari-org/aipipeline/commit/21fcd313c0fce0cce13fbf83d1c0512a29eacc04))
+
+
 ## v0.14.0 (2024-10-07)
 
 ### Documentation
