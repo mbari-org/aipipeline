@@ -6,9 +6,8 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
-  version: "Baseline"
-  #labels: "Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
-  labels: "Ctenophora sp. A"
+  version: "ctenophora-sp-a-yv5-vss"
+  labels: "Ctenophora sp. A,Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
   download_args: ["--verified"]
 
 sdcat:
@@ -17,7 +16,7 @@ sdcat:
 
 vss:
   project: "901103-biodiversity"
-  threshold: 0.9
+  threshold: 0.5
   model: "google/vit-base-patch16-224"
 
 tator:
@@ -31,6 +30,13 @@ tator:
         type: string
       time:
         type: string
+
+  video:
+    attributes:
+      video_reference_uuid:
+        type: string
+      iso_start_datetime:
+        type: datetime
 
   box:
     attributes:
