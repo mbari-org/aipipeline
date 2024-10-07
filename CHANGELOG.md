@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.0 (2024-10-07)
+
+### Features
+
+* feat: added saliency computation and updated docs ([`1920227`](https://github.com/mbari-org/aipipeline/commit/1920227f54a4673d49410af05e10e0fefb9d5ebe))
+
+
 ## v0.15.0 (2024-10-07)
 
 ### Features
