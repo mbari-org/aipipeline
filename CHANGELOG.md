@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.2 (2024-10-07)
+
+### Performance Improvements
+
+* perf(bio):  check depth before starting ([`d9d74eb`](https://github.com/mbari-org/aipipeline/commit/d9d74ebca0d51cdb834b3eef7a2ba8889d41ed81))
+
+
 ## v0.16.1 (2024-10-07)
 
 ### Fixes
