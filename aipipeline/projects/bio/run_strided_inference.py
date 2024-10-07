@@ -50,11 +50,13 @@ REDIS_PASSWD = os.getenv("REDIS_PASSWD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
-def get_ancillary_data(platform: str, iso_datetime: datetime) -> dict:
+def get_ancillary_data(dive: str, iso_datetime: datetime) -> dict:
     try:
+        platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
+        platform = ''.join(platform)
         container = run_docker(
             config_dict["docker"]["expd"],
-            f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S}",
+            f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}",
             [platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
             auto_remove=False,
         )
@@ -160,6 +162,18 @@ def run_inference(
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
+    # Check the beginning and ending of the video depths, and skip if less than 300 meters
+    iso_start = md["start_timestamp"]
+    iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
+    ancillary_data_start = get_ancillary_data(dive, iso_start_datetime)
+    if ancillary_data_start is None or "depthMeters" not in ancillary_data_start:
+        logger.error(f"Failed to get ancillary data for {dive}")
+        return
+    if ancillary_data_start["depthMeters"] < 300:
+        logger.info(f"{video_path.name}====>Depth {ancillary_data_start['depthMeters']} " 
+                    f"is less than 300 meters, skipping")
+        return
+
     # Loop through the video frames
     frame_count = 0
     with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
@@ -238,8 +252,6 @@ def run_inference(
                                         iso_start = md["start_timestamp"]
                                         # Convert the start time to a datetime object
                                         iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
-                                        platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
-                                        platform = ''.join(platform)
                                         # Queue the video first
                                         video_ref_uuid = md["video_reference_uuid"]
                                         iso_start = md["start_timestamp"]
@@ -264,14 +276,10 @@ def run_inference(
 
                                 loc_datetime = iso_start_datetime + timedelta(milliseconds=current_time_ms)
                                 loc_datetime_str = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                                logger.info(f"queuing loc: {loc} for {class_name} {platform} {loc_datetime}")
-                                ancillary_data = get_ancillary_data(platform, loc_datetime)
+                                logger.info(f"queuing loc: {loc} for {class_name} {dive} {loc_datetime}")
+                                ancillary_data = get_ancillary_data(dive, loc_datetime)
                                 if ancillary_data is None or "depthMeters" not in ancillary_data:
                                     logger.error(f"Failed to get ancillary data for {dive}")
-                                    continue
-
-                                if ancillary_data["depthMeters"] < 300:
-                                    logger.info(f"Depth is less than 300 meters, skipping")
                                     continue
 
                                 new_loc = {
