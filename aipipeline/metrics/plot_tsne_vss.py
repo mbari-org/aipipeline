@@ -38,7 +38,7 @@ logger.addHandler(handler)
 
 # Constants
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 def convert_redis_vector_to_float(vector_np):
     return np.frombuffer(vector_np, dtype=np.float32)
@@ -171,11 +171,11 @@ def main(argv=None):
 
     _, config_dict = setup_config(args.config)
 
-    if not os.getenv("REDIS_PASSWD"):
-        logger.error("REDIS_PASSWD environment variable is not set.")
+    if not os.getenv("REDIS_PASSWORD"):
+        logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
-    plot_tsne(config_dict, REDIS_PASSWD)
+    plot_tsne(config_dict, REDIS_PASSWORD)
 
 if __name__ == "__main__":
     main()

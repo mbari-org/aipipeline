@@ -149,10 +149,10 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
     machine_friendly_label = gen_machine_friendly_label(label)
     try:
         container = run_docker(
-            config_dict["docker"]["sdcat"],
-            f"{short_name}-sdcat-clu-{machine_friendly_label}",
-            args,
-            config_dict["docker"]["bind_volumes"],
+            image=config_dict["docker"]["sdcat"],
+            name=f"{short_name}-sdcat-clu-{machine_friendly_label}",
+            args_list=args,
+            bind_volumes=config_dict["docker"]["bind_volumes"],
         )
         if container:
             logger.info(f"Clustering {label}....")
@@ -242,8 +242,10 @@ def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = Non
     for attempt in range(1, n + 1):
         try:
             container = run_docker(
-                config_dict["docker"]["voccropper"], f"{short_name}-voccrop-{now}", args,
-                config_dict["docker"]["bind_volumes"]
+                image=config_dict["docker"]["voccropper"],
+                name=f"{short_name}-voccrop-{now}",
+                args_list=args,
+                bind_volumes=config_dict["docker"]["bind_volumes"]
             )
             if container:
                 logger.info(f"Cropping ROIs in {base_path}....")
@@ -334,7 +336,10 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
     now = datetime.now().strftime("%Y%m%d")
     logger.info(f"Downloading data for labels: {labels}....")
     container = run_docker(
-        config_dict["docker"]["aidata"], f"{short_name}-vss-download-{now}", args, config_dict["docker"]["bind_volumes"]
+        image=config_dict["docker"]["aidata"],
+        name=f"{short_name}-vss-download-{now}",
+        args_list=args,
+        bind_volumes=config_dict["docker"]["bind_volumes"]
     )
     if container:
         container.wait()

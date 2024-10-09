@@ -32,7 +32,7 @@ logger.addHandler(handler)
 
 # Secrets
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 

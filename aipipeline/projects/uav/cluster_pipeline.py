@@ -71,7 +71,7 @@ def process_mission(element):
     ]
 
     container = run_docker(
-        config_dict["docker"]["sdcat"],
+        image=config_dict["docker"]["sdcat"],
         name=f"sdcat-clu-{mission_name}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"],

@@ -67,7 +67,7 @@ def load_images(element) -> str:
         args += ["--end-image", end_image]
 
     container = run_docker(
-        config_dict["docker"]["aidata"],
+        image=config_dict["docker"]["aidata"],
         name=f"aidata-image-load-{mission_name}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"]
