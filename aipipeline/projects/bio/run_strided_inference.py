@@ -46,7 +46,7 @@ idl = 1  # localization index
 
 # Secrets
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
@@ -55,9 +55,9 @@ def get_ancillary_data(dive: str, iso_datetime: datetime) -> dict:
         platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
         platform = ''.join(platform)
         container = run_docker(
-            config_dict["docker"]["expd"],
-            f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}",
-            [platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
+            image=config_dict["docker"]["expd"],
+            name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}",
+            args_list=[platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
             auto_remove=False,
         )
         if container:
@@ -370,8 +370,8 @@ if __name__ == "__main__":
         logger.error("TATOR_TOKEN environment variable not set")
         exit(1)
 
-    if REDIS_PASSWD is None:
-        logger.error("REDIS_PASSWD environment variable not set")
+    if REDIS_PASSWORD is None:
+        logger.error("REDIS_PASSWORD environment variable not set")
         exit(1)
 
     # Get the version id from the database
@@ -392,7 +392,7 @@ if __name__ == "__main__":
     # Connect to Redis
     redis_host = config_dict["redis"]["host"]
     redis_port = config_dict["redis"]["port"]
-    redis_queue = redis.Redis(host=redis_host, port=redis_port, password=os.getenv("REDIS_PASSWD"))
+    redis_queue = redis.Redis(host=redis_host, port=redis_port, password=os.getenv("REDIS_PASSWORD"))
 
     # Clear the database
     if args.flush:

@@ -30,7 +30,7 @@ logger.addHandler(handler)
 
 # Secrets
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 # Global variables
@@ -167,7 +167,7 @@ def run_pipeline(args=None):
     assert version_id is not None, f"No version found in project {project}"
 
     # Initialize the REDIS queue
-    redis_queue = redis.Redis(host=redis_host, port=redis_port, password=REDIS_PASSWD)
+    redis_queue = redis.Redis(host=redis_host, port=redis_port, password=REDIS_PASSWORD)
 
     # Check if we can connect to the REDIS server
     if not redis_queue.ping():

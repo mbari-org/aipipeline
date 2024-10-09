@@ -27,7 +27,7 @@ logger.addHandler(handler)
 
 # Constants
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 
 
 def run_pipeline(argv=None):
@@ -41,12 +41,16 @@ def run_pipeline(argv=None):
     conf_temp = config_files["config"]
     project = config_dict["vss"]["project"]
 
-    if not os.getenv("REDIS_PASSWD"):
-        logger.error("REDIS_PASSWD environment variable is not set.")
+    if not os.getenv("REDIS_PASSWORD"):
+        logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
-    args = ["db", "reset", "--redis-password", REDIS_PASSWD, "--config", conf_temp]
-    run_docker(config_dict["docker"]["aidata"], f'vss-reset_{project}', args, config_dict["docker"]["bind_volumes"])
+    args = ["db", "reset", "--redis-password", REDIS_PASSWORD, "--config", conf_temp]
+    run_docker(
+        image=config_dict["docker"]["aidata"],
+        name=f'vss-reset_{project}',
+        args_list=args,
+        bind_volumes=config_dict["docker"]["bind_volumes"])
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ logger.addHandler(handler)
 
 # Constants
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import precision_score, recall_score, accuracy_score
@@ -202,8 +202,8 @@ def main(argv=None):
 
     _, config_dict = setup_config(args.config)
 
-    if not os.getenv("REDIS_PASSWD"):
-        logger.error("REDIS_PASSWD environment variable is not set.")
+    if not os.getenv("REDIS_PASSWORD"):
+        logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
     processed_data = config_dict["data"]["processed_path"]
@@ -219,7 +219,7 @@ def main(argv=None):
     # Remove any previous augmented data before starting
     remove_multicrop_views(image_path)
 
-    calc_accuracy(config_dict, image_path, REDIS_PASSWD)
+    calc_accuracy(config_dict, image_path, REDIS_PASSWORD)
 
 
 if __name__ == "__main__":

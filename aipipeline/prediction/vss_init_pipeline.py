@@ -41,7 +41,7 @@ logger.addHandler(handler)
 
 # Secrets
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
@@ -88,7 +88,7 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
             "--device",
             "cuda:0",
             "--password",
-            REDIS_PASSWD,
+            REDIS_PASSWORD,
             "--config",
             conf_files[CONFIG_KEY],
             "--token",
@@ -100,10 +100,10 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
         for attempt in range(1, n + 1):
             try:
                 container = run_docker(
-                    str(config_dict["docker"]["aidata"]),
-                    f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
-                    args,
-                    dict(config_dict["docker"]["bind_volumes"]),
+                    image=str(config_dict["docker"]["aidata"]),
+                    name=f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
+                    args_list=args,
+                    bind_volumes=dict(config_dict["docker"]["bind_volumes"]),
                 )
                 if container:
                     logger.info(f"Loading cluster exemplars for {label}...")

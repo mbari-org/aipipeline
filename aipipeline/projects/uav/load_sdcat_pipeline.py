@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/scripts/load-sdcat-pipeline.py
+# Filename: projects/uav/load-sdcat-pipeline.py
 # Description: Load detections into Tator from sdcat clustering
 import os
 from datetime import datetime
@@ -25,11 +25,11 @@ logger.addHandler(handler)
 
 # Constants
 dotenv.load_dotenv()
-REDIS_PASSWD = os.getenv("REDIS_PASSWD")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
-if not REDIS_PASSWD:
-    logger.error("REDIS_PASSWD not found. Need to set in .env file")
+if not REDIS_PASSWORD:
+    logger.error("REDIS_PASSWORD not found. Need to set in .env file")
     exit(-1)
 
 if not TATOR_TOKEN:
@@ -78,10 +78,12 @@ def process_mission(element) -> str:
         TATOR_TOKEN,
         "--version",
         version,
+        "--exclude",
+        "Unknown",
     ]
 
     container = run_docker(
-        config_dict["docker"]["aidata"],
+        image=config_dict["docker"]["aidata"],
         name=f"aidata-sdcat-load-{type}-{mission_name}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"],
