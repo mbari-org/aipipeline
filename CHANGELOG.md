@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.3 (2024-10-11)
+
+### Performance Improvements
+
+* perf(bio): switch to ffmpeg generation of highest quality jpeg ffmpeg for speed-up ([`42c23cc`](https://github.com/mbari-org/aipipeline/commit/42c23cc2a69374cfe2e73fa3c505759cf8c46e9b))
+
+
 ## v0.16.2 (2024-10-07)
 
 ### Performance Improvements
