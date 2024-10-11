@@ -8,6 +8,7 @@ import json
 import logging
 import multiprocessing
 import os
+import subprocess
 import tempfile
 import time
 from datetime import datetime, timedelta
@@ -128,11 +129,38 @@ def resolve_video_path(video_path: Path) -> Path:
     return resolved_path
 
 
+def video_to_frame(timestamp: str, video_path: Path, output_path: Path):
+    """
+    Capture frame with the highest quality jpeg from video at a given time
+    """
+    command = [
+        "ffmpeg",
+        "-loglevel",
+        "panic",
+        "-nostats",
+        "-hide_banner",
+        "-ss", timestamp,
+        "-i", video_path.as_posix(),
+        "-frames:v", "1",
+        "-qmin", "1",
+        "-q:v", "1", # Best quality JPG
+        "-y",
+        output_path.as_posix(),
+    ]
+
+    logger.info(f"Running command: {' '.join(command)}")
+
+    # Run the command in a subprocess
+    try:
+        subprocess.run(command, check=True)
+        logger.info("Frames captured successfully.")
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error occurred: {e}")
+
 def run_inference(
         video_file: str,
         stride: int,
         endpoint_url: str,
-        config_dict: dict,
         class_name: str,
         version_id: int = 0,
 ):
@@ -154,13 +182,21 @@ def run_inference(
 
     dive = md["dive"]
     cap = cv2.VideoCapture(video_path.as_posix())
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    frame_interval_ms = int(1000 * stride)
-    frames_to_skip = int(fps * stride)
-    current_time_ms = 0
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    duration_secs = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS))
+    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    cap.release()
+    output_path = Path("/tmp") / video_path.stem
+    output_path.mkdir(exist_ok=True)
+
+    def seconds_to_timestamp(seconds):
+        # Convert timestamp to hour:minute:second format
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        timestamp = f"{hours:02}:{minutes:02}:{seconds:02}"
+        return timestamp
 
     # Check the beginning and ending of the video depths, and skip if less than 300 meters
     iso_start = md["start_timestamp"]
@@ -175,143 +211,126 @@ def run_inference(
         return
 
     # Loop through the video frames
-    frame_count = 0
-    with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-        while cap.isOpened():
-            # Don't exceed the total number of frames
-            if frame_count >= total_frames:
-                break
-
-            ret, frame = cap.read()
-
-            if not ret:
-                logger.error(f"{video_path.name}: error reading frame {frame_count}")
-                break
-
-            if frame_count % frames_to_skip == 0:
-
-                current_time_ms += frame_interval_ms
-
-                cv2.imwrite(temp_file.name, frame)
-                files = {"file": open(temp_file.name, "rb")}
-                logger.info(f"{video_path.name}: processing frame at {current_time_ms / 1000} seconds")
-
-                for n_try in range(5):
-                    try:
-                        logger.info(f"Sending frame to {endpoint_url}")
-                        response = requests.post(endpoint_url, files=files)
-                        if response.status_code == 200:
-                            break
-                    except Exception as e:
-                        logger.error(f"{video_path.name}: error processing frame at {current_time_ms / 1000} seconds: {e} in {video_path}")
-                        # delay to avoid overloading the server
-                        time.sleep(5)
-                        continue
-
+    for index in range(0, duration_secs, stride):
+        current_time_secs = index
+        logger.info(f"{video_path.name}: processing frame at {current_time_secs} seconds")
+        relative_timestamp = seconds_to_timestamp(current_time_secs)
+        output_frame = output_path / f"{video_path.stem}_{index}.jpg"
+        video_to_frame(relative_timestamp, video_path, output_frame)
+        files = {"file": open(output_frame.as_posix(), "rb")}
+        for n_try in range(5):
+            try:
+                logger.info(f"Sending frame to {endpoint_url}")
+                response = requests.post(endpoint_url, files=files)
                 if response.status_code == 200:
-                    logger.info(f"{video_path.name}: frame at {current_time_ms / 1000} seconds processed successfully")
-                    logger.debug(response.text)
-                    logger.info(f"resp: {response}")
-                    data = json.loads(response.text)
-                    if len(data) > 0:
-                        logger.info(data)
+                    break
+            except Exception as e:
+                logger.error(f"{video_path.name}: error processing frame at {current_time_secs} seconds: {e} in {video_path}")
+                # delay to avoid overloading the server
+                time.sleep(5)
+                continue
 
-                        # Remove duplicates
-                        data = [dict(t) for t in {tuple(d.items()) for d in data}]
+        if response.status_code == 200:
+            logger.info(f"{video_path.name}: frame at {current_time_secs} seconds processed successfully")
+            logger.debug(response.text)
+            logger.info(f"resp: {response}")
+            data = json.loads(response.text)
+            if len(data) > 0:
+                logger.info(data)
 
-                        for loc in data:
-                            if loc["class_name"] == class_name:
-                                # For low confidence detections, run through the vss model
-                                if loc["confidence"] < 0.6:
-                                    logger.info(
-                                        f"{video_path.name}: running VSS model on low confidence {class_name} detection {loc['confidence']}")
-                                    images = [read_image(temp_file.name)]
-                                    file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
-                                    if len(best_predictions) == 0:
-                                        logger.info(f"{video_path.name}: no predictions from VSS model. Skipping this detection.")
-                                        continue
-                                    if best_predictions[0] != class_name:
-                                        logger.info(
-                                            f"{video_path.name}: VSS model prediction {best_predictions[0]} does not match {class_name}. Skipping this detection.")
-                                        continue
-                                    logger.info(f"===>{video_path.name}: VSS model prediction {best_predictions[0]} matches {class_name}<====")
-                                else:
-                                    logger.info(f"====>{video_path.name}: high confidence {class_name} detection {loc['confidence']}<====")
+                # Remove duplicates
+                data = [dict(t) for t in {tuple(d.items()) for d in data}]
 
-                                if not queued_video:
-                                    queued_video = True
-                                    # Only queue the video if we have a valid localization to queue
-                                    # Video transcoding to gif for thumbnail generation is expensive
-                                    try:
-                                        logger.info(f"Queuing video {video_path.name}")
-                                        video_path = Path(video_file)
-                                        md = get_video_metadata(video_path.name)
-                                        if md is None:
-                                            logger.error(f"{video_path.name} failed to get video metadata")
-                                            return
-                                        iso_start = md["start_timestamp"]
-                                        # Convert the start time to a datetime object
-                                        iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
-                                        # Queue the video first
-                                        video_ref_uuid = md["video_reference_uuid"]
-                                        iso_start = md["start_timestamp"]
-                                        video_url = md["uri"]
-                                        logger.info(f"video_ref_uuid: {video_ref_uuid}")
-                                        redis_queue.hset(
-                                            f"video_refs_start:{video_ref_uuid}",
-                                            "start_timestamp",
-                                            iso_start,
-                                        )
-                                        redis_queue.hset(
-                                            f"video_refs_load:{video_ref_uuid}",
-                                            "video_uri",
-                                            video_url,
-                                        )
-                                    except Exception as e:
-                                        logger.info(f"Error: {e}")
-                                        # Remove the video reference from the queue
-                                        redis_queue.delete(f"video_refs_start:{video_ref_uuid}")
-                                        redis_queue.delete(f"video_refs_load:{video_ref_uuid}")
-                                        return
+                for loc in data:
+                    if loc["class_name"] != class_name:
+                        # For low confidence detections, run through the vss model
+                        if loc["confidence"] < 0.6:
+                            logger.info(
+                                f"{video_path.name}: running VSS model on low confidence {class_name} detection {loc['confidence']}")
+                            images = [read_image(output_frame.as_posix())]
+                            file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
+                            if len(best_predictions) == 0:
+                                logger.info(f"{video_path.name}: no predictions from VSS model. Skipping this detection.")
+                                continue
+                            if best_predictions[0] != class_name:
+                                logger.info(
+                                    f"{video_path.name}: VSS model prediction {best_predictions[0]} does not match {class_name}. Skipping this detection.")
+                                continue
+                            logger.info(f"===>{video_path.name}: VSS model prediction {best_predictions[0]} matches {class_name}<====")
+                        else:
+                            logger.info(f"====>{video_path.name}: high confidence {class_name} detection {loc['confidence']}<====")
 
-                                loc_datetime = iso_start_datetime + timedelta(milliseconds=current_time_ms)
-                                loc_datetime_str = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                                logger.info(f"queuing loc: {loc} for {class_name} {dive} {loc_datetime}")
-                                ancillary_data = get_ancillary_data(dive, loc_datetime)
-                                if ancillary_data is None or "depthMeters" not in ancillary_data:
-                                    logger.error(f"Failed to get ancillary data for {dive}")
-                                    continue
+                        if not queued_video:
+                            queued_video = True
+                            # Only queue the video if we have a valid localization to queue
+                            # Video transcoding to gif for thumbnail generation is expensive
+                            try:
+                                logger.info(f"Queuing video {video_path.name}")
+                                video_path = Path(video_file)
+                                md = get_video_metadata(video_path.name)
+                                if md is None:
+                                    logger.error(f"{video_path.name} failed to get video metadata")
+                                    return
+                                iso_start = md["start_timestamp"]
+                                # Convert the start time to a datetime object
+                                iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
+                                # Queue the video first
+                                video_ref_uuid = md["video_reference_uuid"]
+                                iso_start = md["start_timestamp"]
+                                video_url = md["uri"]
+                                logger.info(f"video_ref_uuid: {video_ref_uuid}")
+                                redis_queue.hset(
+                                    f"video_refs_start:{video_ref_uuid}",
+                                    "start_timestamp",
+                                    iso_start,
+                                )
+                                redis_queue.hset(
+                                    f"video_refs_load:{video_ref_uuid}",
+                                    "video_uri",
+                                    video_url,
+                                )
+                            except Exception as e:
+                                logger.info(f"Error: {e}")
+                                # Remove the video reference from the queue
+                                redis_queue.delete(f"video_refs_start:{video_ref_uuid}")
+                                redis_queue.delete(f"video_refs_load:{video_ref_uuid}")
+                                return
 
-                                new_loc = {
-                                    "x1": loc["x"],
-                                    "y1": loc["y"],
-                                    "x2": loc["x"] + loc["width"],
-                                    "y2": loc["y"] + loc["height"],
-                                    "width": frame_width,
-                                    "height": frame_height,
-                                    "frame": frame_count,
-                                    "version_id": version_id,
-                                    "score": loc["confidence"],
-                                    "cluster": -1,
-                                    "label": loc["class_name"],
-                                    "dive": dive,
-                                    "depth": ancillary_data["depthMeters"],
-                                    "iso_datetime": loc_datetime_str,
-                                    "latitude": ancillary_data["latitude"],
-                                    "longitude": ancillary_data["longitude"],
-                                    "temperature": ancillary_data["temperature"],
-                                    "oxygen": ancillary_data["oxygen"],
-                                }
-                                redis_queue.hset(f"locs:{video_ref_uuid}", str(idl), json.dumps(new_loc))
-                                logger.info(f"{video_path.name} found total possible {idl} localizations of {class_name}")
-                                idl += 1
-                else:
-                    logger.error(f"Error processing frame at {current_time_ms / 1000} seconds: {response.text}")
+                        loc_datetime = iso_start_datetime + timedelta(seconds=current_time_secs)
+                        loc_datetime_str = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        logger.info(f"queuing loc: {loc} for {class_name} {dive} {loc_datetime}")
+                        ancillary_data = get_ancillary_data(dive, loc_datetime)
+                        if ancillary_data is None or "depthMeters" not in ancillary_data:
+                            logger.error(f"Failed to get ancillary data for {dive}")
+                            continue
 
-            frame_count += 1
+                        new_loc = {
+                            "x1": loc["x"],
+                            "y1": loc["y"],
+                            "x2": loc["x"] + loc["width"],
+                            "y2": loc["y"] + loc["height"],
+                            "width": frame_width,
+                            "height": frame_height,
+                            "frame": frame_count,
+                            "version_id": version_id,
+                            "score": loc["confidence"],
+                            "cluster": -1,
+                            "label": loc["class_name"],
+                            "dive": dive,
+                            "depth": ancillary_data["depthMeters"],
+                            "iso_datetime": loc_datetime_str,
+                            "latitude": ancillary_data["latitude"],
+                            "longitude": ancillary_data["longitude"],
+                            "temperature": ancillary_data["temperature"],
+                            "oxygen": ancillary_data["oxygen"],
+                        }
+                        redis_queue.hset(f"locs:{video_ref_uuid}", str(idl), json.dumps(new_loc))
+                        logger.info(f"{video_path.name} found total possible {idl} localizations of {class_name}")
+                        idl += 1
+        else:
+            logger.error(f"Error processing frame at {current_time_secs} seconds: {response.text}")
 
     logger.info(f"Finished processing video {video_path}")
-    cap.release()
 
 
 def process_videos(video_files, stride, endpoint_url, config_dict, class_name, version_id):
@@ -423,7 +442,6 @@ if __name__ == "__main__":
                 video_path.as_posix(),
                 args.stride,
                 args.endpoint_url,
-                config_dict,
                 args.class_name,
                 version_id,
             )
@@ -456,7 +474,6 @@ if __name__ == "__main__":
             video_files,
             args.stride,
             args.endpoint_url,
-            config_dict,
             args.class_name,
             version_id,
         )
