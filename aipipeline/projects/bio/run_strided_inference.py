@@ -198,16 +198,16 @@ def run_inference(
         timestamp = f"{hours:02}:{minutes:02}:{seconds:02}"
         return timestamp
 
-    # Check the beginning and ending of the video depths, and skip if less than 300 meters
+    # Check the beginning and ending of the video depths, and skip if less than 200 meters
     iso_start = md["start_timestamp"]
     iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
     ancillary_data_start = get_ancillary_data(dive, iso_start_datetime)
     if ancillary_data_start is None or "depthMeters" not in ancillary_data_start:
         logger.error(f"Failed to get ancillary data for {dive}")
         return
-    if ancillary_data_start["depthMeters"] < 300:
+    if ancillary_data_start["depthMeters"] < 200:
         logger.info(f"{video_path.name}====>Depth {ancillary_data_start['depthMeters']} " 
-                    f"is less than 300 meters, skipping")
+                    f"is less than 200 meters, skipping")
         return
 
     # Loop through the video frames
@@ -331,6 +331,7 @@ def run_inference(
             logger.error(f"Error processing frame at {current_time_secs} seconds: {response.text}")
 
     logger.info(f"Finished processing video {video_path}")
+    output_path.unlink(missing_ok=True)
 
 
 def process_videos(video_files, stride, endpoint_url, config_dict, class_name, version_id):
