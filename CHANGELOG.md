@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.4 (2024-10-11)
+
+### Performance Improvements
+
+* perf(bio): clean-up frame grabs and only run on < 200 meters ([`729f337`](https://github.com/mbari-org/aipipeline/commit/729f33755b0523964bb765b9b0389a8de3c65938))
+
+
 ## v0.16.3 (2024-10-11)
 
 ### Performance Improvements
