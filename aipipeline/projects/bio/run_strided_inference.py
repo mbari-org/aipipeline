@@ -335,7 +335,9 @@ def run_inference(
             logger.error(f"Error processing frame at {current_time_secs} seconds: {response.text}")
 
     logger.info(f"Finished processing video {video_path}")
-    output_path.unlink(missing_ok=True)
+    # Remove the directory with the frames
+    for jpg_file in output_path.glob("*.jpg"):
+        jpg_file.unlink()
 
 
 def process_videos(video_files, stride, endpoint_url, config_dict, class_name, version_id):
