@@ -242,7 +242,7 @@ def run_inference(
                 data = [dict(t) for t in {tuple(d.items()) for d in data}]
 
                 for loc in data:
-                    if loc["class_name"] != class_name:
+                    if loc["class_name"] == class_name:
                         # For low confidence detections, run through the vss model
                         if loc["confidence"] < 0.6:
                             logger.info(
@@ -339,7 +339,7 @@ def process_videos(video_files, stride, endpoint_url, config_dict, class_name, v
     pool = multiprocessing.Pool(processes=num_cpus)
     pool.starmap(
         run_inference,
-        [(v, stride, endpoint_url, config_dict, class_name, version_id) for v in video_files],
+        [(v, stride, endpoint_url, class_name, version_id) for v in video_files],
     )
     pool.close()
     pool.join()
