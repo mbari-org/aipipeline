@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.16.6 (2024-10-12)
+
+### Fixes
+
+* fix(bio): pass config dict ([`6dcf8fe`](https://github.com/mbari-org/aipipeline/commit/6dcf8fe527eda17f3e49fcef61b47f5b596fcd9c))
+
+
 ## v0.16.5 (2024-10-12)
 
 ### Fixes
