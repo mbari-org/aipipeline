@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.16.5 (2024-10-12)
+
+### Fixes
+
+* fix(bio): correct clean-up ([`7c2684c`](https://github.com/mbari-org/aipipeline/commit/7c2684cdf9e26a4bc4c0808869a232fe3492a60b))
+
+* fix(bio): correct frame number which was lost during perf update ([`0531405`](https://github.com/mbari-org/aipipeline/commit/05314054bacf93631c59fdf2f5024fa51ffb92ba))
+
+
 ## v0.16.4 (2024-10-11)
 
 ### Performance Improvements
