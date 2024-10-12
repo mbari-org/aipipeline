@@ -9,7 +9,6 @@ import logging
 import multiprocessing
 import os
 import subprocess
-import tempfile
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -51,7 +50,7 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
-def get_ancillary_data(dive: str, iso_datetime: datetime) -> dict:
+def get_ancillary_data(dive: str, config_dict: dict, iso_datetime: datetime) -> dict:
     try:
         platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
         platform = ''.join(platform)
@@ -202,7 +201,7 @@ def run_inference(
     # Check the beginning and ending of the video depths, and skip if less than 200 meters
     iso_start = md["start_timestamp"]
     iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
-    ancillary_data_start = get_ancillary_data(dive, iso_start_datetime)
+    ancillary_data_start = get_ancillary_data(dive, config_dict, iso_start_datetime)
     if ancillary_data_start is None or "depthMeters" not in ancillary_data_start:
         logger.error(f"Failed to get ancillary data for {dive}")
         return
@@ -303,7 +302,7 @@ def run_inference(
                         loc_datetime = iso_start_datetime + timedelta(seconds=current_time_secs)
                         loc_datetime_str = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
                         logger.info(f"queuing loc: {loc} for {class_name} {dive} {loc_datetime}")
-                        ancillary_data = get_ancillary_data(dive, loc_datetime)
+                        ancillary_data = get_ancillary_data(dive, config_dict, loc_datetime)
                         if ancillary_data is None or "depthMeters" not in ancillary_data:
                             logger.error(f"Failed to get ancillary data for {dive}")
                             continue
