@@ -186,6 +186,7 @@ def run_inference(
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     duration_secs = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS))
     frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    frame_rate = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
     output_path = Path("/tmp") / video_path.stem
     output_path.mkdir(exist_ok=True)
@@ -237,6 +238,9 @@ def run_inference(
             data = json.loads(response.text)
             if len(data) > 0:
                 logger.info(data)
+
+                # Get the frame number
+                frame_number = int(current_time_secs * frame_rate)
 
                 # Remove duplicates
                 data = [dict(t) for t in {tuple(d.items()) for d in data}]
@@ -311,7 +315,7 @@ def run_inference(
                             "y2": loc["y"] + loc["height"],
                             "width": frame_width,
                             "height": frame_height,
-                            "frame": frame_count,
+                            "frame": frame_number,
                             "version_id": version_id,
                             "score": loc["confidence"],
                             "cluster": -1,
