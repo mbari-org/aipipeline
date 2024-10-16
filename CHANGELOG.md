@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.17.0 (2024-10-16)
+
+### Features
+
+* feat: added support for updating the saliency attribute for any project with variable block size, std, and rescaling; run with just compute-saliency uav --scale-percent 50 --min-std 2.0 --block-size 39 --voc-search-pattern <path to your voc/*.xml> ([`6bcb0e4`](https://github.com/mbari-org/aipipeline/commit/6bcb0e4d1b7c216c3758adf24eb20ad289e73507))
+
+
 ## v0.16.6 (2024-10-12)
 
 ### Fixes
