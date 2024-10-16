@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.18.0 (2024-10-16)
+
+### Features
+
+* feat: support search pattern left off of saliency pipeline ([`4bb9685`](https://github.com/mbari-org/aipipeline/commit/4bb96855c01f4f0ab188e58756abae5f55a7978d))
+
+* feat: added download only pipeline ([`3d85098`](https://github.com/mbari-org/aipipeline/commit/3d8509852593d892a536a57a452673820ff253f1))
+
+
 ## v0.17.0 (2024-10-16)
 
 ### Features
