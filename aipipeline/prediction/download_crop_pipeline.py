@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/scripts/vss-download-crop-pipeline.py
+# Filename: projects/predictions/download-crop-pipeline.py
 # Description: Download dataset of images and prepare them running vss pipelines
 import glob
 from datetime import datetime
