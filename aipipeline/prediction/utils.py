@@ -6,12 +6,15 @@ import logging
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 
 import cv2
 import numpy as np
 from PIL import Image
 import pandas as pd
+import xml.etree.ElementTree as ET
+
+from pandas import DataFrame
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,58 @@ handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
+
+
+def parse_voc_xml(xml_file) -> tuple[
+    list[str | None], list[list[int]], list[str | None], list[str | None], list[str | None]]:
+    """
+    Parse a VOC XML file and return the bounding boxes, labels, poses, and ids
+    """
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    boxes = []
+    labels = []
+    poses = []
+    ids = []
+    paths = []
+
+    image_size = root.find('size')
+    image_width = int(image_size.find('width').text)
+    image_height = int(image_size.find('height').text)
+    path = root.find('path').text
+
+    for obj in root.findall('object'):
+        label = obj.find('name').text
+        pose = obj.find('pose').text if obj.find('pose') is not None else "Unspecified"
+        id = obj.find('id').text if obj.find('id') is not None else ""
+        bbox = obj.find('bndbox')
+        xmin = int(bbox.find('xmin').text)
+        ymin = int(bbox.find('ymin').text)
+        xmax = int(bbox.find('xmax').text)
+        ymax = int(bbox.find('ymax').text)
+
+        # Make sure to bound the coordinates are within the image
+        if xmin < 0:
+            xmin = 0
+        if ymin < 0:
+            ymin = 0
+        if xmax < 0:
+            xmax = 0
+        if ymax < 0:
+            ymax = 0
+        if xmax > image_width:
+            xmax = image_width
+        if ymax > image_height:
+            ymax = image_height
+
+        paths.append(path)
+        boxes.append([xmin, ymin, xmax, ymax])
+        labels.append(label)
+        poses.append(pose)
+        ids.append(id)
+
+    return paths, boxes, labels, poses, ids
 
 
 def crop_square_image(row: pd.Series, square_dim: int):
@@ -161,8 +216,7 @@ def top_majority(model_predictions, model_scores, threshold: float, majority_cou
     return best_pred, best_score
 
 
-def compute_saliency(image, show=False):
-
+def compute_saliency(image) -> np.ndarray:
     img_hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     img_lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
@@ -196,7 +250,7 @@ def compute_saliency(image, show=False):
 
     # Combine the center and surround regions for each channel
     # Reduce the weight of the saturation channel
-    saliency_lum = 1.2*(center_lum - surround_lum)
+    saliency_lum = 1.2 * (center_lum - surround_lum)
     saliency_saturation = (center_saturation - surround_saturation) / 4
 
     # Combine the saliency maps into the final saliency map
@@ -214,18 +268,13 @@ def compute_saliency(image, show=False):
     # Blur the saliency map to remove noise
     saliency_map = cv2.GaussianBlur(saliency_map, (15, 15), 0)
 
-    if show:
-        # Display the original image and the saliency map
-        cv2.imshow('Original Image', image)
-        cv2.imshow('Fine-Grained Saliency Map', saliency_map.astype(np.uint8))
-        cv2.waitKey(0)
-
     return saliency_map
 
 
-def compute_saliency_cost(contour, min_std: float, img_saliency: np.ndarray, img_luminance: np.ndarray) -> int:
+def compute_saliency_contour(contour, min_std: float, img_saliency: np.ndarray, img_luminance: np.ndarray) -> int:
     """
-    Calculate the saliency cost of a contour. Lower saliency contours are more likely to be reflections.
+    Calculate the saliency cost of a contour. Lower saliency contours are more likely to be difficult to identify or
+    bad for training.
     :param contour: the contour
     :param min_std: minimum standard deviation of the contour to be considered
     :param img_saliency: saliency image
@@ -260,14 +309,11 @@ def compute_saliency_cost(contour, min_std: float, img_saliency: np.ndarray, img
     return int(cost)
 
 
-def extract_blobs(min_std: float, block_size: int, saliency_map: np.ndarray, img_color: np.ndarray, show=False) -> (pd.DataFrame, np.ndarray):
+def compute_saliency_threshold_map(block_size: int, saliency_map: np.ndarray) -> np.ndarray:
     """
-    Extract blobs from a saliency map
-    :param min_std: minimum standard deviation of the contour to be considered
+    Base function to extract blobs from a saliency map
     :param block_size: block size for adaptive thresholding
     :param saliency_map: normalized saliency map
-    :param img_color: color image used when showing the results
-    :param show: True to show the results
     :return: pandas dataframe of blobs, image with contours drawn
     """
 
@@ -302,19 +348,41 @@ def extract_blobs(min_std: float, block_size: int, saliency_map: np.ndarray, img
         saliency_map_thres_c = cv2.dilate(saliency_map_thres_c, kernel1, iterations=1)
         saliency_map_thres_c = cv2.erode(saliency_map_thres_c, kernel2, iterations=1)
 
+    return saliency_map_thres_c
+
+
+def process_contour_box(x: int, y: int, xx: int, xy: int, min_std: float, saliency_map_thres_c: np.ndarray,
+                        img_lum: np.ndarray) \
+        -> (pd.DataFrame, np.ndarray):
+    """
+    Base function to extract blobs from a saliency map
+    :param min_std:
+    :param saliency_map_thres_c:
+    :param img_lum:
+    :return:
+    """
+    # Create a contour around the box
+    contour = np.array([[x, y], [x, xy], [xx, xy], [xx, y]])
+    return process_contour([contour], min_std, saliency_map_thres_c.astype(np.uint8), img_lum)
+
+
+def process_contour_blobs(min_std: float, saliency_map_thres_c: np.ndarray, img_lum: np.ndarray) \
+        -> (pd.DataFrame, np.ndarray):
+    """
+    Base function to extract blobs from a saliency map
+    :param min_std: minimum standard deviation of the contour to be considered
+    :param saliency_map_thres_c: threshold saliency map
+    :param img_lum: luminance image
+    :return: pandas dataframe of blobs, image with contours drawn
+    """
+
+    # Find the contours in the thresholded saliency map
     contours, _ = cv2.findContours(saliency_map_thres_c, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_TC89_L1)
-
-    # Draw the contours on the image with a purple line border thickness of 2 px
-    contour_img = img_color.copy()
-    cv2.drawContours(contour_img, contours, -1, (81, 12, 51), 2)
-
-    # Get the luminance to use in saliency calculation
-    img_lum = cv2.cvtColor(img_color, cv2.COLOR_BGR2LAB)[:, :, 0]
     df = process_contour(contours, min_std, saliency_map_thres_c.astype(np.uint8), img_lum)
-    return df, contour_img
+    return df
 
 
-def process_contour(contours: np.ndarray, min_std: float, img_s: np.ndarray, img_l: np.ndarray) -> np.ndarray:
+def process_contour(contours: np.ndarray, min_std: float, img_s: np.ndarray, img_l: np.ndarray) -> DataFrame:
     """
     Process a single contour. Save the results to a csv file.
     This is a separate function, so it can be run in parallel.
@@ -325,15 +393,14 @@ def process_contour(contours: np.ndarray, min_std: float, img_s: np.ndarray, img
     :return: dataframe of blobs
     """
     df = pd.DataFrame()
-    for c in contours:
+    for i, c in enumerate(contours):
         x, y, w, h = cv2.boundingRect(c)
 
         area = cv2.contourArea(c)
-        saliency = compute_saliency(c, min_std, img_s, img_l)
+        saliency = compute_saliency_contour(c, min_std, img_s, img_l)
 
         logger.debug(f'Found blob area: {area}, saliency: {saliency}, area: {area}')
         df = pd.concat([df, pd.DataFrame({
-            'image_path': '',
             'class': 'Unknown',
             'score': 0.,
             'area': area,
@@ -344,6 +411,6 @@ def process_contour(contours: np.ndarray, min_std: float, img_s: np.ndarray, img
             'xy': y + h,
             'w': w,
             'h': h,
-        }, index=[0])])
+        }, index=[i])])
 
     return df

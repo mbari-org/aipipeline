@@ -104,11 +104,21 @@ load-uav type="cluster":
     --config $PROJECT_DIR/config/config.yml \
     --type {{type}}
 
+# Fix UAV metadata lat/lon/alt
 fix-uav-metadata:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.:submodules/aidata
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/fix_metadata.py
+
+# Compute saliency for downloaded VOC data and update the Tator database
+compute-saliency project='uav' *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/saliency_pipeline.py \
+    --config $PROJECT_DIR/config/config.yml \
+    {{more_args}}
 
 # Download and crop detections
 download-crop project='uav' label='Unknown' download_dir='/tmp/download':
