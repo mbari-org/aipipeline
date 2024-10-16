@@ -190,7 +190,8 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Download and crop unknown images.")
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--voc-search-pattern", required=True, help="VOC XML files search pattern,"
-                                                     "e.g. /tmp/aipipeline/data/Baseline/voc/*.xml")
+                                                     "e.g. /tmp/aipipeline/data/Baseline/voc/*.xml "
+                                                                    "or /tmp/aipipeline/data/Baseline/voc")
     parser.add_argument("--scale-percent", default=50, type=int, help="Scale percent (downsized) "
                                                                       "for saliency computation")
     parser.add_argument("--min-std", default=2.0, type=float, help="Minimum standard deviation for saliency")
@@ -205,6 +206,11 @@ def run_pipeline(argv=None):
 
     # Some cleaning; remove all .json files in the directory
     voc_search_pattern = Path(args.voc_search_pattern)
+
+    # Add in the *.xml search pattern
+    if '*' not in voc_search_pattern.name:
+        voc_search_pattern = voc_search_pattern / "*.xml"
+
     logger.info(f"Cleaning up {voc_search_pattern.parent}")
     for f in voc_search_pattern.parent.rglob('*.json'):
         f.unlink()
@@ -235,7 +241,7 @@ def run_pipeline(argv=None):
     with beam.Pipeline(options=options) as p:
         (
                 p
-                | "Match XML Filenames" >> MatchFiles(voc_search_pattern.as_posix())  # Match files by pattern
+                | "Match XML Filenames" >> MatchFiles(args.voc_search_pattern)  # Match files by pattern
                 | "ReadMatches" >> ReadMatches()
                 | "ReadImages" >> beam.Map(read_xml)
                 | "BatchXML" >> beam.BatchElements(min_batch_size=batch_size, max_batch_size=batch_size)
