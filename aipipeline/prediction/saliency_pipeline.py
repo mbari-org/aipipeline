@@ -206,7 +206,7 @@ def run_pipeline(argv=None):
         return
 
     # Some cleaning; remove all .json files in the directory
-    voc_search_pattern = Path(args.voc_search_pattern) / "*.xml" if "*" in args.voc_search_pattern else Path(args.voc_search_pattern)
+    voc_search_pattern = Path(args.voc_search_pattern) / "*.xml" if "*" not in args.voc_search_pattern else Path(args.voc_search_pattern)
     logger.info(f"Cleaning up {voc_search_pattern.parent}")
     for f in voc_search_pattern.parent.rglob('*.json'):
         f.unlink()
