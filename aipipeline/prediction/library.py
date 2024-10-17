@@ -212,7 +212,7 @@ def gen_machine_friendly_label(label: str) -> str:
     return label_machine_friendly
 
 
-def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
+def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = None, image_dir: str = None) -> List[tuple]:
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
     if processed_dir is None:
@@ -220,11 +220,13 @@ def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = Non
     else:
         processed_data = processed_dir
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
+    if image_dir is None:
+        image_dir = (Path(base_path) / "images").as_posix()
     args = [
         "-d",
         f"{base_path}/voc",
         "--image_dir",
-        f"{base_path}/images",
+        f"{image_dir}",
         "-o",
         f"{base_path}/crops",
         "--resize",
