@@ -9,7 +9,7 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
-from aipipeline.config_setup import extract_labels_config, setup_config
+from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import crop_rois_voc
 
 logger = logging.getLogger(__name__)
@@ -37,11 +37,18 @@ def run_pipeline(argv=None):
 
     parser = argparse.ArgumentParser(description="Crop localizations from VOC formatted data.")
     parser.add_argument("--config", required=True, help="Config file path")
+    parser.add_argument("--image-dir", required=False, help="Directory containing images")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
     processed_dir = config_dict["data"]["processed_path"]
     labels = config_dict["data"]["labels"].split(",")
+    processed_data = config_dict["data"]["processed_path"]
+    base_path = os.path.join(processed_data, config_dict["data"]["version"])
+    if args.image_dir is None:
+        image_dir = f"{base_path}/images",
+    else:
+        image_dir = args.image_dir
 
     # Print the new config
     logger.info("Configuration:")
@@ -52,7 +59,7 @@ def run_pipeline(argv=None):
         (
             p
             | "Extract labels" >> beam.Create([labels])
-            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=processed_dir)
+            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=processed_dir, image_dir=image_dir)
             | "Log results" >> beam.Map(logger.info)
         )
 
