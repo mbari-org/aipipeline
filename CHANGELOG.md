@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.21.1 (2024-10-17)
+
+### Performance Improvements
+
+* perf(cfe): switch to depth labeled images for data mining ([`9dd60ae`](https://github.com/mbari-org/aipipeline/commit/9dd60ae7f56a47e25816bdb6b17931234a8b64f2))
+
+
 ## v0.21.0 (2024-10-17)
 
 ### Features
