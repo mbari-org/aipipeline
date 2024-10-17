@@ -339,7 +339,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
     logger.info(f"Downloading data for labels: {labels}....")
     container = run_docker(
         image=config_dict["docker"]["aidata"],
-        name=f"{short_name}-vss-download-{now}",
+        name=f"{short_name}-download-{now}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"]
     )
