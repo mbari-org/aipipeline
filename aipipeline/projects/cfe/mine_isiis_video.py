@@ -1,13 +1,29 @@
+from datetime import datetime
 from typing import List
 
 import cv2
+import numpy as np
 import requests
 import io
 import logging
 from collections import Counter
 from pathlib import Path
 
+from aipipeline.prediction.utils import compute_saliency, compute_saliency_threshold_map, process_contour_blobs
+
 logger = logging.getLogger(__name__)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# Also log to the console
+console = logging.StreamHandler()
+logger.addHandler(console)
+logger.setLevel(logging.INFO)
+# and log to file
+now = datetime.now()
+log_filename = f"mine_isiis_{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 
 def top_majority(model_predictions, model_scores, threshold: float, majority_count=-1):
@@ -48,15 +64,16 @@ def top_majority(model_predictions, model_scores, threshold: float, majority_cou
     return best_pred, best_score
 
 
-def process_video(out_path: Path, video_path: Path, target_labels: List[str], vss_threshold = 0.8):
-    top_n = 3 # Number of top predictions to return
+def process_video(out_path: Path, video_path: Path, target_labels: List[str], vss_threshold=0.8):
+    top_n = 3  # Number of top predictions to return
     url_vs = f"http://doris.shore.mbari.org:8000/knn/{top_n}/902111-CFE"
     cap = cv2.VideoCapture(video_path.as_posix())
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_number = 0
-    
+    min_std = 4.0
+
     out_csv = out_path / 'csv' / f"{video_path.stem}_blob_vss.csv"
     out_crop_base = out_path / 'crop'
 
@@ -66,6 +83,8 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
         while cap.isOpened():
             ret, frame = cap.read()
 
+            logger.debug(f"Processing frame {frame_number} of {total_frames} in {video_path}")
+
             if not ret:
                 logger.error(f"Error reading frame at {frame_number} frame {total_frames} in {video_path}")
                 break
@@ -73,28 +92,36 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
             if frame_number >= total_frames:
                 break
 
-            # Run basic blob detection on the frame which is in grayscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            frame_number += 1
 
-            # Threshold the image to create a binary mask of pixels > 180
-            _, mask = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+            saliency_map = compute_saliency(frame) # Compute the saliency map
+            saliency_map_thres_c = compute_saliency_threshold_map(33, saliency_map)
+            img_lum = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)[:, :, 0]
+            df_blob = process_contour_blobs(min_std, saliency_map_thres_c, img_lum)
 
-            # Find contours in the binary mask
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # If no blobs are found, cannot assign saliency cost
+            if df_blob.empty:
+                continue
 
-            filtered_contours = [cnt for cnt in contours if cv2.contourArea(cnt) < 150000 and cv2.contourArea(cnt) > 300]
+            # remove any contours that have a saliency of 1000 or less
+            df_blob = df_blob[df_blob.saliency > 1000]
 
             # skip if no contours found or too many contours
-            if len(filtered_contours) == 0:
+            if len(df_blob) == 0:
                 logger.error(f"No contours found for {frame_number} on {video_path}")
                 continue
 
-            if len(filtered_contours) > 50:
+            logger.info(f"Found {len(df_blob)} blobs for {frame_number} on {video_path}")
+
+            if len(df_blob) > 50:
                 logger.error(f"Too many contours found for {frame_number} on {video_path}")
                 continue
 
-            for i, contour in enumerate(filtered_contours):
-                x, y, w, h = cv2.boundingRect(contour)
+            for idx, row in df_blob.iterrows():
+                x, y, w, h = row.x, row.y, row.xx, row.xy
+                saliency = row.saliency
+                area = row.area
+                logger.info(f"Processing blob {idx} at {x}, {y}, {w}, {h} with saliency {saliency}")
 
                 # Crop the box, keeping the longest side
                 width = w
@@ -137,6 +164,7 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
 
                 response = requests.post(url_vs, headers={"accept": "application/json"}, files=files)
                 logger.debug(f"Response: {response.status_code}")
+                crop_file.unlink()
 
                 if response.status_code != 200:
                     logger.error(f"Error processing images: {response.text}")
@@ -153,12 +181,10 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
                 best_pred, best_score = top_majority(predictions, score[0], threshold=vss_threshold, majority_count=-1)
 
                 if best_pred is None:
-                    crop_file.unlink()
                     logger.error(f"No majority prediction for {frame_number} on {video_path}")
                     continue
 
                 if best_score < vss_threshold or best_pred not in target_labels:
-                    crop_file.unlink()
                     logger.error(
                         f"Score {best_score} below threshold {vss_threshold} or {best_pred} not in {target_labels} for {video_path} at {frame_number}")
                     continue
@@ -167,25 +193,37 @@ def process_video(out_path: Path, video_path: Path, target_labels: List[str], vs
                 # normalized coordinates and the image width and height. This should be useful for extracting images
                 # for loading from the video. Note that we are not keeping the crop_file
                 # image_path,class,score,area,saliency,x,y,xx,xy,w,h,cluster,image_width,image_height,crop_path,frame
+                logger.info(f"Found {best_pred} with score {best_score} for {video_path} at {frame_number}")
                 f.write(
-                    f"{video_path}, {best_pred}, {best_score}, {w * h}, 0, {x}, {y}, {xx}, {xy}, {w}, {h}, -1, {frame_width}, {frame_height}, {crop_file}, {frame_number}\n")
-
-            frame_number += 1
+                    f"{video_path}, {best_pred}, {best_score}, {area}, {saliency}, {x}, {y}, {xx}, {xy}, {w}, {h}, -1, {frame_width}, {frame_height}, {crop_file}, {frame_number}\n")
 
         cap.release()
 
 
 if __name__ == "__main__":
-    import os
+    import multiprocessing
     import time
+
+    vss_threshold = 0.1  # Threshold for the VSS model
     time_start = time.time()
-    target_labels = ["copepod","rhizaria","particle_blur","larvacean","fecal_pellet","football","centric_diatom","gelatinous"]
-    vss_threshold = 0.5
-    file_path = Path(os.path.abspath(__file__))
-    video_path = file_path.parent / 'data' / 'CFE_ISIIS-077-2024-01-26 13-14-40.686.mp4'
+    target_labels = ["copepod", "rhizaria", "particle_blur",
+                     "larvacean", "fecal_pellet", "football",
+                     "centric_diatom", "gelatinous"]
+    image_path = Path('/mnt/CFE/Data_archive/Images/ISIIS/COOK/Videos2framesdepth/')
+
+    num_processes = multiprocessing.cpu_count()
+    logger.info(f"Number of processes: {num_processes}")
     out_path = Path.cwd() / 'output'
     (out_path / 'csv').mkdir(parents=True, exist_ok=True)
     (out_path / 'crop').mkdir(parents=True, exist_ok=True)
-    process_video(out_path, video_path, target_labels, vss_threshold)
+
+    with multiprocessing.Pool(processes=num_processes) as pool:
+        for image in image_path.rglob("*m.png"):
+            image_file = Path(image_path) / image
+            out_path = Path.cwd() / 'output'
+            pool.apply_async(process_video, args=(out_path, image_file, target_labels, vss_threshold))
+        pool.close()
+        pool.join()
+
     time_end = time.time()
     logger.info(f"total processing time: {time_end - time_start}")
