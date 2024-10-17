@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.23.0 (2024-10-17)
+
+### Features
+
+* feat: handle alternative image directory for voc crops ([`0777493`](https://github.com/mbari-org/aipipeline/commit/0777493499824e0d622585c1d792108459aebb8e))
+
+
 ## v0.22.0 (2024-10-17)
 
 ### Features
