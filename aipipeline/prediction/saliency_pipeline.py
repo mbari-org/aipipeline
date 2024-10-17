@@ -196,6 +196,7 @@ def run_pipeline(argv=None):
                                                                       "for saliency computation")
     parser.add_argument("--min-std", default=2.0, type=float, help="Minimum standard deviation for saliency")
     parser.add_argument("--block-size", default=39, type=int, help="Block size for saliency blob detection")
+    parser.add_argument("--update", default=False, action="store_true", help="Update the database with saliency scores")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -205,12 +206,7 @@ def run_pipeline(argv=None):
         return
 
     # Some cleaning; remove all .json files in the directory
-    voc_search_pattern = Path(args.voc_search_pattern)
-
-    # Add in the *.xml search pattern
-    if '*' not in voc_search_pattern.name:
-        voc_search_pattern = voc_search_pattern / "*.xml"
-
+    voc_search_pattern = Path(args.voc_search_pattern) / "*.xml" if "*" in args.voc_search_pattern else Path(args.voc_search_pattern)
     logger.info(f"Cleaning up {voc_search_pattern.parent}")
     for f in voc_search_pattern.parent.rglob('*.json'):
         f.unlink()
@@ -251,7 +247,8 @@ def run_pipeline(argv=None):
                                                   block_size=args.block_size)
         )
 
-    update_database(voc_search_pattern.parent, api, project_id, box_id)
+    if args.update:
+        update_database(voc_search_pattern.parent, api, project_id, box_id)
 
 
 if __name__ == "__main__":
