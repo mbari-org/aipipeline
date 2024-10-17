@@ -121,11 +121,12 @@ compute-saliency project='uav' *more_args="":
     {{more_args}}
 
 # Crop detections from VOC formatted downloads
-crop project='uav':
+crop project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/crop_pipeline.py \
-        --config ./aipipeline/projects/{{project}}/config/config.yml
+        --config ./aipipeline/projects/{{project}}/config/config.yml \
+        {{more_args}}
 
 # Download and crop Unknown detections
 download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download':
