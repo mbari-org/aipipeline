@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.22.0 (2024-10-17)
+
+### Features
+
+* feat: handle alternative image directory downloads and skipping download for VSS initialization ([`4f74e68`](https://github.com/mbari-org/aipipeline/commit/4f74e681adf945c5d60e3bf5135bc5f0a1d33301))
+
+
 ## v0.21.1 (2024-10-17)
 
 ### Performance Improvements
