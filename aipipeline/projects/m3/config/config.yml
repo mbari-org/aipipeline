@@ -1,0 +1,63 @@
+# aipipeline/projects/m3/config.yml
+# Config file for M3 project production
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6381
+
+data:
+  processed_path: "/mnt/ML_SCRATCH/M3"
+  version: "Baseline"
+  labels: ''
+  download_args: [""]
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  ini: "sdcat.ini"
+
+vss:
+  project: "901103-biodiversity"
+  threshold: 0.5
+  model: "google/vit-base-patch16-224"
+
+tator:
+  project: "901103-biodiversity"
+  host: "mantis.shore.mbari.org"
+  url_load: "http://mantis.shore.mbari.org:8001/label/id"
+
+  image:
+    attributes:
+      date:
+        type: string
+      time:
+        type: string
+
+  video:
+    attributes:
+      video_reference_uuid:
+        type: string
+      iso_start_datetime:
+        type: datetime
+
+  box:
+    attributes:
+      Label:
+        type: string
+      concept:
+        type: string
+      score:
+        type: float
+      cluster:
+        type: string
+      saliency:
+        type: float
+      group:
+        type: string
+      obs_uuid:
+        type: string
+      exemplar:
+        type: bool
+      verified:
+        type: bool
+
+
+ffmpeg_path: "/usr/bin/ffmpeg"
