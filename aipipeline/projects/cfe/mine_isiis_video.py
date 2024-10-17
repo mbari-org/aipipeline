@@ -2,7 +2,6 @@ from datetime import datetime
 from typing import List
 
 import cv2
-import numpy as np
 import requests
 import io
 import logging
