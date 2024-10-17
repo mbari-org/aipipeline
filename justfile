@@ -120,8 +120,8 @@ compute-saliency project='uav' *more_args="":
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
-# Download and crop detections
-download-crop project='uav' label='Unknown' download_dir='/tmp/download':
+# Download and crop Unknown detections
+download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
@@ -129,6 +129,13 @@ download-crop project='uav' label='Unknown' download_dir='/tmp/download':
         --skip_clean True \
         --label {{label}} \
         --download_dir {{download_dir}}
+
+# Download only
+download project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml
 
 # Predict images using the VSS database
 predict-vss project='uav' image_dir='/tmp/download' *more_args="":

@@ -72,18 +72,27 @@ just list
 
 | Recipe                  | Description                                                                                                                        |
 |-------------------------|------------------------------------------------------------------------------------------------------------------------------------|
- | `just list`             | List recipes                                                                                                                       |
- | `just install`          | Setup the environment                                                                                                              |
- | `just plot-tsne-vss`    | Generate a tsne plot of the VSS database                                                                                           |
- | `just gen-acc-vss`      | Calculate the accuracy of the VSS database                                                                                         |
- | `just update`           | Update the environment. Run this command after checking out any code changes                                                       |
- | `just reset-vss uav`    | Reset the VSS database, removing all data. Run befpre init-vss or when creating the REDIS database, e.g. to reset teh uav database |
- | `just init-vss uav`     | Initialize the VSS database for the UAV project                                                                                    |
- | `just cluster-uav`      | Cluster mission in aipipeline/projects/uav/data/missions2process.txt                                                               |
- | `just detect-uav`       | Detect mission in aipipeline/projects/uav/data/missions2process.txt                                                                |
- | `just detect-uav-test`  | Detect mission data in aipipeline/projects/uav/data/missions2process.txt                                                           |
- | `just load-uav-images`  | Load uav mission images in aipipeline/projects/uav/data/missions2process.txt                                                       |
- 
+| `list`                                           | List recipes                                                                                                 |
+| `install`                                        | Setup the environment                                                                                        |
+| `update`                                         | Update the environment. Run this command after checking out any code changes                                  |
+| `plot-tsne-vss project='uav'`                    | Generate a t-SNE plot of the VSS database                                                                    |
+| `calc-acc-vss project='uav'`                     | Calculate the accuracy of the VSS database                                                                   |
+| `reset-vss-all`                                  | Reset the VSS database, removing all data. Proceed with caution!!                                             |
+| `reset-vss project='uav'`                        | Reset the VSS database, removing all data. Run before `init-vss` or when creating the database.               |
+| `init-vss project='uav' *more_args=""`           | Initialize the VSS database for the UAV project                                                              |
+| `cluster-uav`                                    | Cluster mission in `aipipeline/projects/uav/data/missions2process.txt`                                        |
+| `detect-uav *more_args=""`                       | Detect mission in `aipipeline/projects/uav/data/missions2process.txt`, add `--vss` to classify with VSS       |
+| `detect-uav-test`                                | Detect mission data in `aipipeline/projects/uav/data/missions2process.txt`                                    |
+| `load-uav-images`                                | Load UAV mission images in `aipipeline/projects/uav/data/missions2process.txt`                                |
+| `load-uav type="cluster"`                        | Load UAV detections/clusters in `aipipeline/projects/uav/data/missions2process.txt`                           |
+| `fix-uav-metadata`                               | Fix UAV metadata lat/lon/alt                                                                                 |
+| `compute-saliency project='uav' *more_args=""`   | Compute saliency for downloaded VOC data and update the Tator database                                        |
+| `download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download'` | Download and crop Unknown detections                                                                         |
+| `download project='uav'`                         | Download only                                                                                                |
+| `predict-vss project='uav' image_dir='/tmp/download' *more_args=""` | Predict images using the VSS database                                                                         |
+| `run-ctenoA-test`                                | Run the strided inference on a single video                                                                  |
+| `run-ctenoA-prod`                                | Run the strided inference on a collection of videos in a TSV file                                             |
+
 --
 
 ### Related projects
