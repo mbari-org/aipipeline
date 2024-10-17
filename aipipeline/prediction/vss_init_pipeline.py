@@ -129,11 +129,12 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
 def run_pipeline(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Process images with VSS")
+    parser = argparse.ArgumentParser(description="Initialize the VSS database")
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
-    parser.add_argument("--skip_clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
-    parser.add_argument("--batch_size", required=False, default=3, help="Batch size")
+    parser.add_argument("--skip-clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
+    parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
+    parser.add_argument("--batch-size", required=False, default=3, help="Batch size")
     args, beam_args = parser.parse_known_args(argv)
 
     conf_files, config_dict = setup_config(args.config)
@@ -151,10 +152,19 @@ def run_pipeline(argv=None):
     remove_multicrop_views(base_path)
 
     with beam.Pipeline(options=options) as p:
-        (
+        start = (
             p
-            | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
+            | "Create labels" >> beam.Create([labels])
+        )
+        if not args.skip_download:
+            import pdb; pdb.set_trace()
+            start = (
+                start
+                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
+            )
+
+        (
+            start
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
