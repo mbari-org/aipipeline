@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.21.0 (2024-10-17)
+
+### Features
+
+* feat: added crop pipeline ([`50e09cd`](https://github.com/mbari-org/aipipeline/commit/50e09cd85a5ad8a0311bc9a55f47cc662e84dae7))
+
+* feat(m3): added m3 config ([`84fe3aa`](https://github.com/mbari-org/aipipeline/commit/84fe3aaa4b681fef154079371e2299100c952d26))
+
+
 ## v0.20.0 (2024-10-17)
 
 ### Documentation
