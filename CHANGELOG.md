@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.19.0 (2024-10-17)
+
+### Features
+
+* feat: added support for optional database update with --update to saliency pipeline ([`ec2c78a`](https://github.com/mbari-org/aipipeline/commit/ec2c78a0620ae9ada6346cfddf80fe23b31143bc))
+
+### Fixes
+
+* fix: correct search pattern completion ([`c8d236c`](https://github.com/mbari-org/aipipeline/commit/c8d236c76d3a3f3d008a2c66d04dadbe3c3b6976))
+
+
 ## v0.18.0 (2024-10-16)
 
 ### Features
