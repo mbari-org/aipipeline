@@ -43,14 +43,14 @@ reset-vss-all:
       time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config ${project_dir}/config/config.yml
     done
 
-# Reset the VSS database, removing all data. Run befpre init-vss or when creating the database. Run with e.g. `uav`
+# Reset the VSS database, removing all data. Run before init-vss or when creating the database. Run with e.g. `uav`
 reset-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config $PROJECT_DIR/config/config.yml
 
-# Initialize the VSS database for the UAV project
+# Initialize the VSS database for a project
 init-vss project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
@@ -119,6 +119,13 @@ compute-saliency project='uav' *more_args="":
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/saliency_pipeline.py \
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
+
+# Crop detections from VOC formatted downloads
+crop project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/crop_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml
 
 # Download and crop Unknown detections
 download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download':
