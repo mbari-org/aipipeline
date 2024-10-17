@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.20.0 (2024-10-17)
+
+### Documentation
+
+* docs: minor typo fix ([`d31b650`](https://github.com/mbari-org/aipipeline/commit/d31b650ca9c94bf81c808a4704b99e1f8439bc17))
+
+### Features
+
+* feat(bio): added download for top concepts ([`3f0372b`](https://github.com/mbari-org/aipipeline/commit/3f0372bed6511ce11e4e585e999184bcd95d64e3))
+
+
 ## v0.19.0 (2024-10-17)
 
 ### Features
