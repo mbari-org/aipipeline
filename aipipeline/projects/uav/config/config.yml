@@ -25,7 +25,7 @@ data:
   raw_path: "/mnt/UAV/"
   processed_path_sdcat: "/mnt/UAV/machineLearning/"
   processed_path: "/mnt/ML_SCRATCH/UAV/"
-  version: "saliency_MBARI/uav-yolov5-30k_VSS"
+  version: "Baseline"
   labels: "Pinniped,Poop,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
   download_args: ["--verified"]
 
