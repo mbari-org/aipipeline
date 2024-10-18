@@ -302,6 +302,10 @@ def compute_saliency_contour(contour, min_std: float, img_saliency: np.ndarray, 
     # The cost function penalizes smaller areas with low variance
     cost = (area * (mean_intensity_l + mean_intensity_s + 0.1 * area) - variance) / factor
 
+    # If cost is NaN, set it to 1
+    if np.isnan(cost):
+        cost = 1
+
     # If the std is too low, then the contour is not interesting; set the cost to 1
     if std < min_std:
         cost = 1
