@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.24.1 (2024-10-18)
+
+### Performance Improvements
+
+* perf(bio): set saliency score to 1000 for download ([`b86f118`](https://github.com/mbari-org/aipipeline/commit/b86f1188405f680085c63cc54c992b5a52851f35))
+
+
 ## v0.24.0 (2024-10-18)
 
 ### Features
