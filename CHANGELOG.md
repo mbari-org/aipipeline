@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.25.0 (2024-10-18)
+
+### Features
+
+* feat: remove low saliency matches from downloaded data to support external data integration ([`7cb5440`](https://github.com/mbari-org/aipipeline/commit/7cb544053840d91875b9fcd129848a54605220b2))
+
+### Fixes
+
+* fix: handle zero cost saliency ([`2d990e4`](https://github.com/mbari-org/aipipeline/commit/2d990e417278de6a2438992cd8a687ce0d8eb7c1))
+
+
 ## v0.24.1 (2024-10-18)
 
 ### Performance Improvements
