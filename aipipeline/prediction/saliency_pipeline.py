@@ -9,6 +9,7 @@ from pathlib import Path
 import apache_beam as beam
 import cv2
 import dotenv
+import xml.etree.ElementTree as ET
 import tator
 from tator.openapi.tator_openapi import TatorApi  # type: ignore
 from apache_beam.options.pipeline_options import PipelineOptions
@@ -66,6 +67,32 @@ def read_xml(readable_file):
     return readable_file.metadata.path
 
 
+def remove_low_saliency(voc_search_pattern: Path, min_saliency: int):
+    # Remove VOC XML entries that are lower than a certain saliency score
+    json_files = voc_search_pattern.parent.rglob('*.json')
+    for json_file in json_files:
+        with open(json_file, "r") as f:
+            json_data = json.load(f)
+            ids = json_data["ids"]
+            if len(ids) == 0:
+                continue
+            xml_file = Path(f"{json_file.parent}/{json_file.stem}")
+            best_saliency = json_data["best_saliency"]
+            remove_indices = [i for i, saliency in enumerate(best_saliency) if saliency < min_saliency]
+            # Remove the XML entries at the indices
+            if remove_indices:
+                with open(xml_file, "r") as f:
+                    xml_data = f.read()
+                    root = ET.fromstring(xml_data)
+                    for i, obj in enumerate(root.findall('object')):
+                        if i in remove_indices:
+                            logger.info(f"Removing {obj} from {xml_file}")
+                            root.remove(obj)
+                # Write the new XML data
+                with open(xml_file, "w") as f:
+                    f.write(ET.tostring(root).decode())
+
+
 def update_database(voc_path: Path, api: TatorApi, project_id: int, box_id: int):
     # Get all the JSON files in the directory
     json_files = voc_path.rglob('*.json')
@@ -85,7 +112,8 @@ def update_database(voc_path: Path, api: TatorApi, project_id: int, box_id: int)
                 }
                 try:
                     logger.info(id_bulk_patch)
-                    response = api.update_localization_list(project=project_id, **params, localization_bulk_update=id_bulk_patch)
+                    response = api.update_localization_list(project=project_id, **params,
+                                                            localization_bulk_update=id_bulk_patch)
                     logger.debug(response)
                     num_updated += 1
                 except Exception as e:
@@ -177,26 +205,29 @@ def compute_saliency_cost(data,
             if not df.empty:
                 matches[id]["best_saliency"] = int(df.saliency.max())
 
-        match_dict["ids"].append(int(id))
+        match_dict["ids"].append(id)
         match_dict["best_iou"].append(match["best_iou"])
         match_dict["best_saliency"].append(match["best_saliency"])
 
     return match_dict
 
+
 # Beam pipeline
 def run_pipeline(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Download and crop unknown images.")
+    parser = argparse.ArgumentParser(description="Download data and assign saliency values.")
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--voc-search-pattern", required=True, help="VOC XML files search pattern,"
-                                                     "e.g. /tmp/aipipeline/data/Baseline/voc/*.xml "
+                                                                    "e.g. /tmp/aipipeline/data/Baseline/voc/*.xml "
                                                                     "or /tmp/aipipeline/data/Baseline/voc")
     parser.add_argument("--scale-percent", default=50, type=int, help="Scale percent (downsized) "
                                                                       "for saliency computation")
     parser.add_argument("--min-std", default=2.0, type=float, help="Minimum standard deviation for saliency")
     parser.add_argument("--block-size", default=39, type=int, help="Block size for saliency blob detection")
     parser.add_argument("--update", default=False, action="store_true", help="Update the database with saliency scores")
+    parser.add_argument("--min-saliency", type=int, help="Remove VOC xml entries that are lower than a certain "
+                                                         "saliency score")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -206,10 +237,11 @@ def run_pipeline(argv=None):
         return
 
     # Some cleaning; remove all .json files in the directory
-    voc_search_pattern = Path(args.voc_search_pattern) / "*.xml" if "*" not in args.voc_search_pattern else Path(args.voc_search_pattern)
+    voc_search_pattern = Path(args.voc_search_pattern) / "*.xml" if "*" not in args.voc_search_pattern else Path(
+        args.voc_search_pattern)
     logger.info(f"Cleaning up {voc_search_pattern.parent}")
-    for f in voc_search_pattern.parent.rglob('*.json'):
-        f.unlink()
+    # for f in voc_search_pattern.parent.rglob('*.json'):
+    #     f.unlink()
 
     # Get the Tator API
     api = tator.get_api(config_dict["tator"]["host"], TATOR_TOKEN)
@@ -234,18 +266,21 @@ def run_pipeline(argv=None):
         args.block_size += 1
 
     batch_size = 10
-    with beam.Pipeline(options=options) as p:
-        (
-                p
-                | "Match XML Filenames" >> MatchFiles(args.voc_search_pattern)  # Match files by pattern
-                | "ReadMatches" >> ReadMatches()
-                | "ReadImages" >> beam.Map(read_xml)
-                | "BatchXML" >> beam.BatchElements(min_batch_size=batch_size, max_batch_size=batch_size)
-                | "ProcessXMLBatches" >> beam.Map(process_xml_batch,
-                                                  scale_percent=args.scale_percent,
-                                                  min_std=args.min_std,
-                                                  block_size=args.block_size)
-        )
+    # with beam.Pipeline(options=options) as p:
+    #     (
+    #             p
+    #             | "Match XML Filenames" >> MatchFiles(args.voc_search_pattern)  # Match files by pattern
+    #             | "ReadMatches" >> ReadMatches()
+    #             | "ReadImages" >> beam.Map(read_xml)
+    #             | "BatchXML" >> beam.BatchElements(min_batch_size=batch_size, max_batch_size=batch_size)
+    #             | "ProcessXMLBatches" >> beam.Map(process_xml_batch,
+    #                                               scale_percent=args.scale_percent,
+    #                                               min_std=args.min_std,
+    #                                               block_size=args.block_size)
+    #     )
+
+    if args.min_saliency:
+        remove_low_saliency(voc_search_pattern, args.min_saliency)
 
     if args.update:
         update_database(voc_search_pattern.parent, api, project_id, box_id)
