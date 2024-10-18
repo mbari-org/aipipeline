@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.27.0 (2024-10-18)
+
+### Features
+
+* feat(bio): simple script to delete a particular version ([`39b0788`](https://github.com/mbari-org/aipipeline/commit/39b0788162d92b3c68d283ccad2c0a90f4450701))
+
+
 ## v0.26.1 (2024-10-18)
 
 ### Bug Fixes
