@@ -1,15 +1,26 @@
 # CHANGELOG
 
 
+## v0.26.0 (2024-10-18)
+
+### Features
+
+* feat: added load vss only pipeline ([`23c9b78`](https://github.com/mbari-org/aipipeline/commit/23c9b785179feaf8ab232a3bf4b70236780a2a60))
+
+### Performance Improvements
+
+* perf: added vss optimizer ([`e3dc508`](https://github.com/mbari-org/aipipeline/commit/e3dc508030eef2db9af2229b90a73deab7735885))
+
+
 ## v0.25.0 (2024-10-18)
+
+### Bug Fixes
+
+* fix: handle zero cost saliency ([`2d990e4`](https://github.com/mbari-org/aipipeline/commit/2d990e417278de6a2438992cd8a687ce0d8eb7c1))
 
 ### Features
 
 * feat: remove low saliency matches from downloaded data to support external data integration ([`7cb5440`](https://github.com/mbari-org/aipipeline/commit/7cb544053840d91875b9fcd129848a54605220b2))
-
-### Fixes
-
-* fix: handle zero cost saliency ([`2d990e4`](https://github.com/mbari-org/aipipeline/commit/2d990e417278de6a2438992cd8a687ce0d8eb7c1))
 
 
 ## v0.24.1 (2024-10-18)
@@ -69,13 +80,13 @@
 
 ## v0.19.0 (2024-10-17)
 
+### Bug Fixes
+
+* fix: correct search pattern completion ([`c8d236c`](https://github.com/mbari-org/aipipeline/commit/c8d236c76d3a3f3d008a2c66d04dadbe3c3b6976))
+
 ### Features
 
 * feat: added support for optional database update with --update to saliency pipeline ([`ec2c78a`](https://github.com/mbari-org/aipipeline/commit/ec2c78a0620ae9ada6346cfddf80fe23b31143bc))
-
-### Fixes
-
-* fix: correct search pattern completion ([`c8d236c`](https://github.com/mbari-org/aipipeline/commit/c8d236c76d3a3f3d008a2c66d04dadbe3c3b6976))
 
 
 ## v0.18.0 (2024-10-16)
@@ -96,14 +107,14 @@
 
 ## v0.16.6 (2024-10-12)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio): pass config dict ([`6dcf8fe`](https://github.com/mbari-org/aipipeline/commit/6dcf8fe527eda17f3e49fcef61b47f5b596fcd9c))
 
 
 ## v0.16.5 (2024-10-12)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio): correct clean-up ([`7c2684c`](https://github.com/mbari-org/aipipeline/commit/7c2684cdf9e26a4bc4c0808869a232fe3492a60b))
 
@@ -133,7 +144,7 @@
 
 ## v0.16.1 (2024-10-07)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio): minor correction to the endpoint ([`f22beeb`](https://github.com/mbari-org/aipipeline/commit/f22beeb6888757d38c04c10671c1d0cd72ecfaed))
 
@@ -154,7 +165,7 @@
 
 ## v0.14.1 (2024-10-07)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio): added missing TATOR_TOKEN ([`21fcd31`](https://github.com/mbari-org/aipipeline/commit/21fcd313c0fce0cce13fbf83d1c0512a29eacc04))
 
@@ -192,7 +203,7 @@
 
 ## v0.12.3 (2024-10-03)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio): added missing yaml entry and fix typo ([`811b988`](https://github.com/mbari-org/aipipeline/commit/811b9889283e8cf26ec4196a6cbe8d7454f061aa))
 
@@ -227,7 +238,7 @@
 
 ## v0.10.5 (2024-10-03)
 
-### Fixes
+### Bug Fixes
 
 * fix(bio):  fixed refactoring bugs ([`9f85436`](https://github.com/mbari-org/aipipeline/commit/9f854363f0247f375ba46cad109994812b8145d9))
 
@@ -262,13 +273,13 @@
 
 ## v0.10.0 (2024-09-30)
 
+### Bug Fixes
+
+* fix: correct best score average ([`2dff7f3`](https://github.com/mbari-org/aipipeline/commit/2dff7f324d19a04251c8d4dae9c2f3328bf839f2))
+
 ### Features
 
 * feat: working two-stage vss pipeline detect for UAV ([`d9c288e`](https://github.com/mbari-org/aipipeline/commit/d9c288e154e2950f130eaa1ea9e2fd5a0864ff29))
-
-### Fixes
-
-* fix: correct best score average ([`2dff7f3`](https://github.com/mbari-org/aipipeline/commit/2dff7f324d19a04251c8d4dae9c2f3328bf839f2))
 
 ### Performance Improvements
 
@@ -277,7 +288,7 @@
 
 ## v0.9.1 (2024-09-29)
 
-### Fixes
+### Bug Fixes
 
 * fix(cfe): replace depth by name in CFE images ([`d41cba0`](https://github.com/mbari-org/aipipeline/commit/d41cba058e33ac52fd02538fdf54959a593d6baf))
 
@@ -291,20 +302,20 @@
 
 ## v0.8.2 (2024-09-24)
 
-### Build System
-
-* build: add extra args to predict vss and correct download crop config ([`4d0864b`](https://github.com/mbari-org/aipipeline/commit/4d0864ba54aab4a0f92ad0f3743a02ee2cd9183d))
-
-### Fixes
+### Bug Fixes
 
 * fix: skip over low scoring threshold ([`8bdc7bf`](https://github.com/mbari-org/aipipeline/commit/8bdc7bf8a1dc681d9f32c1f0de88e69852d7a521))
 
 * fix: better handling of missing exemplars ([`0b05c1a`](https://github.com/mbari-org/aipipeline/commit/0b05c1a664b6d70b501485e8bf6bfe8ea7494dba))
 
+### Build System
+
+* build: add extra args to predict vss and correct download crop config ([`4d0864b`](https://github.com/mbari-org/aipipeline/commit/4d0864ba54aab4a0f92ad0f3743a02ee2cd9183d))
+
 
 ## v0.8.1 (2024-09-24)
 
-### Fixes
+### Bug Fixes
 
 * fix: correct termination ([`08e0f5e`](https://github.com/mbari-org/aipipeline/commit/08e0f5eb5eae4f089870fb22bee0ec7dd0442825))
 
@@ -318,7 +329,7 @@
 
 ## v0.7.4 (2024-09-19)
 
-### Fixes
+### Bug Fixes
 
 * fix: correct config for i2map host ([`bd0a2be`](https://github.com/mbari-org/aipipeline/commit/bd0a2beef954c3d24cd9220b471f8c13be845528))
 
@@ -331,14 +342,14 @@
 
 ## v0.7.3 (2024-09-19)
 
-### Fixes
+### Bug Fixes
 
 * fix: correct threshold for scoring vss ([`a7cb0db`](https://github.com/mbari-org/aipipeline/commit/a7cb0db12ccd9cf4aa4f7aa4ca94cd024faadade))
 
 
 ## v0.7.2 (2024-09-16)
 
-### Fixes
+### Bug Fixes
 
 * fix: correct path for config setup ([`acf25a2`](https://github.com/mbari-org/aipipeline/commit/acf25a23224c1539f2bbd81f0f245d2839905a33))
 
@@ -347,7 +358,7 @@
 
 ## v0.7.1 (2024-09-13)
 
-### Fixes
+### Bug Fixes
 
 * fix: add metadata fix for UAV images, correct path for sdcat config and updated missions2process.txt ([`fc42612`](https://github.com/mbari-org/aipipeline/commit/fc4261284ca77d1c939b6e3e11dd606dbaf56a0f))
 
@@ -372,6 +383,10 @@
 
 ## v0.5.0 (2024-09-05)
 
+### Bug Fixes
+
+* fix: flag missing exemplar file, break after load and other refactoring ([`7acc573`](https://github.com/mbari-org/aipipeline/commit/7acc573aa60333b4409a93e5cbb46de19168dbe7))
+
 ### Features
 
 * feat: plot names in centroids of each class ([`8c5dd39`](https://github.com/mbari-org/aipipeline/commit/8c5dd39b7009df173f77235e4be006ca2c9ecb48))
@@ -384,10 +399,6 @@
 
 * feat: add more checks for required keys in config ([`4446d1d`](https://github.com/mbari-org/aipipeline/commit/4446d1dab81da79a221c6d0aa59156d8e95b02e7))
 
-### Fixes
-
-* fix: flag missing exemplar file, break after load and other refactoring ([`7acc573`](https://github.com/mbari-org/aipipeline/commit/7acc573aa60333b4409a93e5cbb46de19168dbe7))
-
 ### Performance Improvements
 
 * perf: better handling of missing classes and bump low exemplars to 10 ([`f486fdd`](https://github.com/mbari-org/aipipeline/commit/f486fdd3c6461d8427bf7743b38657ee52256a58))
@@ -397,13 +408,7 @@
 
 ## v0.4.0 (2024-08-31)
 
-### Features
-
-* feat: add config for bulk i2map ([`8df2e17`](https://github.com/mbari-org/aipipeline/commit/8df2e17b203097e924cc08348d3ed60b98f24687))
-
-* feat: added skip to download and crop pipeline and add remove data defaults - these should be specified by project ([`dc29285`](https://github.com/mbari-org/aipipeline/commit/dc292850487ac7706263f1342edc1f3f529d1ff2))
-
-### Fixes
+### Bug Fixes
 
 * fix: added the guano for eval ([`c0c9383`](https://github.com/mbari-org/aipipeline/commit/c0c938350c99f77f3cae6622456342ef323fec6e))
 
@@ -411,18 +416,24 @@
 
 * fix: add augment data clean in case not run before metric ([`a2dcbea`](https://github.com/mbari-org/aipipeline/commit/a2dcbea88838089b03e9f958ef3ee9bc9f02c7a6))
 
+### Features
+
+* feat: add config for bulk i2map ([`8df2e17`](https://github.com/mbari-org/aipipeline/commit/8df2e17b203097e924cc08348d3ed60b98f24687))
+
+* feat: added skip to download and crop pipeline and add remove data defaults - these should be specified by project ([`dc29285`](https://github.com/mbari-org/aipipeline/commit/dc292850487ac7706263f1342edc1f3f529d1ff2))
+
 
 ## v0.3.2 (2024-08-30)
+
+### Bug Fixes
+
+* fix: removed any augmented data for init vss and other minor improvements to plot names ([`2f040d0`](https://github.com/mbari-org/aipipeline/commit/2f040d0fd8ce8ca5625c6b3b3b891b0d3529d9e8))
 
 ### Documentation
 
 * docs: adjust size of plots ([`14bf018`](https://github.com/mbari-org/aipipeline/commit/14bf018afc4e027d20912f7634bc1677838ec31e))
 
 * docs: updated with new metric plots and just recipes ([`0807a9e`](https://github.com/mbari-org/aipipeline/commit/0807a9e85ce62e82741efb324dbb62dc53d4e004))
-
-### Fixes
-
-* fix: removed any augmented data for init vss and other minor improvements to plot names ([`2f040d0`](https://github.com/mbari-org/aipipeline/commit/2f040d0fd8ce8ca5625c6b3b3b891b0d3529d9e8))
 
 ### Unknown
 
@@ -431,7 +442,7 @@
 
 ## v0.3.1 (2024-08-28)
 
-### Fixes
+### Bug Fixes
 
 * fix: correct uav imports after refactoring munged and merged aidata config ([`9a8bf29`](https://github.com/mbari-org/aipipeline/commit/9a8bf29118684a47ab3982cdea2c0f9874eeb5fd))
 
@@ -471,13 +482,13 @@
 
 ## v0.1.1 (2024-08-26)
 
+### Bug Fixes
+
+* fix: added missing files and reduce docker log names to daily ([`1847fee`](https://github.com/mbari-org/aipipeline/commit/1847feeeb56736f79583d80d92b9a6c4f57d06dd))
+
 ### Documentation
 
 * docs: added example tsne plot ([`779e9ae`](https://github.com/mbari-org/aipipeline/commit/779e9ae6d515381d86f22075aef92fbec312f3ac))
-
-### Fixes
-
-* fix: added missing files and reduce docker log names to daily ([`1847fee`](https://github.com/mbari-org/aipipeline/commit/1847feeeb56736f79583d80d92b9a6c4f57d06dd))
 
 
 ## v0.1.0 (2024-08-26)
