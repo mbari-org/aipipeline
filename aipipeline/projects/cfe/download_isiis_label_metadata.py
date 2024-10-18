@@ -28,13 +28,14 @@ media_hash = {media.id: media for media in medias}
 
 # Save to a tsv file
 with open("isiis_labels.tsv", "w") as f:
-    f.write("database_id\tiso_datetime\tdepth\tLabel\tx\ty\twidth\theight\tscore\n")
+    f.write("database_id\tmedia_name\tiso_datetime\tdepth\tLabel\tx\ty\twidth\theight\tscore\n")
 
     for loc in localizations:
         # Get the media that is associated with the localization
         media = media_hash[loc.media]
 
         f.write(f"{loc.id}"
+                f"\t{media.name}"
                 f"\t{media.attributes['iso_datetime']}"
                 f"\t{media.attributes['depth']}"
                 f"\t{loc.attributes['Label']}"
