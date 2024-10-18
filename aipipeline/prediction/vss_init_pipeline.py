@@ -157,7 +157,6 @@ def run_pipeline(argv=None):
             | "Create labels" >> beam.Create([labels])
         )
         if not args.skip_download:
-            import pdb; pdb.set_trace()
             start = (
                 start
                 | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
