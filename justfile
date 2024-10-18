@@ -26,11 +26,19 @@ plot-tsne-vss project='uav':
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/plot_tsne_vss.py --config $PROJECT_DIR/config/config.yml
 
+optimize-vss project='uav' *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/optimize_vss.py \
+    --config $PROJECT_DIR/config/config.yml \
+    {{more_args}}
+
 # Calculate the accuracy of the VSS database
 calc-acc-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
-    export PYTHONPATH=.:submodules/aidata
+    export PYTHONPATH=.:/u/mldevops/code/aidata
     time conda run -n aipipeline --no-capture-output python3 aipipeline/metrics/calc_accuracy_vss.py --config $PROJECT_DIR/config/config.yml
 
 # Reset the VSS database, removing all data. Proceed with caution!!
@@ -56,6 +64,13 @@ init-vss project='uav' *more_args="":
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config.yml {{more_args}}
+
+# Load already computed exemplars into the VSS database
+load-vss project='uav' :
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
 # Cluster mission in aipipeline/projects/uav/data/missions2process.txt
 cluster-uav:
