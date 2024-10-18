@@ -114,12 +114,12 @@ def calc_accuracy(config: dict, image_dir: str, password: str):
     # Create a dictionary to encode the labels
     label_encoder = LabelEncoder()
     # Combine both the found labels and the database labels in case there are missing labels
-    combined = predicted_labels + [labels]
+    combined = predicted_labels + [labels_unique]
     flattened = [item for sublist in combined for item in sublist]
-    unique_labels = list(set(flattened))
-    label_encoder.fit(unique_labels)
+    labels_unique_all = list(set(flattened))
+    label_encoder.fit(labels_unique_all)
     label_dict = {label: i for i, label in enumerate(label_encoder.classes_)}
-    LABELS_VAL = ", ".join(unique_labels)
+    LABELS_VAL = ", ".join(labels_unique_all)
 
     # Convert predictions to encoded labels
     true_labels_encoded = [label_dict[label] for label in true_labels]
