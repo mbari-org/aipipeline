@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.26.1 (2024-10-18)
+
+### Bug Fixes
+
+* fix: continue to load exemplar when missing data as some labels may be missing ([`e3fbdbd`](https://github.com/mbari-org/aipipeline/commit/e3fbdbd7d755f9472d446782454172d074941ee4))
+
+
 ## v0.26.0 (2024-10-18)
 
 ### Features
