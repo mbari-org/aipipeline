@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.24.0 (2024-10-18)
+
+### Features
+
+* feat(cfe): add download_isiis_label_metadata.py for Fernanda ([`6ee109c`](https://github.com/mbari-org/aipipeline/commit/6ee109cf668e05ceb8a988816d12ab2d1248bf6a))
+
+
 ## v0.23.0 (2024-10-17)
 
 ### Features
