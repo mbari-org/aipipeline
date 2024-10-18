@@ -6,9 +6,9 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
-  version: "ctenophora-sp-a-yv5-vss"
+  version: "Baseline"
   labels: "Ctenophora sp. A,Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
-  download_args: ["--verified"]
+  download_args: ["--verified --min-saliency 1000"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
