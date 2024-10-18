@@ -71,7 +71,7 @@ def load_exemplars(labels: List[tuple[str, str]], config_dict=Dict, conf_files=D
 
             if exemplar_file is None:
                 logger.info(f"No detections file found for {label}")
-                return f"No exemplar or detections file found for {label}"
+                continue
 
             with open(exemplar_file, "r") as f:
                 exemplar_count = len(f.readlines())
