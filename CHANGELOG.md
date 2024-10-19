@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.28.0 (2024-10-19)
+
+### Features
+
+* feat(cfe): switch from video to frame mining on images with depth ([`bd5ee13`](https://github.com/mbari-org/aipipeline/commit/bd5ee13e0651d850a4da0ec75416675decd18ec1))
+
+
 ## v0.27.0 (2024-10-18)
 
 ### Features
