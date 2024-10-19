@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.28.1 (2024-10-19)
+
+### Performance Improvements
+
+* perf(bio): crop pass to vss, and pass confidence detections less than .9 ([`69c4b99`](https://github.com/mbari-org/aipipeline/commit/69c4b99b5c47471758aa1d587b06ca6569a55624))
+
+
 ## v0.28.0 (2024-10-19)
 
 ### Features
