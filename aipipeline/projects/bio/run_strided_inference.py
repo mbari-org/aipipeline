@@ -23,6 +23,7 @@ from aipipeline.config_setup import setup_config
 from aipipeline.db_utils import init_api_project, get_version_id
 from aipipeline.prediction.library import run_vss
 from aipipeline.docker.utils import run_docker
+from aipipeline.prediction.utils import crop_square_image
 
 CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
 
@@ -247,11 +248,26 @@ def run_inference(
                 for loc in data:
                     if loc["class_name"] == class_name:
                         # For low confidence detections, run through the vss model
-                        if loc["confidence"] < 0.6:
+                        if loc["confidence"] < 0.9:
                             logger.info(
                                 f"{video_path.name}: running VSS model on low confidence {class_name} detection {loc['confidence']}")
-                            images = [read_image(output_frame.as_posix())]
+                            # Crop the image to the bounding box
+                            crop_path = output_path / f"{video_path.stem}_{index}_crop.jpg"
+                            data = {
+                                    "image_path": output_frame.as_posix(),
+                                    "crop_path": crop_path.as_posix(),
+                                    "image_width": frame_width,
+                                    "image_height": frame_height,
+                                    "x": loc["x"]/frame_width,
+                                    "y": loc["y"]/frame_height,
+                                    "xx": (loc["x"] + loc["width"]) / frame_width,
+                                    "xy": (loc["y"] + loc["height"]) / frame_height,
+                                }
+                            s = pd.Series(data)
+                            crop_square_image(s, 224)
+                            images = [read_image(crop_path.as_posix())]
                             file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
+                            crop_path.unlink()
                             if len(best_predictions) == 0:
                                 logger.info(f"{video_path.name}: no predictions from VSS model. Skipping this detection.")
                                 continue
@@ -362,6 +378,7 @@ def parse_args():
     )
     parser.add_argument("--config", required=True, help=f"Configuration files. For example: {CONFIG_YAML}")
     parser.add_argument("--video", help="Video file or directory.", required=False, type=str)
+    parser.add_argument("--version", help="Version name", required=False, type=str)
     parser.add_argument(
         "--tsv",
         help="TSV file with video paths per Haddock output",
@@ -402,6 +419,8 @@ if __name__ == "__main__":
     # Get the version id from the database
     project = config_dict["tator"]["project"]
     host = config_dict["tator"]["host"]
+    if args.version: # Override the version in the config file
+        config_dict["data"]["version"] = args.version
     version = config_dict["data"]["version"]
     api, project = init_api_project(host=host, token=TATOR_TOKEN, project=project)
     version_id = get_version_id(api, project, version)

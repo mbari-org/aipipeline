@@ -10,13 +10,19 @@ data:
   labels: "Ctenophora sp. A,Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
   download_args: ["--verified --min-saliency 1000"]
 
+mounts:
+  - name: "video"
+    path: "/mnt/M3"
+    host: "m3.shore.mbari.org"
+    nginx_root: "/M3"
+
 sdcat:
   model: "hustvl/yolos-tiny"
   ini: "sdcat.ini"
 
 vss:
   project: "901103-biodiversity"
-  threshold: 0.5
+  threshold: 0.1
   model: "google/vit-base-patch16-224"
 
 tator:
