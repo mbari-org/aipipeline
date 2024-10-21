@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.29.0 (2024-10-21)
+
+### Features
+
+* feat(cfe): load media+boxes of mined rare class labels ([`c8b9824`](https://github.com/mbari-org/aipipeline/commit/c8b98245cedbaf8e9827e36a137e64229d8068ff))
+
+
 ## v0.28.2 (2024-10-21)
 
 ### Performance Improvements
