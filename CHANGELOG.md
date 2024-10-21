@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.28.2 (2024-10-21)
+
+### Performance Improvements
+
+* perf(bio): add blurriness removal ([`113e7f8`](https://github.com/mbari-org/aipipeline/commit/113e7f8fd3c96469fff593753287fbaebffc1f98))
+
+
 ## v0.28.1 (2024-10-19)
 
 ### Performance Improvements
