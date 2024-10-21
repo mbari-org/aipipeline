@@ -22,7 +22,7 @@ from aipipeline.prediction.library import (
     gen_machine_friendly_label,
     clean,
     batch_elements,
-    ProcessClusterBatch, remove_multicrop_views,
+    ProcessClusterBatch, remove_multicrop_views, clean_blurriness,
 )
 
 logger = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
                 exemplar_count = len(f.readlines())
             logger.info(f"To few exemplars, using detections file {exemplar_file} instead")
 
-        logger.info(f"Loading {exemplar_count} exemplars for {label} as {machine_friendly_label} from {exemplar_file}")
+        logger.info(f"Loading {exemplar_count} exemplars for {label} as {label} from {exemplar_file}")
         args = [
             "load",
             "exemplars",
@@ -166,6 +166,7 @@ def run_pipeline(argv=None):
             start
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
+            | 'Remove blurred images' >> beam.Map(clean_blurriness)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)

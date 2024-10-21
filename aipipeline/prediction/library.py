@@ -1,3 +1,4 @@
+import glob
 import json
 import logging
 import multiprocessing
@@ -74,6 +75,36 @@ def generate_multicrop_views2(image) -> List[tuple]:
         augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
         data.append(augmented_image)
     return data
+
+
+def clean_blurriness_single(element) -> tuple:
+    count, crop_path, save_path = element
+    num_removed = 0
+    for image_path in glob.glob(f"{crop_path}/*.jpg"):
+        image = cv2.imread(image_path)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+        variance = laplacian.var()
+        if variance < 3:
+            logger.info(f"Removing {image_path} with variance {variance}")
+            os.remove(image_path)
+            num_removed += 1
+    return count - num_removed, crop_path, save_path
+
+
+def clean_blurriness(elements) -> List[tuple]:
+    logger.info(f"Cleaning blurriness in {elements} ")
+    data = []
+    import multiprocessing
+    num_cpus = multiprocessing.cpu_count()
+    if len(elements) > num_cpus:
+        num_processes = num_cpus
+    else:
+        num_processes = len(elements)
+    with multiprocessing.Pool(num_processes) as pool:
+        cleaned_data = pool.map(clean_blurriness_single, elements)
+
+    return cleaned_data
 
 
 def generate_multicrop_views(elements) -> List[tuple]:
@@ -212,7 +243,8 @@ def gen_machine_friendly_label(label: str) -> str:
     return label_machine_friendly
 
 
-def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = None, image_dir: str = None) -> List[tuple]:
+def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: str = None, image_dir: str = None) -> List[
+    tuple]:
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
     if processed_dir is None:
@@ -285,6 +317,9 @@ def crop_rois_voc(labels: List[str], config_dict: Dict, processed_dir: str = Non
             if count == 0:
                 logger.info(f"Skipping label {label} with 0 crops")
                 continue
+            if labels_filter and 'all' not in labels_filter and label not in labels_filter:
+                logger.info(f"Skipping label {label} not in {labels_filter}")
+                continue
             logger.info(f"Found {count} crops for label {label}")
             # Total number of crops, and paths to crops and cluster output respectively
             data.append((count, f"{base_path}/crops/{label}", f"{base_path}/cluster/{label}"))
@@ -354,7 +389,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
     return labels
 
 
-def run_vss(image_batch: List[tuple[np.array,str]], config_dict: dict, top_k: int = 3):
+def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: int = 3):
     """
     Run vector similarity
     :param image_batch: batch of images path/binary tuples to process, maximum of 3 as supported by the inference
@@ -447,4 +482,3 @@ def init_api_project(host: str, token: str, project_name: str) -> tuple[Any, int
         raise Exception(f"Could not find project {project}")
 
     return api, project.id
-
