@@ -7,8 +7,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from aipipeline.docker.utils import run_docker
-
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # Also log to the console
@@ -30,7 +28,6 @@ if not TATOR_TOKEN:
     sys.exit(1)
 
 if __name__ == "__main__":
-    import multiprocessing
     import time
 
     time_start = time.time()
@@ -54,23 +51,40 @@ if __name__ == "__main__":
     image_paths = df_all['image_path'].unique()
     project = "902111-CFE"
     section = "mine_depth_v1"
+    config = "/home/dcline/code/aidata/aidata/config/config_cfe.yml"
 
+    # Load the images
     for image_path in image_paths:
         args = [
             "load",
             "images",
             "--input",
-            image_path,
+            f"'{image_path}'",
             "--config",
-            f"/tmp/{project}/config.yml",
+            config,
             "--token",
             TATOR_TOKEN,
             "--section",
             section,
         ]
         command = "python -m aidata " + " ".join(args)
-        logger.info(f"Running {' '.join(args)}")
+        logger.info(f"Running {command}")
         subprocess.run(command, shell=True)
+
+    # Now load the boxes
+    args = [
+        "load",
+        "boxes",
+        "--input",
+        out_path / 'csv',
+        "--config",
+        config,
+        "--token",
+        TATOR_TOKEN,
+    ]
+    command = "python -m aidata " + " ".join(args)
+    logger.info(f"Running {command}")
+    subprocess.run(command, shell=True)
 
     time_end = time.time()
     logger.info(f"total processing time: {time_end - time_start}")
