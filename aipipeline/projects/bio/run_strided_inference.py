@@ -163,6 +163,8 @@ def run_inference(
         endpoint_url: str,
         class_name: str,
         version_id: int = 0,
+        min_confidence: float = 0.1,
+        remove_vignette: bool = False,
         skip_vss: bool = False,
 ):
     """
@@ -186,7 +188,6 @@ def run_inference(
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     duration_secs = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) / cap.get(cv2.CAP_PROP_FPS))
-    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     frame_rate = cap.get(cv2.CAP_PROP_FPS)
     cap.release()
     output_path = Path("/tmp") / video_path.stem
@@ -246,28 +247,40 @@ def run_inference(
                 # Remove duplicates
                 data = [dict(t) for t in {tuple(d.items()) for d in data}]
 
+                if remove_vignette:
+                    # Remove any detections in the corner 1% of the frame
+                    threshold = 0.01  # 1% threshold
+                    for loc in data:
+                        if (
+                                (0 <= loc['x'] <= threshold or 1 - threshold <= loc['x'] <= 1) or
+                                (0 <= loc['y'] <= threshold or 1 - threshold <= loc['y'] <= 1) or
+                                (0 <= loc['xx'] <= threshold or 1 - threshold <= loc['xx'] <= 1) or
+                                (0 <= loc['xy'] <= threshold or 1 - threshold <= loc['xy'] <= 1)
+                        ):
+                            data.remove(loc)
+
                 for loc in data:
-                    if loc["class_name"] == class_name:
-                        # For low confidence detections, run through the vss model
-                        # Crop the image to the bounding box
-                        crop_path = output_path / f"{video_path.stem}_{index}_crop.jpg"
-                        data = {
-                            "image_path": output_frame.as_posix(),
-                            "crop_path": crop_path.as_posix(),
-                            "image_width": frame_width,
-                            "image_height": frame_height,
-                            "x": loc["x"] / frame_width,
-                            "y": loc["y"] / frame_height,
-                            "xx": (loc["x"] + loc["width"]) / frame_width,
-                            "xy": (loc["y"] + loc["height"]) / frame_height,
-                        }
-                        s = pd.Series(data)
-                        crop_square_image(s, 224)
+                    if loc["class_name"] == class_name and loc["confidence"] >= min_confidence:
                         if loc["confidence"] < 0.9:
                             if not skip_vss:
                                 logger.info(
                                     f"{video_path.name}: running VSS model on low confidence {class_name} detection {loc['confidence']}")
 
+                                # For low confidence detections, run through the vss model
+                                # Crop the image to the bounding box
+                                crop_path = output_path / f"{video_path.stem}_{index}_crop.jpg"
+                                data = {
+                                    "image_path": output_frame.as_posix(),
+                                    "crop_path": crop_path.as_posix(),
+                                    "image_width": frame_width,
+                                    "image_height": frame_height,
+                                    "x": loc["x"] / frame_width,
+                                    "y": loc["y"] / frame_height,
+                                    "xx": (loc["x"] + loc["width"]) / frame_width,
+                                    "xy": (loc["y"] + loc["height"]) / frame_height,
+                                }
+                                s = pd.Series(data)
+                                crop_square_image(s, 224)
                                 images = [read_image(crop_path.as_posix())]
                                 file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
                                 crop_path.unlink()
@@ -360,12 +373,13 @@ def run_inference(
         jpg_file.unlink()
 
 
-def process_videos(video_files, stride, endpoint_url, class_name, version_id, skip_vss=False):
+def process_videos(video_files, stride, endpoint_url, class_name, version_id, min_confidence,
+                remove_vignette=False, skip_vss=False):
     num_cpus = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=num_cpus)
     pool.starmap(
         run_inference,
-        [(v, stride, endpoint_url, class_name, version_id, skip_vss) for v in video_files],
+        [(v, stride, endpoint_url, class_name, version_id, min_confidence, remove_vignette, skip_vss) for v in video_files],
     )
     pool.close()
     pool.join()
@@ -405,7 +419,9 @@ def parse_args():
         type=str,
     )
     parser.add_argument("--skip-vss", help="Skip running VSS model on low confidence detections.", action="store_true")
+    parser.add_argument("--min-confidence", help="Minimum confidence for detections.", default=0.1, type=float)
     parser.add_argument("--flush", help="Flush the REDIS database.", action="store_true")
+    parser.add_argument("--remove-vignette", help="Remove vignette detection.", action="store_true")
     return parser.parse_args()
 
 
@@ -475,6 +491,8 @@ if __name__ == "__main__":
                 args.endpoint_url,
                 args.class_name,
                 version_id,
+                args.min_confidence,
+                remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
             )
         elif video_path.is_dir():
@@ -487,6 +505,8 @@ if __name__ == "__main__":
                 args.endpoint_url,
                 args.class_name,
                 version_id,
+                args.min_confidence,
+                remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
             )
         else:
