@@ -34,7 +34,7 @@ optimize-vss project='uav' *more_args="":
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
-# Calculate the accuracy of the VSS database
+# Calculate the accuracy of the VSS database; run after download, then optimize
 calc-acc-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
@@ -57,6 +57,13 @@ reset-vss project='uav':
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config $PROJECT_DIR/config/config.yml
+
+# Remove an entry from the VSS database, e.g. j remove-vss i2map --doc \'doc:marine organism:\*\'
+remove-vss project='uav' *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_remove.py --config $PROJECT_DIR/config/config.yml {{more_args}}
 
 # Initialize the VSS database for a project
 init-vss project='uav' *more_args="":
