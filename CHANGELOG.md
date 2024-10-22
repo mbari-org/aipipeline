@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.30.0 (2024-10-22)
+
+### Features
+
+* feat(bio): add --skip-vss  to skip over second stage ([`809188f`](https://github.com/mbari-org/aipipeline/commit/809188fad962cb265b254cd2d52631fa7b12e4dd))
+
+
 ## v0.29.0 (2024-10-21)
 
 ### Features
