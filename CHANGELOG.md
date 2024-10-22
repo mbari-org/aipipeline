@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.34.0 (2024-10-22)
+
+### Features
+
+* feat(i2map): change group MERGE_CLASSIFY to NMS ([`6fb7265`](https://github.com/mbari-org/aipipeline/commit/6fb72654e32b9b705d4e82efd6d61e10355716c3))
+
+* feat(cfe): delete all media by depth ([`41a60f9`](https://github.com/mbari-org/aipipeline/commit/41a60f9969dcf59b394741293cca8bc7352403d1))
+
+* feat(uav): delete all loc in media ([`6323700`](https://github.com/mbari-org/aipipeline/commit/63237007002aacd2d9d0ad0c8f31b460fd8bc450))
+
+
 ## v0.33.0 (2024-10-22)
 
 ### Documentation
