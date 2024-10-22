@@ -70,29 +70,31 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 just list
 ```
 
-| Recipe                                                                              | Description                                                                                             |
-|-------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
-| `list`                                                                              | List recipes                                                                                            |
-| `install`                                                                           | Setup the environment                                                                                   |
-| `update`                                                                            | Update the environment. Run this command after checking out any code changes                            |
-| `plot-tsne-vss project='uav'`                                                       | Generate a t-SNE plot of the VSS database                                                               |
-| `calc-acc-vss project='uav'`                                                        | Calculate the accuracy of the VSS database                                                              |
-| `reset-vss-all`                                                                     | Reset the VSS database, removing all data. Proceed with caution!!                                       |
-| `reset-vss project='uav'`                                                           | Reset the VSS database, removing all data. Run before `init-vss` or when creating the database.         |
-| `init-vss project='uav' *more_args=""`                                              | Initialize the VSS database for the UAV project                                                         |
-| `cluster-uav`                                                                       | Cluster mission in `aipipeline/projects/uav/data/missions2process.txt`                                  |
-| `detect-uav *more_args=""`                                                          | Detect mission in `aipipeline/projects/uav/data/missions2process.txt`, add `--vss` to classify with VSS |
-| `detect-uav-test`                                                                   | Detect mission data in `aipipeline/projects/uav/data/missions2process.txt`                              |
-| `load-uav-images`                                                                   | Load UAV mission images in `aipipeline/projects/uav/data/missions2process.txt`                          |
-| `load-uav type="cluster"`                                                           | Load UAV detections/clusters in `aipipeline/projects/uav/data/missions2process.txt`                     |
-| `fix-uav-metadata`                                                                  | Fix UAV metadata lat/lon/alt                                                                            |
-| `compute-saliency project='uav' *more_args=""`                                      | Compute saliency for downloaded VOC data and update the Tator database                                  |
-| `crop project='uav'`                                                                | Crop detections from VOC formatted downloads                                                            |  
-| `download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download'` | Download and crop Unknown detections                                                                    |
-| `download project='uav'`                                                            | Download only                                                                                           |
-| `predict-vss project='uav' image_dir='/tmp/download' *more_args=""`                 | Predict images using the VSS database                                                                   |
-| `run-ctenoA-test`                                                                   | Run the strided inference on a single video                                                             |
-| `run-ctenoA-prod`                                                                   | Run the strided inference on a collection of videos in a TSV file                                       |
+| Recipe                                       | Description                                                                                      |
+|----------------------------------------------|--------------------------------------------------------------------------------------------------|
+| `list`                                       | List recipes                                                                                     |
+| `install`                                    | Setup the environment                                                                            |
+| `update`                                     | Update the environment. Run this command after checking out any code changes                      |
+| `plot-tsne-vss project='uav'`                | Generate a tsne plot of the VSS database                                                         |
+| `optimize-vss project='uav' *more_args=""`   | Optimize the VSS database                                                                        |
+| `calc-acc-vss project='uav'`                 | Calculate the accuracy of the VSS database; run after download, then optimize                     |
+| `reset-vss-all`                              | Reset the VSS database, removing all data. Proceed with caution!!                                |
+| `reset-vss project='uav'`                    | Reset the VSS database, removing all data. Run before init-vss or when creating the database.     |
+| `init-vss project='uav' *more_args=""`       | Initialize the VSS database for a project                                                        |
+| `load-vss project='uav'`                     | Load already computed exemplars into the VSS database                                             |
+| `cluster-uav`                                | Cluster mission in `aipipeline/projects/uav/data/missions2process.txt`                            |
+| `detect-uav *more_args=""`                   | Detect mission in `aipipeline/projects/uav/data/missions2process.txt`, add `--vss` to classify with VSS |
+| `detect-uav-test`                            | Detect mission data in `aipipeline/projects/uav/data/missions2process.txt`                        |
+| `load-uav-images`                            | Load UAV mission images in `aipipeline/projects/uav/data/missions2process.txt`                    |
+| `load-uav type="cluster"`                    | Load UAV detections/clusters in `aipipeline/projects/uav/data/missions2process.txt`               |
+| `fix-uav-metadata`                           | Fix UAV metadata lat/lon/alt                                                                      |
+| `compute-saliency project='uav' *more_args=""`| Compute saliency for downloaded VOC data and update the Tator database                            |
+| `crop project='uav' *more_args=""`           | Crop detections from VOC formatted downloads                                                      |
+| `download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download'`| Download and crop Unknown detections                                  |
+| `download project='uav'`                     | Download only                                                                                     |
+| `predict-vss project='uav' image_dir='/tmp/download' *more_args=""` | Predict images using the VSS database                                                |
+| `run-ctenoA-test`                            | Run the strided inference on a single video                                                       |
+| `run-ctenoA-prod`                            | Run the strided inference on a collection of videos in a TSV file                                 |
 
 --
 
@@ -105,4 +107,4 @@ just list
 - [fastapi-vss](https://github.com/mbari-org/fastapi-vss) - A RESTful API for vector similarity search using foundational models.
 - [fastapi-tator](https://github.com/mbari-org/fastapi-tator) - A RESTful API server for bulk operations on a Tator annotation database.
 
-**updated: 2024-10-07**
+**updated: 2024-10-22**
