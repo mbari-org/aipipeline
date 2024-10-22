@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.33.0 (2024-10-22)
+
+### Documentation
+
+* docs: updated README with latest recipes ([`5eda62d`](https://github.com/mbari-org/aipipeline/commit/5eda62d665972ce3e8b2c29576659b2f0733d839))
+
+### Features
+
+* feat: added vss remove e.g. j remove-vss uav --doc \'doc:boat:\*\' ([`06b02d9`](https://github.com/mbari-org/aipipeline/commit/06b02d9905269335d3e533b3065cdab19ff27eea))
+
+
 ## v0.32.0 (2024-10-22)
 
 ### Features
