@@ -4,7 +4,7 @@
 docker:
   aidata: 'mbari/aidata:latest-cuda124'
   sdcat: 'mbari/sdcat:latest-cuda124'
-  voccropper: 'mbari/voc-imagecropper:0.4.4'
+  voccropper: 'mbari/voc-imagecropper:0.4.5'
   expd: 'get-expd-data'
 
 
