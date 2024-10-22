@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.31.1 (2024-10-22)
+
+### Bug Fixes
+
+* fix(bio): normalize coords ([`b42cec4`](https://github.com/mbari-org/aipipeline/commit/b42cec46371aefe73033c22a1b8dc1420f6615a5))
+
+
 ## v0.31.0 (2024-10-22)
 
 ### Features
