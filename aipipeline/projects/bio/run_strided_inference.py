@@ -247,6 +247,13 @@ def run_inference(
                 # Remove duplicates
                 data = [dict(t) for t in {tuple(d.items()) for d in data}]
 
+                # Normalize the bounding box coordinates
+                for loc in data:
+                    loc["x"] = loc["x"] / frame_width
+                    loc["y"] = loc["y"] / frame_height
+                    loc["xx"] = (loc["x"] + loc["width"]) / frame_width
+                    loc["xy"] = (loc["y"] + loc["height"]) / frame_height
+
                 if remove_vignette:
                     # Remove any detections in the corner 1% of the frame
                     threshold = 0.01  # 1% threshold
@@ -274,10 +281,10 @@ def run_inference(
                                     "crop_path": crop_path.as_posix(),
                                     "image_width": frame_width,
                                     "image_height": frame_height,
-                                    "x": loc["x"] / frame_width,
-                                    "y": loc["y"] / frame_height,
-                                    "xx": (loc["x"] + loc["width"]) / frame_width,
-                                    "xy": (loc["y"] + loc["height"]) / frame_height,
+                                    "x": loc["x"],
+                                    "y": loc["y"],
+                                    "xx": loc["xx"],
+                                    "xy": loc["xy"],
                                 }
                                 s = pd.Series(data)
                                 crop_square_image(s, 224)
