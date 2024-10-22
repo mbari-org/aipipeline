@@ -77,7 +77,7 @@ def generate_multicrop_views2(image) -> List[tuple]:
     return data
 
 
-def clean_blurriness_single(element) -> tuple:
+def clean_blurriness_single(element, min_variance) -> tuple:
     count, crop_path, save_path = element
     num_removed = 0
     for image_path in glob.glob(f"{crop_path}/*.jpg"):
@@ -85,14 +85,14 @@ def clean_blurriness_single(element) -> tuple:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         laplacian = cv2.Laplacian(gray, cv2.CV_64F)
         variance = laplacian.var()
-        if variance < 3:
+        if variance < min_variance:
             logger.info(f"Removing {image_path} with variance {variance}")
             os.remove(image_path)
             num_removed += 1
     return count - num_removed, crop_path, save_path
 
 
-def clean_blurriness(elements) -> List[tuple]:
+def clean_blurriness(elements, min_variance) -> List[tuple]:
     logger.info(f"Cleaning blurriness in {elements} ")
     data = []
     import multiprocessing
@@ -102,7 +102,8 @@ def clean_blurriness(elements) -> List[tuple]:
     else:
         num_processes = len(elements)
     with multiprocessing.Pool(num_processes) as pool:
-        cleaned_data = pool.map(clean_blurriness_single, elements)
+        args = [(data, min_variance) for data in elements]
+        cleaned_data = pool.starmap(clean_blurriness_single, args)
 
     return cleaned_data
 
