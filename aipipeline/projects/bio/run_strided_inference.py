@@ -258,12 +258,14 @@ def run_inference(
                     # Remove any detections in the corner 1% of the frame
                     threshold = 0.01  # 1% threshold
                     for loc in data:
-                        if (
+                        if not (
                                 (0 <= loc['x'] <= threshold or 1 - threshold <= loc['x'] <= 1) or
                                 (0 <= loc['y'] <= threshold or 1 - threshold <= loc['y'] <= 1) or
                                 (0 <= loc['xx'] <= threshold or 1 - threshold <= loc['xx'] <= 1) or
                                 (0 <= loc['xy'] <= threshold or 1 - threshold <= loc['xy'] <= 1)
                         ):
+                            logger.info(f"{loc} is not in the corner")
+                        else:
                             data.remove(loc)
 
                 for loc in data:
