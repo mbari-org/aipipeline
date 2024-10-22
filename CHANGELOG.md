@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.31.0 (2024-10-22)
+
+### Features
+
+* feat(bio): add --remove-vignette to remove vignette detections ([`675a501`](https://github.com/mbari-org/aipipeline/commit/675a5015cbfa10395f7229f4ca271158b6c747d7))
+
+
 ## v0.30.0 (2024-10-22)
 
 ### Features
