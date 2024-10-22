@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.31.2 (2024-10-22)
+
+### Bug Fixes
+
+* fix(bio): correct vignette logic ([`e18ff74`](https://github.com/mbari-org/aipipeline/commit/e18ff748dee59a4bca9d432d4bb8e2390058757a))
+
+
 ## v0.31.1 (2024-10-22)
 
 ### Bug Fixes
