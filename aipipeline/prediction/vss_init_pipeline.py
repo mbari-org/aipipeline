@@ -135,6 +135,7 @@ def run_pipeline(argv=None):
     parser.add_argument("--skip-clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
     parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
     parser.add_argument("--batch-size", required=False, default=3, help="Batch size")
+    parser.add_argument("--min-variance", required=False, default=3.0, help="Minimum variance for blurriness")
     args, beam_args = parser.parse_known_args(argv)
 
     conf_files, config_dict = setup_config(args.config)
@@ -166,7 +167,7 @@ def run_pipeline(argv=None):
             start
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
-            | 'Remove blurred images' >> beam.Map(clean_blurriness)
+            | 'Remove blurred images' >> beam.Map(clean_blurriness, min_variance=args.min_variance)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)
