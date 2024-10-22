@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.32.0 (2024-10-22)
+
+### Features
+
+* feat: add --min-variance to vss-init ([`c838aae`](https://github.com/mbari-org/aipipeline/commit/c838aae0e939f569fa8ca4ec52d9a3620590a316))
+
+
 ## v0.31.2 (2024-10-22)
 
 ### Bug Fixes
