@@ -14,7 +14,7 @@ logger.setLevel(logging.DEBUG)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 # and log to file
 now = datetime.now()
-log_filename = f"optimize_vss{now:%Y%m%d}.log"
+log_filename = f"vss_optimize{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -27,7 +27,7 @@ from pathlib import Path
 import redis
 
 
-def optimize(config: dict, password: str, csv_path: Path, n: int = 1):
+def optimize(config: dict, password: str, csv_path: Path, min_instance: int = 1, min_score: float = 0.5):
     r = redis.Redis(
         host=config["redis"]["host"],
         port=config["redis"]["port"],
@@ -35,12 +35,12 @@ def optimize(config: dict, password: str, csv_path: Path, n: int = 1):
     )
 
     # Read in the csv file as a pandas dataframe
-    # where the true_label is not the same as the pred_label
+    # where the true_label is not the same as the pred_label and the score is greater than the threshold
     df = pd.read_csv(csv_path)
-    df = df[(df["true_label"] != df["pred_label"])]
+    df = df[(df["true_label"] != df["pred_label"]) & (df["predicted_score"] > min_score)]
 
-    # Group by predicted_id and only remove those that occur more than n times
-    confused = df.groupby("predicted_id").filter(lambda x: len(x) > n)
+    # Group by predicted_id and only remove those that occur more than min_instance times
+    confused = df.groupby("predicted_id").filter(lambda x: len(x) > min_instance)
 
     # Get the unique predicted_ids that are confused
     confused = confused.drop_duplicates(subset="predicted_id")
@@ -70,8 +70,9 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Calculate the accuracy of the vss")
     parser.add_argument("--config", required=False, help="Config file path", default=example_project)
     parser.add_argument("--confused-csv", required=True, help="CSV file path")
-    parser.add_argument("--n", required=False, help="Number of times the predicted_id must be falsely predicted to b "
+    parser.add_argument("--min-instance", required=False, help="Number of times the predicted_id must be falsely predicted to b "
                                                     "removed", default=1)
+    parser.add_argument("--min-score", required=False, help="Minimum score for the predicted_id to be removed", default=0.90)
     args = parser.parse_args(argv)
 
     _, config_dict = setup_config(args.config)
@@ -80,7 +81,7 @@ def main(argv=None):
         logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
-    optimize(config_dict, os.getenv("REDIS_PASSWORD"), Path(args.confused_csv))
+    optimize(config_dict, os.getenv("REDIS_PASSWORD"), Path(args.confused_csv), int(args.min_instance), float(args.min_score))
 
 
 if __name__ == "__main__":
