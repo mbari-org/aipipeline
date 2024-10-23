@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.34.1 (2024-10-23)
+
+### Performance Improvements
+
+* perf: load all detections if less than 100 total examples ([`7ec6053`](https://github.com/mbari-org/aipipeline/commit/7ec6053ce5f545690f79d4fb060abef28cd111d1))
+
+
 ## v0.34.0 (2024-10-22)
 
 ### Features
