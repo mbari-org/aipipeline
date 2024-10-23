@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.0 (2024-10-23)
+
+### Features
+
+* feat(bio): added --allowed-classes animal with --class-remap "{'animal': 'marine organism'}" ([`1306116`](https://github.com/mbari-org/aipipeline/commit/13061161de26b75b0b569f4bcad90f606af7f963))
+
+
 ## v0.34.1 (2024-10-23)
 
 ### Performance Improvements
