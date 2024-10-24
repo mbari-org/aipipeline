@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.3 (2024-10-24)
+
+### Bug Fixes
+
+* fix(bio): removed unused args ([`1038aa7`](https://github.com/mbari-org/aipipeline/commit/1038aa7d8167d8089525440447d806318d21ba4f))
+
+
 ## v0.35.2 (2024-10-24)
 
 ### Bug Fixes
