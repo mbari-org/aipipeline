@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.1 (2024-10-24)
+
+### Bug Fixes
+
+* fix: minor logging correction ([`544f3b7`](https://github.com/mbari-org/aipipeline/commit/544f3b77b9549b962fef060c27ced79ebe2959ab))
+
+
 ## v0.35.0 (2024-10-23)
 
 ### Features
