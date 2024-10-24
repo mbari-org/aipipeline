@@ -388,12 +388,12 @@ def run_inference(
 
 
 def process_videos(video_files, stride, endpoint_url, class_name, version_id, min_confidence,
-                   remove_vignette=False, skip_vss=False):
+                   allowed_classes, class_remap, remove_vignette=False, skip_vss=False):
     num_cpus = multiprocessing.cpu_count()
     pool = multiprocessing.Pool(processes=num_cpus)
     pool.starmap(
         run_inference,
-        [(v, stride, endpoint_url, class_name, version_id, min_confidence, remove_vignette, skip_vss) for v in
+        [(v, stride, endpoint_url, class_name, version_id, min_confidence, allowed_classes, class_remap, remove_vignette, skip_vss) for v in
          video_files],
     )
     pool.close()
@@ -561,6 +561,7 @@ if __name__ == "__main__":
             args.allowed_classes,
             args.class_remap,
             version_id,
+            remove_vignette=args.remove_vignette,
             skip_vss=args.skip_vss,
         )
 
