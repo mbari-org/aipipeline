@@ -39,7 +39,7 @@ def get_version_id(api: TatorApi, project: Project, version: str) -> int:
     version_match = [v for v in versions if v.name == version]
     if len(version_match) == 0:
         logger.error(f"Could not find version {version}")
-        raise ValueError(f"Could not find version {version}")
+        raise ValueError(f"Could not find version {version} in possible versions {versions}")
     if len(version_match) > 1:
         logger.error(f"Found multiple versions with name {version}")
         raise ValueError(f"Found multiple versions with name {version}")
