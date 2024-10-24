@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.2 (2024-10-24)
+
+### Bug Fixes
+
+* fix(bio): pass through addtional args ([`3bf1b74`](https://github.com/mbari-org/aipipeline/commit/3bf1b74e40c7cb8ae1e592db67325a678dc61fc5))
+
+
 ## v0.35.1 (2024-10-24)
 
 ### Bug Fixes
