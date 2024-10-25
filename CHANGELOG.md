@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.4 (2024-10-25)
+
+### Performance Improvements
+
+* perf(uav): exclude unused classes, lower threshold for vss to allow more rare detections, and cluster everything ([`c7d12b6`](https://github.com/mbari-org/aipipeline/commit/c7d12b65afb0f6aefa96d5b5e9c368fdfbda2b63))
+
+
 ## v0.35.3 (2024-10-24)
 
 ### Bug Fixes
