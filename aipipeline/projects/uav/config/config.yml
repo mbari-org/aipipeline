@@ -35,7 +35,7 @@ sdcat:
 
 vss:
   project: "901902-uavs"
-  threshold: 0.5
+  threshold: 0.1
   model: "google/vit-base-patch16-224"
 
 tator:

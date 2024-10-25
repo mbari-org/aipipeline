@@ -79,6 +79,10 @@ def process_mission(element) -> str:
         "--version",
         version,
         "--exclude",
+        "Poop",
+        "--exclude",
+        "Batray",
+        "--exclude",
         "Unknown",
     ]
 
