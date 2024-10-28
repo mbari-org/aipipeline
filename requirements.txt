@@ -10,3 +10,4 @@ matplotlib
 albumentations
 torch
 apache-beam
+cleanvision
