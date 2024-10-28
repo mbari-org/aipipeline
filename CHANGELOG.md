@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.6 (2024-10-28)
+
+### Performance Improvements
+
+* perf(uav): remove any low saliency detections from clustering ([`43b316c`](https://github.com/mbari-org/aipipeline/commit/43b316c51203cb046cc1a10f3aeea125cc8ce354))
+
+
 ## v0.35.5 (2024-10-28)
 
 ### Performance Improvements
