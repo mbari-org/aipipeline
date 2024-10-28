@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.35.5 (2024-10-28)
+
+### Performance Improvements
+
+* perf: clean vss images with cleanvision defaults removing all dark and blurry images ([`1ccb994`](https://github.com/mbari-org/aipipeline/commit/1ccb994a63cd150b22e51fc0cce23495c5faa758))
+
+
 ## v0.35.4 (2024-10-25)
 
 ### Performance Improvements
