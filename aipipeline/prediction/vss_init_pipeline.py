@@ -22,7 +22,7 @@ from aipipeline.prediction.library import (
     gen_machine_friendly_label,
     clean,
     batch_elements,
-    ProcessClusterBatch, remove_multicrop_views, clean_blurriness,
+    ProcessClusterBatch, remove_multicrop_views, clean_images,
 )
 
 logger = logging.getLogger(__name__)
@@ -173,7 +173,7 @@ def run_pipeline(argv=None):
             start
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
-            | 'Remove blurred images' >> beam.Map(clean_blurriness, min_variance=args.min_variance)
+            | "Clean dark blurry examples" >> beam.Map(clean_images)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)

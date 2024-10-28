@@ -1,4 +1,4 @@
-import glob
+from cleanvision import Imagelab
 import json
 import logging
 import multiprocessing
@@ -77,35 +77,27 @@ def generate_multicrop_views2(image) -> List[tuple]:
     return data
 
 
-def clean_blurriness_single(element, min_variance) -> tuple:
+def clean_bad_images(element) -> tuple:
     count, crop_path, save_path = element
     num_removed = 0
-    for image_path in glob.glob(f"{crop_path}/*.jpg"):
-        image = cv2.imread(image_path)
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-        variance = laplacian.var()
-        if variance < min_variance:
-            logger.info(f"Removing {image_path} with variance {variance}")
-            os.remove(image_path)
-            num_removed += 1
+    imagelab = Imagelab(data_path=crop_path)
+    imagelab.find_issues()
+    imagelab.report()
+    # Get all dark or blurry images and remove them
+    bad_images = imagelab.issues[["is_dark_issue"] == True or imagelab.issues["is_dark_issue"] == True]
+    for img in bad_images.index:
+        os.remove(img)
+        num_removed += 1
+    logger.info(f"Removed {num_removed} dark or blurry images in {crop_path}")
     return count - num_removed, crop_path, save_path
 
 
-def clean_blurriness(elements, min_variance) -> List[tuple]:
-    logger.info(f"Cleaning blurriness in {elements} ")
-    data = []
-    import multiprocessing
-    num_cpus = multiprocessing.cpu_count()
-    if len(elements) > num_cpus:
-        num_processes = num_cpus
-    else:
-        num_processes = len(elements)
-    with multiprocessing.Pool(num_processes) as pool:
-        args = [(data, min_variance) for data in elements]
-        cleaned_data = pool.starmap(clean_blurriness_single, args)
+def clean_images(elements) -> List[tuple]:
+    logger.info(f"Cleaning bad images in {elements} ")
+    for element in elements:
+        clean_bad_images(element)
 
-    return cleaned_data
+    return elements
 
 
 def generate_multicrop_views(elements) -> List[tuple]:
