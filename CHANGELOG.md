@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.36.0 (2024-10-29)
+
+### Build System
+
+* build: added co-tracker submodule ([`4bcd71a`](https://github.com/mbari-org/aipipeline/commit/4bcd71a09504e16ef91e1156c09d010925180753))
+
+* build:  added submodule for co-tracker and better formatting for cluster-uav ([`8aaef9b`](https://github.com/mbari-org/aipipeline/commit/8aaef9b0938a2beb735ee1da925d8792e4694970))
+
+### Features
+
+* feat(bio): added support for --skip-load and --max-seconds to save just localizations ([`c5f6cda`](https://github.com/mbari-org/aipipeline/commit/c5f6cda79d5d9e350945195af69c2074b92b748a))
+
+
 ## v0.35.6 (2024-10-28)
 
 ### Performance Improvements
