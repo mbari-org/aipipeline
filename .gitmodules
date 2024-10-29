@@ -1,6 +1,0 @@
-[submodule "submodules/aidata"]
-	path = submodules/aidata
-	url = https://github.com/mbari-org/aidata
-[submodule "submodules/co-tracker"]
-	path = submodules/co-tracker
-	url = https://github.com/facebookresearch/co-tracker.git

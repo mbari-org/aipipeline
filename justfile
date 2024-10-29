@@ -9,11 +9,12 @@ list:
 
 # Setup the environment
 install: update
-    git submodule update --init --recursive
     conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
-    conda run -n aipipeline pip install -r submodules/aidata/requirements.txt
-    mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
-    cd submodules/co-tracker && conda run -n aipipeline pip install -e .
+    git clone http://github.com/mbari-org/aidata.git deps/aidata
+    git clone https://github.com/facebookresearch/co-tracker deps/co-tracker
+    conda run -n aipipeline pip install -r deps/aidata/requirements.txt
+    cd deps/co-tracker && conda run -n aipipeline pip install -e .
+    cd .. && mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
 
 # Update the environment. Run this command after checking out any code changes
 update:
@@ -133,7 +134,7 @@ load-uav type="cluster":
 fix-uav-metadata:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
-    export PYTHONPATH=.:submodules/aidata
+    export PYTHONPATH=.:deps/aidata
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/fix_metadata.py
 
 # Compute saliency for downloaded VOC data and update the Tator database
