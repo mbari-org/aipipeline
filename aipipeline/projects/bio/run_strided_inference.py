@@ -3,6 +3,7 @@
 # Description: commands related to running inference on strided video with REDIS queue based load
 import argparse
 import ast
+import uuid
 
 import dotenv
 import io
@@ -275,7 +276,10 @@ def run_inference(
 
                 for loc in data:
                     # Skip detections with low confidence or not the target class
-                    if loc["confidence"] < min_confidence or loc["class_name"] not in allowed_class_names:
+                    if loc["confidence"] < min_confidence:
+                        continue
+
+                    if allowed_class_names and loc["class_name"] not in allowed_class_names:
                         continue
 
                     if not skip_vss:
@@ -283,31 +287,36 @@ def run_inference(
                             f"{video_path.name}: running VSS model on detection {loc['confidence']}")
 
                         # Crop the image to the bounding box
-                        crop_path = output_path / f"{video_path.stem}_{index}_crop.jpg"
+                        crop_path = output_path / f"{uuid.uuid5(uuid.NAMESPACE_DNS, str(loc['x']) + str(loc['y']) + str(loc['width']) + str(loc['height']))}.jpg"
+
                         data = {
                             "image_path": output_frame.as_posix(),
                             "crop_path": crop_path.as_posix(),
                             "image_width": frame_width,
                             "image_height": frame_height,
-                            "x": loc["x"],
-                            "y": loc["y"],
-                            "xx": loc["xx"],
-                            "xy": loc["xy"],
++                           "x": loc["x"] / frame_width,
++                           "y": loc["y"] / frame_height,
++                           "xx": (loc["x"] + loc["width"]) / frame_width,
++                           "xy": (loc["y"] + loc["height"] / frame_height)
                         }
                         s = pd.Series(data)
                         crop_square_image(s, 224)
                         images = [read_image(crop_path.as_posix())]
-                        file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
+                        try:
+                            file_paths, best_predictions, best_scores = run_vss(images, config_dict, top_k=3)
+                            if len(best_predictions) == 0:
+                                logger.info(
+                                    f"{video_path.name}: no predictions from VSS model. Skipping this detection.")
+                                continue
+                            if allowed_class_names and best_predictions[0] not in allowed_class_names:
+                                logger.info(
+                                    f"{video_path.name}: VSS model prediction {best_predictions[0]} not in {allowed_class_names}. Skipping this detection.")
+                                continue
+                            logger.info(f"===>{video_path.name}: VSS model prediction {best_predictions[0]}")
+                            loc["class_name"] = best_predictions[0]
+                        except Exception as e:
+                            logger.error(f'Error running vss {e}')
                         crop_path.unlink()
-                        if len(best_predictions) == 0:
-                            logger.info(f"{video_path.name}: no predictions from VSS model. Skipping this detection.")
-                            continue
-                        if best_predictions[0] not in allowed_class_names:
-                            logger.info(
-                                f"{video_path.name}: VSS model prediction {best_predictions[0]} not in {allowed_class_names}. Skipping this detection.")
-                            continue
-                        logger.info(f"===>{video_path.name}: VSS model prediction {best_predictions[0]} in {allowed_class_names}<====")
-                        loc["class_name"] = best_predictions[0]
                     else:
                         logger.info(f"{video_path.name}: {loc['class_name']} detection {loc['confidence']}")
 
