@@ -11,7 +11,7 @@ list:
 install: update
     git submodule update --init --recursive
     conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
-    conda run -n aipipeline pip install submodules/aidata/requirements.txt
+    conda run -n aipipeline pip install -r submodules/aidata/requirements.txt
     mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
     cd submodules/co-tracker && conda run -n aipipeline pip install -e .
 
