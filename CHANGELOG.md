@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.36.1 (2024-10-29)
+
+### Bug Fixes
+
+* fix(bio): correct normalization of localization and handle exceptions in vss ([`3349391`](https://github.com/mbari-org/aipipeline/commit/33493910a4f4c8563a709f8e9da20ae1d0e7ba9d))
+
+
 ## v0.36.0 (2024-10-29)
 
 ### Build System
