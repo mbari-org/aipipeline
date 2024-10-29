@@ -549,7 +549,7 @@ if __name__ == "__main__":
                 remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
                 skip_load=args.skip_load,
-                max_secs=args.max_secs,
+                max_secs=args.max_seconds,
             )
         elif video_path.is_dir():
             # Fanout to number of CPUs
@@ -566,7 +566,7 @@ if __name__ == "__main__":
                 remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
                 skip_load=args.skip_load,
-                max_secs=args.max_secs,
+                max_secs=args.max_seconds,
             )
         else:
             logger.error(f"Invalid video path: {video_path}")
@@ -591,7 +591,7 @@ if __name__ == "__main__":
             remove_vignette=args.remove_vignette,
             skip_vss=args.skip_vss,
             skip_load=args.skip_load,
-            max_secs=args.max_secs,
+            max_secs=args.max_seconds,
         )
 
     logger.info("Finished processing videos")
