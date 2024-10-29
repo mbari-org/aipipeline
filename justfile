@@ -198,3 +198,20 @@ run-ctenoA-prod:
     --class_name "Ctenophora sp. A" \
     --endpoint_url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
     --tsv ./aipipeline/projects/bio/data/videotable.tsv
+
+# Run the mega strided inference only on a single video
+run-mega-inference:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    --config ./aipipeline/projects/bio/config/config.yml \
+    --class_name "animal" \
+    --class-remap "{\"animal\":\"marine organism\"}" \
+    --flush \
+    --skip-vss \
+    --skip-load \
+    --remove-vignette \
+    --min-confidence 0.2 \
+    --max-seconds 120 \
+    --endpoint_url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
+    --video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4

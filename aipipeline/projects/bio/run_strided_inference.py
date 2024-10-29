@@ -170,6 +170,8 @@ def run_inference(
         min_confidence: float = 0.1,
         remove_vignette: bool = False,
         skip_vss: bool = False,
+        skip_load: bool = False,
+        max_secs: int = -1,
 ):
     """
     Run inference on a video file and queue the localizations in REDIS
@@ -220,6 +222,9 @@ def run_inference(
     # Loop through the video frames
     for index in range(0, duration_secs, stride):
         current_time_secs = index
+        if 0 < max_secs < current_time_secs:
+            logger.info(f"Reached max_secs: {max_secs}. Stopping processing.")
+            break
         logger.info(f"{video_path.name}: processing frame at {current_time_secs} seconds")
         relative_timestamp = seconds_to_timestamp(current_time_secs)
         output_frame = output_path / f"{video_path.stem}_{index}.jpg"
@@ -306,6 +311,18 @@ def run_inference(
                     else:
                         logger.info(f"{video_path.name}: {loc['class_name']} detection {loc['confidence']}")
 
+                    if remapped_class_names:
+                        label = remapped_class_names[loc["class_name"]]
+                    else:
+                        label = loc["class_name"]
+
+                    if skip_load:
+                        save_path = output_path / f"{video_path.stem}_{index}_loc.json"
+                        logger.info(f"Skipping loading localizations to Tator for {video_path.name}. Savings to json file.")
+                        with open(save_path, "w") as f:
+                            json.dump(loc, f, indent=4)
+                        continue
+
                     if not queued_video:
                         queued_video = True
                         # Only queue the video if we have a valid localization to queue
@@ -349,11 +366,6 @@ def run_inference(
                     if ancillary_data is None or "depthMeters" not in ancillary_data:
                         logger.error(f"Failed to get ancillary data for {dive}")
                         continue
-
-                    if remapped_class_names:
-                        label = remapped_class_names[loc["class_name"]]
-                    else:
-                        label = loc["class_name"]
 
                     new_loc = {
                         "x1": loc["x"],
@@ -412,6 +424,8 @@ def parse_args():
     )
     parser.add_argument("--config", required=True, help=f"Configuration files. For example: {CONFIG_YAML}")
     parser.add_argument("--video", help="Video file or directory.", required=False, type=str)
+    parser.add_argument("--max-seconds", help="Maximum number of seconds to process.", required=False, type=int)
+    parser.add_argument("--skip-load", help="Skip loading the video into Tator.", action="store_true")
     parser.add_argument("--version", help="Version name", required=False, type=str)
     parser.add_argument(
         "--tsv",
@@ -525,6 +539,8 @@ if __name__ == "__main__":
                 args.min_confidence,
                 remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
+                skip_load=args.skip_load,
+                max_secs=args.max_secs,
             )
         elif video_path.is_dir():
             # Fanout to number of CPUs
@@ -540,6 +556,8 @@ if __name__ == "__main__":
                 args.min_confidence,
                 remove_vignette=args.remove_vignette,
                 skip_vss=args.skip_vss,
+                skip_load=args.skip_load,
+                max_secs=args.max_secs,
             )
         else:
             logger.error(f"Invalid video path: {video_path}")
@@ -563,6 +581,8 @@ if __name__ == "__main__":
             version_id,
             remove_vignette=args.remove_vignette,
             skip_vss=args.skip_vss,
+            skip_load=args.skip_load,
+            max_secs=args.max_secs,
         )
 
     logger.info("Finished processing videos")
