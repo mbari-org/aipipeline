@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.36.2 (2024-10-29)
+
+### Bug Fixes
+
+* fix(bio): correct max_seconds args ([`03dd84e`](https://github.com/mbari-org/aipipeline/commit/03dd84ef7a40acbec59af0659df0ac2d137c41c5))
+
+
 ## v0.36.1 (2024-10-29)
 
 ### Bug Fixes
