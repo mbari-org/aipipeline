@@ -8,12 +8,12 @@ list:
     @just --list --unsorted
 
 # Setup the environment
-install:
-    conda env create -f environment.yml
-    python -m pip install --upgrade pip
-    python -m pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
+install: update
     git submodule update --init --recursive
-    python -m pip install submodules/aidata/requirements.txt
+    conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
+    conda run -n aipipeline pip install submodules/aidata/requirements.txt
+    mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
+    cd submodules/co-tracker && conda run -n aipipeline pip install -e .
 
 # Update the environment. Run this command after checking out any code changes
 update:
@@ -79,14 +79,17 @@ load-vss project='uav' :
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Cluster mission in aipipeline/projects/uav/data/missions2process.txt
-cluster-uav:
+# Cluster mission in aipipeline/projects/uav/data/missions2process.txt, add --vss to classify clusters with vss
+cluster-uav *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster_pipeline.py --missions $PROJECT_DIR/data/missions2process.txt --config $PROJECT_DIR/config/config.yml
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster_pipeline.py \
+    --missions $PROJECT_DIR/data/missions2process.txt \
+    --config $PROJECT_DIR/config/config.yml \
+    {{more_args}}
 
-# Detect mission in aipipeline/projects/uav/data/missions2process.txt, add --vss to classify with vss
+# Detect mission in aipipeline/projects/uav/data/missions2process.txt
 detect-uav *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
