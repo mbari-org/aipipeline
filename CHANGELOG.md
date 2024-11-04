@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v0.36.3 (2024-11-04)
+
+### Bug Fixes
+
+* fix: pass through additional args in download_pipeline.py ([`ed7ae48`](https://github.com/mbari-org/aipipeline/commit/ed7ae48a9a591f3cd0cabc547e84d2e84900f145))
+
+
 ## v0.36.2 (2024-10-29)
 
 ### Bug Fixes
