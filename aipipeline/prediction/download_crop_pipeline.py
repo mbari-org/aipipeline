@@ -40,9 +40,9 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Download and crop unknown images.")
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--labels", required=True, help="Comma separated list of labels to download")
-    parser.add_argument("--download_args", required=False, default=[""], help="Additional arguments for download")
-    parser.add_argument("--download_dir", required=True, help="Directory to download images")
-    parser.add_argument("--skip_clean", required=False, default=False,
+    parser.add_argument("--download-args", required=False, default=[""], help="Additional arguments for download")
+    parser.add_argument("--download-dir", required=True, help="Directory to download images")
+    parser.add_argument("--skip-clean", required=False, default=False,
                                                     help="Skip cleaning of previously downloaded data")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
@@ -72,9 +72,16 @@ def run_pipeline(argv=None):
 
     # Make sure the download directory is not a child of the processed directory - this is a safety check
     # Otherwise, the processed data could be deleted
-    processed_dir = config_dict["data"]["processed_path"]
-    if Path(args.download_dir).is_relative_to(processed_dir):
-        raise ValueError(f"Download directory {args.download_dir} is a child of the processed directory {processed_dir}")
+    bind_volumes = config_dict["docker"]["bind_volumes"].keys()
+    # Check if the download directory is a child of any of the bind volumes in the docker config
+    found = False
+    for volume in bind_volumes:
+        if Path(args.download_dir).is_relative_to(volume):
+            found = True
+            break
+    if not found:
+        raise ValueError(
+            f"Download directory {args.download_dir} is not a child of any of the bind volumes in the docker config")
 
     if not args.skip_clean:
         clean(args.download_dir)
