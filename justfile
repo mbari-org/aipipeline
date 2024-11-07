@@ -8,7 +8,7 @@ list:
     @just --list --unsorted
 
 # Setup the environment
-install: update
+install: update_trackers
     conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
     git clone http://github.com/mbari-org/aidata.git deps/aidata
     git clone https://github.com/facebookresearch/co-tracker deps/co-tracker
@@ -17,8 +17,8 @@ install: update
     cd .. && mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
 
 # Update the environment. Run this command after checking out any code changes
-update:
-    conda env update --file environment.yml --prune
+update_trackers:
+    conda env update_trackers --file environment.yml --prune
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -137,7 +137,7 @@ fix-uav-metadata:
     export PYTHONPATH=.:deps/aidata
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/fix_metadata.py
 
-# Compute saliency for downloaded VOC data and update the Tator database
+# Compute saliency for downloaded VOC data and update_trackers the Tator database
 compute-saliency project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
@@ -155,14 +155,15 @@ crop project='uav' *more_args="":
         {{more_args}}
 
 # Download and crop Unknown detections
-download-crop-unknowns project='uav' label='Unknown' download_dir='/tmp/download':
+download-crop-unknowns project='uav' labels='Unknown' download-dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
-        --config ./aipipeline/projects/{{project}}/config/config_unknown.yml \
+        --config ./aipipeline/projects/{{project}}/config/config.yml \
         --skip_clean True \
-        --label {{label}} \
-        --download_dir {{download_dir}}
+        --labels {{labels}} \
+        --download-dir {{download-dir}} \
+        {{more_args}}
 
 # Download only
 download project='uav':
@@ -213,6 +214,12 @@ run-mega-inference:
     --skip-load \
     --remove-vignette \
     --min-confidence 0.2 \
-    --max-seconds 120 \
+    --max-seconds 300 \
+    --stride 1 \
     --endpoint_url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
     --video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4
+
+run-mega-update_trackers:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py
