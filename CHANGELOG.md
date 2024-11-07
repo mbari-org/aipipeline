@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.36.5 (2024-11-07)
+
+### Bug Fixes
+
+- Correct args to download_crop_pipeline.py
+  ([`c6a4fe7`](https://github.com/mbari-org/aipipeline/commit/c6a4fe742758b087db57a7cb0f3114392a62488e))
+
+
 ## v0.36.4 (2024-11-07)
 
 ### Bug Fixes
