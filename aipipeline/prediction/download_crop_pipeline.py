@@ -40,22 +40,24 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Download and crop unknown images.")
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--labels", required=True, help="Comma separated list of labels to download")
-    parser.add_argument("--download-args", required=False, default=[""], help="Additional arguments for download")
+    parser.add_argument("--download-args", required=False,  help="Additional arguments for download")
     parser.add_argument("--download-dir", required=True, help="Directory to download images")
     parser.add_argument("--skip-clean", required=False, default=False,
                                                     help="Skip cleaning of previously downloaded data")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
-    download_args = config_dict["data"]["download_args"]
 
     if not os.path.exists(args.download_dir):
         os.makedirs(args.download_dir)
 
     # Override the config
     config_dict["data"]["labels"] = args.labels
-    config_dict["data"]["download_args"] = args.download_args
+    if args.download_args:
+        config_dict["data"]["download_args"] = [args.download_args]
+
     labels = args.labels.split(",")
+    download_args = config_dict["data"]["download_args"]
 
     # Print the new config
     logger.info("Configuration:")
