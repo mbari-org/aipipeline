@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipipeline/prediction/vss-predict-pipeline.py
+# Filename: aipipeline/prediction/vss_predict_pipeline.py
 # Description: Batch process missions with visual search server
 
 import apache_beam as beam
@@ -42,42 +42,34 @@ def read_image(readable_file):
         return img, readable_file.metadata.path
 
 
-def process_image_batch(batch, config_dict):
+def process_image_batch(batch, config_dict) -> int:
     url_load = config_dict["tator"]["url_load"]
     vss_threshold = float(config_dict["vss"]["threshold"])
-    project = config_dict["tator"]["project"]
+    tator_project = config_dict["tator"]["project"]
     num_processed = 0
     try:
+        logger.debug(f"Processing batch of {len(batch)} images")
         file_paths, best_predictions, best_scores = run_vss(batch, config_dict, top_k=3)
         for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
-            if best_pred is None:
-                logger.error(f"No majority prediction for {file_path}")
-                continue
+            if best_pred is not None and best_score is not None and best_score > vss_threshold:
+                # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
+                database_id = int(Path(file_path).stem)
 
-            if best_score < vss_threshold:
-                logger.error(f"Score {best_score} below threshold {vss_threshold} for {file_path}")
-                continue
-
-            logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_path}")
-
-            # The database_id is the image file stem, e.g.  1925774.jpg -> 1925774
-            database_id = int(Path(file_path).stem)
-
-            headers = {
-                "accept": "application/json",
-                "Content-Type": "application/json",
-            }
-            data = {"loc_id": database_id, "project_name": project, "dry_run": False, "score": best_score}
-            logger.debug(f"{url_load}/{best_pred}")
-            response = requests.post(f"{url_load}/{best_pred}", headers=headers, json=data)
-            if response.status_code == 200:
-                logger.debug(f"Assigned label {best_pred} score {best_score} to {database_id}")
-                num_processed += 1
-            else:
-                logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
-                exit(1)
+                headers = {
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+                data = {"loc_id": database_id, "project_name": tator_project, "dry_run": False, "score": best_score}
+                logger.info(f"{url_load}/{best_pred}")
+                response = requests.post(f"{url_load}/{best_pred}", headers=headers, json=data)
+                if response.status_code == 200:
+                    logger.debug(f"Assigned label {best_pred} score {best_score} to {database_id}")
+                    num_processed += 1
+                else:
+                    logger.error(f"Error loading label {best_pred} to {database_id} {response.status_code} {response.text}")
+                    exit(1)
     except Exception as ex:
-        return 0
+        logger.error(f"Error processing batch: {ex}")
 
     return num_processed
 
@@ -94,13 +86,13 @@ def run_pipeline(argv=None):
         / "config"
         / "config.yml"
     )
-    parser.add_argument("--image_dir", required=True,
+    parser.add_argument("--image-dir", required=True,
         help="Input image directory, e.g. /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/",
     )
     parser.add_argument("--config", required=False, default=default_project.as_posix(),
                         help="Config yaml file path")
-    parser.add_argument("--batch_size", required=False, default=3, help="Batch size")
-    parser.add_argument("--max_images", required=False,  help="Maximum number of images to process")
+    parser.add_argument("--batch-size", required=False, default=3, help="Batch size")
+    parser.add_argument("--max-images", required=False,  help="Maximum number of images to process")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -123,10 +115,10 @@ def run_pipeline(argv=None):
                 image_pcoll
                 | "ReadFiles" >> ReadMatches()
                 | "ReadImages" >> beam.Map(read_image)
-                | "BatchImages" >> beam.BatchElements(min_batch_size=3, max_batch_size=3)
+                | "BatchImages" >> beam.BatchElements(min_batch_size=1, max_batch_size=20)
                 | "ProcessBatches" >> beam.Map(process_image_batch, config_dict)
                 | "SumResults" >> beam.CombineGlobally(sum)
-                | "WriteResults" >> beam.io.WriteToText("num_loaded")
+                | "WriteResults" >> beam.io.WriteToText("num_processed.txt")
                 | "LogResults" >> beam.Map(logger.info)
         )
 
