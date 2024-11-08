@@ -391,9 +391,9 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
     :return:
     """
     logger.info(f"Processing {len(image_batch)} images")
-    project = config_dict["tator"]["project"]
+    vss_project = config_dict["vss"]["project"]
     vss_threshold = float(config_dict["vss"]["threshold"])
-    url_vs = f"{config_dict['vss']['url']}/{top_k}/{project}"
+    url_vs = f"{config_dict['vss']['url']}/{top_k}/{vss_project}"
     logger.debug(f"URL: {url_vs} threshold: {vss_threshold}")
     files = []
     for img, path in image_batch:
