@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v0.37.0 (2024-11-08)
+
+### Bug Fixes
+
+- Correct dictionary item for vss project
+  ([`afd99e0`](https://github.com/mbari-org/aipipeline/commit/afd99e031a96cb627b3b5b46ca7e9c2d45f08273))
+
+### Features
+
+- Added vss to UAV processing pipeline
+  ([`df81cc1`](https://github.com/mbari-org/aipipeline/commit/df81cc1916de205ac421e9b3dac9b56c6e29bb88))
+
+### Performance Improvements
+
+- Removed color jitter from aug and remove all issues, dark, clurry, duplicate, near-duplicate and
+  only cluster is > 500 examples for vss
+  ([`7a38228`](https://github.com/mbari-org/aipipeline/commit/7a38228642548239d6456c030062fb8550dc3924))
+
+- Mostly some cleaning of args and logging for vss_predict_pipeline.py but also bumped the batch
+  size to 20 for faster prediction
+  ([`84608ad`](https://github.com/mbari-org/aipipeline/commit/84608ad77eb8d81d97db9872e902b8e16b43d42d))
+
+
 ## v0.36.5 (2024-11-07)
 
 ### Bug Fixes
