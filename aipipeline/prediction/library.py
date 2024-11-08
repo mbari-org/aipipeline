@@ -48,12 +48,11 @@ def remove_multicrop_views(data_dir: str):
         file.unlink()
 
 
-def simclr_augmentations(image_size):
+def simclr_like_augmentations(image_size):
     import albumentations as albu
     return albu.Compose([
         albu.RandomResizedCrop(height=image_size, width=image_size, scale=(0.2, 1.0), p=1.0),
         albu.HorizontalFlip(p=0.5),
-        albu.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1, p=0.8),
         albu.GaussianBlur(blur_limit=(3, 7), sigma_limit=0.1, p=0.5),
         albu.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
         ToTensorV2()
@@ -62,7 +61,7 @@ def simclr_augmentations(image_size):
 
 def generate_multicrop_views2(image) -> List[tuple]:
     data = []
-    small_crop_augmentations = simclr_augmentations(image_size=190)
+    small_crop_augmentations = simclr_like_augmentations(image_size=190)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     multicrop = [small_crop_augmentations(image=image)['image'] for _ in range(2)]
     for i, crop in enumerate(multicrop):
@@ -83,9 +82,10 @@ def clean_bad_images(element) -> tuple:
     imagelab = Imagelab(data_path=crop_path)
     imagelab.find_issues()
     imagelab.report()
-    # Get all dark or blurry images and remove them
-    bad_images = imagelab.issues[["is_dark_issue"] == True or imagelab.issues["is_dark_issue"] == True]
-    for img in bad_images.index:
+    # Columns to check for issues
+    issue_columns = ["is_dark_issue", "is_blurry_issue", "is_near_duplicates_issue", "is_exact_duplicates_issue"]
+    bad_images  = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
+    for img in bad_images:
         os.remove(img)
         num_removed += 1
     logger.info(f"Removed {num_removed} dark or blurry images in {crop_path}")
@@ -102,7 +102,7 @@ def clean_images(elements) -> List[tuple]:
 
 def generate_multicrop_views(elements) -> List[tuple]:
     data = []
-    small_crop_augmentations = simclr_augmentations(image_size=224)
+    small_crop_augmentations = simclr_like_augmentations(image_size=224)
     for count, crop_path, save_path in elements:
         if count > 100:
             logger.info(f"Skipping {count} crops in {crop_path}")
@@ -151,6 +151,11 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
         return []
     short_name = get_short_name(project)
     logger.info(data)
+
+    # If there are less than 500 images, skip clustering
+    if num_images < 500:
+        logger.info(f"Skipping clustering for {num_images} images in {crop_dir}")
+        return [(Path(crop_dir).name, cluster_dir)]
 
     logger.info(f"Clustering {num_images} images in {crop_dir} ....")
     min_cluster_size = 2
