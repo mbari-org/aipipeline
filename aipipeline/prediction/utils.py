@@ -10,6 +10,7 @@ from typing import List, Tuple
 
 import cv2
 import numpy as np
+import piexif
 from PIL import Image
 import pandas as pd
 import xml.etree.ElementTree as ET
@@ -156,6 +157,15 @@ def crop_square_image(row: pd.Series, square_dim: int):
         # Save the image
         img.save(row.crop_path)
         img.close()
+
+        # Encode the cropped coordinates in the exif data
+        with open(row.crop_path, "rb") as f:
+            img = Image.open(f)
+            exif_dict = piexif.load(img.info.get("exif", b""))
+            bounding_box = f"{x1},{y1},{x2},{y2}"
+            exif_dict["Exif"][piexif.ExifIFD.UserComment] = f"bbox:{bounding_box}".encode("utf-8")
+            exif_bytes = piexif.dump(exif_dict)
+            img.save(row.crop_path, exif=exif_bytes)
 
     except Exception as e:
         logger.exception(f"Error cropping {row.image_path} {e}")
