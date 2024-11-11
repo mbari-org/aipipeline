@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.38.0 (2024-11-11)
+
+### Features
+
+- Add originating bounding box to crop for use in downstream processing in EXIF comment field, e.g.
+  UserComment: b'bbox:534,16,817,300'
+  ([`ad49140`](https://github.com/mbari-org/aipipeline/commit/ad4914080e10a44e9f9ea9f04c9934370463eeed))
+
+
 ## v0.37.0 (2024-11-08)
 
 ### Bug Fixes
@@ -52,7 +61,7 @@
 
 ### Bug Fixes
 
-- Correct max_seconds args
+- **bio**: Correct max_seconds args
   ([`03dd84e`](https://github.com/mbari-org/aipipeline/commit/03dd84ef7a40acbec59af0659df0ac2d137c41c5))
 
 
@@ -60,7 +69,7 @@
 
 ### Bug Fixes
 
-- Correct normalization of localization and handle exceptions in vss
+- **bio**: Correct normalization of localization and handle exceptions in vss
   ([`3349391`](https://github.com/mbari-org/aipipeline/commit/33493910a4f4c8563a709f8e9da20ae1d0e7ba9d))
 
 
@@ -76,7 +85,7 @@
 
 ### Features
 
-- Added support for --skip-load and --max-seconds to save just localizations
+- **bio**: Added support for --skip-load and --max-seconds to save just localizations
   ([`c5f6cda`](https://github.com/mbari-org/aipipeline/commit/c5f6cda79d5d9e350945195af69c2074b92b748a))
 
 
@@ -84,7 +93,7 @@
 
 ### Performance Improvements
 
-- Remove any low saliency detections from clustering
+- **uav**: Remove any low saliency detections from clustering
   ([`43b316c`](https://github.com/mbari-org/aipipeline/commit/43b316c51203cb046cc1a10f3aeea125cc8ce354))
 
 
@@ -100,8 +109,8 @@
 
 ### Performance Improvements
 
-- Exclude unused classes, lower threshold for vss to allow more rare detections, and cluster
-  everything
+- **uav**: Exclude unused classes, lower threshold for vss to allow more rare detections, and
+  cluster everything
   ([`c7d12b6`](https://github.com/mbari-org/aipipeline/commit/c7d12b65afb0f6aefa96d5b5e9c368fdfbda2b63))
 
 
@@ -109,7 +118,7 @@
 
 ### Bug Fixes
 
-- Removed unused args
+- **bio**: Removed unused args
   ([`1038aa7`](https://github.com/mbari-org/aipipeline/commit/1038aa7d8167d8089525440447d806318d21ba4f))
 
 
@@ -117,7 +126,7 @@
 
 ### Bug Fixes
 
-- Pass through addtional args
+- **bio**: Pass through addtional args
   ([`3bf1b74`](https://github.com/mbari-org/aipipeline/commit/3bf1b74e40c7cb8ae1e592db67325a678dc61fc5))
 
 
@@ -133,7 +142,7 @@
 
 ### Features
 
-- Added --allowed-classes animal with --class-remap "{'animal': 'marine organism'}"
+- **bio**: Added --allowed-classes animal with --class-remap "{'animal': 'marine organism'}"
   ([`1306116`](https://github.com/mbari-org/aipipeline/commit/13061161de26b75b0b569f4bcad90f606af7f963))
 
 
@@ -149,13 +158,13 @@
 
 ### Features
 
-- Change group MERGE_CLASSIFY to NMS
+- **i2map**: Change group MERGE_CLASSIFY to NMS
   ([`6fb7265`](https://github.com/mbari-org/aipipeline/commit/6fb72654e32b9b705d4e82efd6d61e10355716c3))
 
-- Delete all media by depth
+- **cfe**: Delete all media by depth
   ([`41a60f9`](https://github.com/mbari-org/aipipeline/commit/41a60f9969dcf59b394741293cca8bc7352403d1))
 
-- Delete all loc in media
+- **uav**: Delete all loc in media
   ([`6323700`](https://github.com/mbari-org/aipipeline/commit/63237007002aacd2d9d0ad0c8f31b460fd8bc450))
 
 
@@ -184,7 +193,7 @@
 
 ### Bug Fixes
 
-- Correct vignette logic
+- **bio**: Correct vignette logic
   ([`e18ff74`](https://github.com/mbari-org/aipipeline/commit/e18ff748dee59a4bca9d432d4bb8e2390058757a))
 
 
@@ -192,7 +201,7 @@
 
 ### Bug Fixes
 
-- Normalize coords
+- **bio**: Normalize coords
   ([`b42cec4`](https://github.com/mbari-org/aipipeline/commit/b42cec46371aefe73033c22a1b8dc1420f6615a5))
 
 
@@ -200,7 +209,7 @@
 
 ### Features
 
-- Add --remove-vignette to remove vignette detections
+- **bio**: Add --remove-vignette to remove vignette detections
   ([`675a501`](https://github.com/mbari-org/aipipeline/commit/675a5015cbfa10395f7229f4ca271158b6c747d7))
 
 
@@ -208,7 +217,7 @@
 
 ### Features
 
-- Add --skip-vss to skip over second stage
+- **bio**: Add --skip-vss to skip over second stage
   ([`809188f`](https://github.com/mbari-org/aipipeline/commit/809188fad962cb265b254cd2d52631fa7b12e4dd))
 
 
@@ -216,7 +225,7 @@
 
 ### Features
 
-- Load media+boxes of mined rare class labels
+- **cfe**: Load media+boxes of mined rare class labels
   ([`c8b9824`](https://github.com/mbari-org/aipipeline/commit/c8b98245cedbaf8e9827e36a137e64229d8068ff))
 
 
@@ -224,7 +233,7 @@
 
 ### Performance Improvements
 
-- Add blurriness removal
+- **bio**: Add blurriness removal
   ([`113e7f8`](https://github.com/mbari-org/aipipeline/commit/113e7f8fd3c96469fff593753287fbaebffc1f98))
 
 
@@ -232,7 +241,7 @@
 
 ### Performance Improvements
 
-- Crop pass to vss, and pass confidence detections less than .9
+- **bio**: Crop pass to vss, and pass confidence detections less than .9
   ([`69c4b99`](https://github.com/mbari-org/aipipeline/commit/69c4b99b5c47471758aa1d587b06ca6569a55624))
 
 
@@ -240,7 +249,7 @@
 
 ### Features
 
-- Switch from video to frame mining on images with depth
+- **cfe**: Switch from video to frame mining on images with depth
   ([`bd5ee13`](https://github.com/mbari-org/aipipeline/commit/bd5ee13e0651d850a4da0ec75416675decd18ec1))
 
 
@@ -248,7 +257,7 @@
 
 ### Features
 
-- Simple script to delete a particular version
+- **bio**: Simple script to delete a particular version
   ([`39b0788`](https://github.com/mbari-org/aipipeline/commit/39b0788162d92b3c68d283ccad2c0a90f4450701))
 
 
@@ -290,7 +299,7 @@
 
 ### Performance Improvements
 
-- Set saliency score to 1000 for download
+- **bio**: Set saliency score to 1000 for download
   ([`b86f118`](https://github.com/mbari-org/aipipeline/commit/b86f1188405f680085c63cc54c992b5a52851f35))
 
 
@@ -298,7 +307,7 @@
 
 ### Features
 
-- Add download_isiis_label_metadata.py for Fernanda
+- **cfe**: Add download_isiis_label_metadata.py for Fernanda
   ([`6ee109c`](https://github.com/mbari-org/aipipeline/commit/6ee109cf668e05ceb8a988816d12ab2d1248bf6a))
 
 
@@ -322,7 +331,7 @@
 
 ### Performance Improvements
 
-- Switch to depth labeled images for data mining
+- **cfe**: Switch to depth labeled images for data mining
   ([`9dd60ae`](https://github.com/mbari-org/aipipeline/commit/9dd60ae7f56a47e25816bdb6b17931234a8b64f2))
 
 
@@ -333,7 +342,7 @@
 - Added crop pipeline
   ([`50e09cd`](https://github.com/mbari-org/aipipeline/commit/50e09cd85a5ad8a0311bc9a55f47cc662e84dae7))
 
-- Added m3 config
+- **m3**: Added m3 config
   ([`84fe3aa`](https://github.com/mbari-org/aipipeline/commit/84fe3aaa4b681fef154079371e2299100c952d26))
 
 
@@ -346,7 +355,7 @@
 
 ### Features
 
-- Added download for top concepts
+- **bio**: Added download for top concepts
   ([`3f0372b`](https://github.com/mbari-org/aipipeline/commit/3f0372bed6511ce11e4e585e999184bcd95d64e3))
 
 
@@ -388,7 +397,7 @@
 
 ### Bug Fixes
 
-- Pass config dict
+- **bio**: Pass config dict
   ([`6dcf8fe`](https://github.com/mbari-org/aipipeline/commit/6dcf8fe527eda17f3e49fcef61b47f5b596fcd9c))
 
 
@@ -396,10 +405,10 @@
 
 ### Bug Fixes
 
-- Correct clean-up
+- **bio**: Correct clean-up
   ([`7c2684c`](https://github.com/mbari-org/aipipeline/commit/7c2684cdf9e26a4bc4c0808869a232fe3492a60b))
 
-- Correct frame number which was lost during perf update
+- **bio**: Correct frame number which was lost during perf update
   ([`0531405`](https://github.com/mbari-org/aipipeline/commit/05314054bacf93631c59fdf2f5024fa51ffb92ba))
 
 
@@ -407,7 +416,7 @@
 
 ### Performance Improvements
 
-- Clean-up frame grabs and only run on < 200 meters
+- **bio**: Clean-up frame grabs and only run on < 200 meters
   ([`729f337`](https://github.com/mbari-org/aipipeline/commit/729f33755b0523964bb765b9b0389a8de3c65938))
 
 
@@ -415,7 +424,7 @@
 
 ### Performance Improvements
 
-- Switch to ffmpeg generation of highest quality jpeg ffmpeg for speed-up
+- **bio**: Switch to ffmpeg generation of highest quality jpeg ffmpeg for speed-up
   ([`42c23cc`](https://github.com/mbari-org/aipipeline/commit/42c23cc2a69374cfe2e73fa3c505759cf8c46e9b))
 
 
@@ -423,7 +432,7 @@
 
 ### Performance Improvements
 
-- Check depth before starting
+- **bio**: Check depth before starting
   ([`d9d74eb`](https://github.com/mbari-org/aipipeline/commit/d9d74ebca0d51cdb834b3eef7a2ba8889d41ed81))
 
 
@@ -431,7 +440,7 @@
 
 ### Bug Fixes
 
-- Minor correction to the endpoint
+- **bio**: Minor correction to the endpoint
   ([`f22beeb`](https://github.com/mbari-org/aipipeline/commit/f22beeb6888757d38c04c10671c1d0cd72ecfaed))
 
 
@@ -455,7 +464,7 @@
 
 ### Bug Fixes
 
-- Added missing TATOR_TOKEN
+- **bio**: Added missing TATOR_TOKEN
   ([`21fcd31`](https://github.com/mbari-org/aipipeline/commit/21fcd313c0fce0cce13fbf83d1c0512a29eacc04))
 
 
@@ -463,15 +472,15 @@
 
 ### Documentation
 
-- Add test recipe for processing single video with two-stage pipeline
+- **bio**: Add test recipe for processing single video with two-stage pipeline
   ([`41ce64f`](https://github.com/mbari-org/aipipeline/commit/41ce64f570d193902a121b82581d4a81139e13b1))
 
-- Resolve video to path
+- **bio**: Resolve video to path
   ([`7d800fc`](https://github.com/mbari-org/aipipeline/commit/7d800fc4ed25f635a7988b0d475d4874b9d63835))
 
 ### Features
 
-- Added ancillary data, slightly faster video seek and better logging for multiproc
+- **bio**: Added ancillary data, slightly faster video seek and better logging for multiproc
   ([`28e0772`](https://github.com/mbari-org/aipipeline/commit/28e07720e275501ec160e2e3655ae461a9d4d73f))
 
 
@@ -479,12 +488,12 @@
 
 ### Documentation
 
-- Updated README with command line changes
+- **bio**: Updated README with command line changes
   ([`1aa0b69`](https://github.com/mbari-org/aipipeline/commit/1aa0b69aecc078a1b8b5bfd1fc3644f054aac279))
 
 ### Performance Improvements
 
-- More conservative threshold for second stage vss
+- **bio**: More conservative threshold for second stage vss
   ([`d8be83f`](https://github.com/mbari-org/aipipeline/commit/d8be83fceff21fb0b3dfe290d34772e962a13b6e))
 
 
@@ -492,7 +501,7 @@
 
 ### Features
 
-- Added expc metadata docker build and test data
+- **bio**: Added expc metadata docker build and test data
   ([`8d49c73`](https://github.com/mbari-org/aipipeline/commit/8d49c73cbe1bc41d55d490de9e3ea05b101df2f6))
 
 
@@ -500,7 +509,7 @@
 
 ### Bug Fixes
 
-- Added missing yaml entry and fix typo
+- **bio**: Added missing yaml entry and fix typo
   ([`811b988`](https://github.com/mbari-org/aipipeline/commit/811b9889283e8cf26ec4196a6cbe8d7454f061aa))
 
 
@@ -508,7 +517,7 @@
 
 ### Performance Improvements
 
-- Final assigment for UAV version saliency_MBARI/uav-yolov5-30k_VSS
+- **uav**: Final assigment for UAV version saliency_MBARI/uav-yolov5-30k_VSS
   ([`5a8b2e8`](https://github.com/mbari-org/aipipeline/commit/5a8b2e8090a2bce6dc651834b466b2b3cdb1fd14))
 
 
@@ -516,7 +525,7 @@
 
 ### Performance Improvements
 
-- Load all detections in single docker instance
+- **uav**: Load all detections in single docker instance
   ([`8d3c7c3`](https://github.com/mbari-org/aipipeline/commit/8d3c7c35a00a670e5b35ccbd9d67dffe1470591d))
 
 
@@ -524,7 +533,7 @@
 
 ### Features
 
-- Added vss second stage
+- **bio**: Added vss second stage
   ([`c5defea`](https://github.com/mbari-org/aipipeline/commit/c5defea579060ee732132019cc0acf9ab928b97f))
 
 
@@ -532,7 +541,7 @@
 
 ### Features
 
-- Added support to grab data version by name
+- **bio**: Added support to grab data version by name
   ([`10a5c09`](https://github.com/mbari-org/aipipeline/commit/10a5c09dd4b09d0a2a6868b5273b90d9815e862f))
 
 
@@ -540,7 +549,7 @@
 
 ### Bug Fixes
 
-- Fixed refactoring bugs
+- **bio**: Fixed refactoring bugs
   ([`9f85436`](https://github.com/mbari-org/aipipeline/commit/9f854363f0247f375ba46cad109994812b8145d9))
 
 
@@ -548,7 +557,7 @@
 
 ### Performance Improvements
 
-- Reduce detections with saliency, min/max area adjustments
+- **cfe**: Reduce detections with saliency, min/max area adjustments
   ([`676a5e9`](https://github.com/mbari-org/aipipeline/commit/676a5e9f7d6c1813aedf23164fe877c628a4129d))
 
 
@@ -556,7 +565,7 @@
 
 ### Performance Improvements
 
-- Add Kelp,Bird pass through
+- **uav**: Add Kelp,Bird pass through
   ([`0c152eb`](https://github.com/mbari-org/aipipeline/commit/0c152eb52deeac1e983d670491a94f0e2e68f10d))
 
 
@@ -564,7 +573,7 @@
 
 ### Performance Improvements
 
-- More memory efficient multiproc crop
+- **uav**: More memory efficient multiproc crop
   ([`eab6f5d`](https://github.com/mbari-org/aipipeline/commit/eab6f5dd9c0abb1df6c15a7e4ada833a5ede7b27))
 
 
@@ -572,7 +581,7 @@
 
 ### Performance Improvements
 
-- Faster vss with multiproc crop, correct handling of csv output and pipeline conditional
+- **uav**: Faster vss with multiproc crop, correct handling of csv output and pipeline conditional
   ([`4b6f4f1`](https://github.com/mbari-org/aipipeline/commit/4b6f4f1fb9428b08cc2fb4371fefed9351d5764d))
 
 
@@ -598,7 +607,7 @@
 
 ### Bug Fixes
 
-- Replace depth by name in CFE images
+- **cfe**: Replace depth by name in CFE images
   ([`d41cba0`](https://github.com/mbari-org/aipipeline/commit/d41cba058e33ac52fd02538fdf54959a593d6baf))
 
 
@@ -606,7 +615,7 @@
 
 ### Features
 
-- Added vss to predict pipeline
+- **uav**: Added vss to predict pipeline
   ([`ca52762`](https://github.com/mbari-org/aipipeline/commit/ca52762800576ed408523606b091cf5d605ae3bf))
 
 
