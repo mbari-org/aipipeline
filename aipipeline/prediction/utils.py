@@ -154,18 +154,13 @@ def crop_square_image(row: pd.Series, square_dim: int):
         # Resize the image to square_dim x square_dim
         img = img.resize((square_dim, square_dim), Image.LANCZOS)
 
-        # Save the image
-        img.save(row.crop_path)
-        img.close()
-
         # Encode the cropped coordinates in the exif data
-        with open(row.crop_path, "rb") as f:
-            img = Image.open(f)
-            exif_dict = piexif.load(img.info.get("exif", b""))
-            bounding_box = f"{x1},{y1},{x2},{y2}"
-            exif_dict["Exif"][piexif.ExifIFD.UserComment] = f"bbox:{bounding_box}".encode("utf-8")
-            exif_bytes = piexif.dump(exif_dict)
-            img.save(row.crop_path, exif=exif_bytes)
+        bounding_box = f"{x1},{y1},{x2},{y2}"
+        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}}
+        exif_dict["Exif"][piexif.ExifIFD.UserComment] = f"bbox:{bounding_box}".encode("utf-8")
+        exif_bytes = piexif.dump(exif_dict)
+        img.save(row.crop_path, exif=exif_bytes)
+        img.close()
 
     except Exception as e:
         logger.exception(f"Error cropping {row.image_path} {e}")
