@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.38.1 (2024-11-12)
+
+### Bug Fixes
+
+- Add default EXIF fields if missing
+  ([`580643e`](https://github.com/mbari-org/aipipeline/commit/580643e7c51fc44b7c15e841f427a5e74347a989))
+
+
 ## v0.38.0 (2024-11-11)
 
 ### Features
