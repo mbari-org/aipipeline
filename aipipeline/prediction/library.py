@@ -4,7 +4,6 @@ import logging
 import multiprocessing
 import os
 import shutil
-import time
 from datetime import datetime
 import numpy as np
 from pathlib import Path
@@ -79,6 +78,9 @@ def generate_multicrop_views2(image) -> List[tuple]:
 def clean_bad_images(element) -> tuple:
     count, crop_path, save_path = element
     num_removed = 0
+    # Check if any images exist
+    if count == 0:
+        return count, crop_path, save_path
     imagelab = Imagelab(data_path=crop_path)
     imagelab.find_issues()
     imagelab.report()
@@ -139,8 +141,8 @@ def generate_multicrop_views(elements) -> List[tuple]:
     return data
 
 
-def cluster(data, config_dict: Dict) -> List[tuple]:
-    logger.info(f'Clustering {data}')
+def cluster(data, config_dict: Dict, min_detections: int) -> List[tuple]:
+    logger.info(f'Clustering {data} with min_detections {min_detections}')
     num_images, crop_dir, cluster_dir = data
     project = config_dict["tator"]["project"]
     sdcat_config = config_dict["sdcat"]["ini"]
@@ -151,11 +153,6 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
         return []
     short_name = get_short_name(project)
     logger.info(data)
-
-    # If there are less than 500 images, skip clustering
-    if num_images < 500:
-        logger.info(f"Skipping clustering for {num_images} images in {crop_dir}")
-        return [(Path(crop_dir).name, cluster_dir)]
 
     logger.info(f"Clustering {num_images} images in {crop_dir} ....")
     min_cluster_size = 2
@@ -179,6 +176,19 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
     label = Path(crop_dir).name
     machine_friendly_label = gen_machine_friendly_label(label)
     try:
+        # Skip clustering if there are too few images, but generate a detection file for the next step
+        if num_images < min_detections:
+            logger.info(f"Skipping clustering for {label} with {num_images} images")
+            Path(cluster_dir).mkdir(parents=True, exist_ok=True)
+            cluster_results.append((Path(crop_dir).name, cluster_dir))
+            images = [f"{crop_dir}/{f}" for f in os.listdir(crop_dir) if f.endswith(".jpg")]
+            with open(f"{cluster_dir}/no_cluster_exemplars.csv", "w") as f:
+                # Add the header image_path,image_width,image_height,crop_path,cluster
+                f.write("image_path,image_width,image_height,crop_path,cluster\n")
+                for image in images:
+                    f.write(f"{image},224,224,{image},-1\n")
+            return cluster_results
+
         container = run_docker(
             image=config_dict["docker"]["sdcat"],
             name=f"{short_name}-sdcat-clu-{machine_friendly_label}",
@@ -203,8 +213,9 @@ def cluster(data, config_dict: Dict) -> List[tuple]:
 
 class ProcessClusterBatch(beam.DoFn):
 
-    def __init__(self, config_dict: Dict):
+    def __init__(self, config_dict: Dict, min_detections: int):
         self.config_dict = config_dict
+        self.min_detections = min_detections
 
     def process(self, batch):
         if len(batch) > 1:
@@ -212,7 +223,7 @@ class ProcessClusterBatch(beam.DoFn):
         else:
             num_processes = 1
         with multiprocessing.Pool(num_processes) as pool:
-            args = [(data, self.config_dict) for data in batch]
+            args = [(data, self.config_dict, self.min_detections) for data in batch]
             results = pool.starmap(cluster, args)
         return results
 

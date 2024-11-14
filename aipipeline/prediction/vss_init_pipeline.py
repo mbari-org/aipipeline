@@ -46,7 +46,7 @@ TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
 # Load exemplars into Vector Search Server
-def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
+def load_exemplars(data, config_dict=Dict, conf_files=Dict, min_exemplars:int = 10, min_detections: int = 2000) -> str:
     project = str(config_dict["tator"]["project"])
     short_name = get_short_name(project)
 
@@ -79,7 +79,7 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
             logger.info(f"No exemplars or detections found for {label}")
             continue
 
-        if exemplar_count < 10 or detection_count < 100:
+        if exemplar_count < min_exemplars or detection_count < min_detections:
             logger.info(f"Too few exemplars, using detections file {detection_file} instead")
             exemplar_file = detection_file
 
@@ -140,9 +140,11 @@ def run_pipeline(argv=None):
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--skip-clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
     parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
-    parser.add_argument("--batch-size", required=False, type=int, default=2, help="Batch size")
+    parser.add_argument("--batch-size", required=False, type=int, default=1, help="Batch size")
     args, beam_args = parser.parse_known_args(argv)
 
+    MIN_EXEMPLARS = 10
+    MIN_DETECTIONS = 2000
     conf_files, config_dict = setup_config(args.config)
     batch_size = int(args.batch_size)
     download_args = config_dict["data"]["download_args"]
@@ -175,8 +177,8 @@ def run_pipeline(argv=None):
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | "Clean dark blurry examples" >> beam.Map(clean_images)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=batch_size))
-            | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
-            | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)
+            | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict, min_detections=MIN_DETECTIONS))
+            | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files,min_exemplars=MIN_EXEMPLARS, min_detections=MIN_DETECTIONS)
             | "Log results" >> beam.Map(logger.info)
         )
 
