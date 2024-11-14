@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.38.2 (2024-11-14)
+
+### Performance Improvements
+
+- Skip cluster in vss pipeline for < 2000 detections
+  ([`2591116`](https://github.com/mbari-org/aipipeline/commit/2591116f1c687bfb45a4a38f0436b433ae3aded9))
+
+
 ## v0.38.1 (2024-11-12)
 
 ### Bug Fixes
