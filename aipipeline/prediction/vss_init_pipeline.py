@@ -140,11 +140,11 @@ def run_pipeline(argv=None):
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--skip-clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
     parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
-    parser.add_argument("--batch-size", required=False, type=int, default=3, help="Batch size")
-    parser.add_argument("--min-variance", required=False, type=float, default=3.0, help="Minimum variance for blurriness")
+    parser.add_argument("--batch-size", required=False, type=int, default=2, help="Batch size")
     args, beam_args = parser.parse_known_args(argv)
 
     conf_files, config_dict = setup_config(args.config)
+    batch_size = int(args.batch_size)
     download_args = config_dict["data"]["download_args"]
     processed_data = config_dict["data"]["processed_path"]
     base_path = str(os.path.join(processed_data, config_dict["data"]["version"]))
@@ -174,7 +174,7 @@ def run_pipeline(argv=None):
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | "Clean dark blurry examples" >> beam.Map(clean_images)
-            | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=2))
+            | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=batch_size))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)
             | "Log results" >> beam.Map(logger.info)
