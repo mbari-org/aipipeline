@@ -2,6 +2,7 @@
 # Filename: projects/predictions/crop-pipeline.py
 # Description: Crop images based on voc formatted data
 from datetime import datetime
+from typing import List
 
 import dotenv
 import os
@@ -55,14 +56,7 @@ def run_pipeline(argv=None):
     for key, value in config_dict.items():
         logger.info(f"{key}: {value}\n")
 
-    with beam.Pipeline(options=options) as p:
-        (
-            p
-            | "Extract labels" >> beam.Create([labels])
-            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=processed_dir, image_dir=image_dir)
-            | "Log results" >> beam.Map(logger.info)
-        )
-
+    crop_rois_voc(labels_filter=labels, image_dir=image_dir, processed_dir=processed_dir, config_dict=config_dict)
 
 if __name__ == "__main__":
     run_pipeline()
