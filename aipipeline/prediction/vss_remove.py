@@ -55,14 +55,13 @@ def run_pipeline(argv=None):
 
     logger.info(f"Removing hash {args.doc} from the VSS database...")
 
-    # Get all keys matching the pattern
-    keys = r.keys(args.doc)
+    # Find and delete keys matching the pattern
+    num_deleted = 0
+    for key in r.scan_iter(args.doc):
+        r.delete(key)
+        num_deleted += 1
 
-    # Delete the keys
-    if keys:
-        r.delete(*keys)
-
-    print(f"Deleted {len(keys)} keys.")
+    print(f"Deleted {num_deleted} keys.")
 
 
 if __name__ == "__main__":
