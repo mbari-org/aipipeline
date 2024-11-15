@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v0.39.0 (2024-11-15)
+
+### Bug Fixes
+
+- Add missing dependency
+  ([`c118d35`](https://github.com/mbari-org/aipipeline/commit/c118d35269a9a1eeb268f6fc341a4d1686def297))
+
+### Documentation
+
+- Updated recipes
+  ([`a0bb70c`](https://github.com/mbari-org/aipipeline/commit/a0bb70ca4a06349aa42ffc1758db4663850dd607))
+
+### Features
+
+- **bio**: Added two-stage strided track pipeline
+  ([`1a9cc1b`](https://github.com/mbari-org/aipipeline/commit/1a9cc1b87cab28a7dd3d8b30efcc56a6f1791f2b))
+
+
 ## v0.38.2 (2024-11-14)
 
 ### Performance Improvements
