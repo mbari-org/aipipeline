@@ -8,17 +8,12 @@ list:
     @just --list --unsorted
 
 # Setup the environment
-install: update_trackers
+install:
     conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
     git clone http://github.com/mbari-org/aidata.git deps/aidata
-    git clone https://github.com/facebookresearch/co-tracker deps/co-tracker
     conda run -n aipipeline pip install -r deps/aidata/requirements.txt
-    cd deps/co-tracker && conda run -n aipipeline pip install -e .
-    cd .. && mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
-
-# Update the environment. Run this command after checking out any code changes
-update_trackers:
-    conda env update_trackers --file environment.yml --prune
+    git clone http://github.com/mbari-org/biotrack.git deps/biotrack
+    cd deps/biotrack && poetry install
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -222,8 +217,7 @@ run-mega-inference:
 # Run the mega strided tracking pipeline on a single video for the bio project
 run-mega-track-bio:
     #!/usr/bin/env bash
-    export PYTHONPATH=./aipipeline/projects/bio/biotrack:.
-    export REDIS_PASSWORD=KNLKpAmHqw9DuvPaWN6yhBWaCA
+    export PYTHONPATH=.:deps/biotrack:.
     base_dir=/mnt/M3/mezzanine/Ventana/2022/09/4432
     videos=($(ls $base_dir/*.mp4))
     for video in ${videos[@]}; do
@@ -238,15 +232,10 @@ run-mega-track-bio:
 # Run the mega strided tracking pipeline on a single video for the i2map project
 run-mega-track-i2map:
     #!/usr/bin/env bash
-    export PYTHONPATH=./aipipeline/projects/bio/biotrack:.
-    export REDIS_PASSWORD=KNLKpAmHqw9DuvPaWN6yhBWaCA
+    export PYTHONPATH=.:deps/biotrack:.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
      --config ./aipipeline/projects/i2map/config/config.yml \
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
      --min-confidence 0.1 --version megadet-vss-track \
      --stride-fps 30 --skip-load \
      --video /mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov
-
-#D1443_20220529T170725Z_h265
-# --video /mnt/M3/mezzanine/Ventana/2024/10/4581/V4581_20241002T195229Z_h265.mp4 --flush
-#--video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4 --flush \
