@@ -71,7 +71,7 @@ init-vss project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --config $PROJECT_DIR/config/config.yml {{more_args}}
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --batch-size 1 --config $PROJECT_DIR/config/config.yml {{more_args}}
 
 # Load already computed exemplars into the VSS database
 load-vss project='uav' :
@@ -178,7 +178,7 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_predict_pipeline.py \
     --config ./aipipeline/projects/{{project}}/config/config.yml \
-    --image_dir {{image_dir}} \
+    --image-dir {{image_dir}} \
     {{more_args}}
 
 # Run the strided inference on a single video
@@ -219,7 +219,34 @@ run-mega-inference:
     --endpoint_url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
     --video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4
 
-run-mega-update_trackers:
+# Run the mega strided tracking pipeline on a single video for the bio project
+run-mega-track-bio:
     #!/usr/bin/env bash
-    export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py
+    export PYTHONPATH=./aipipeline/projects/bio/biotrack:.
+    export REDIS_PASSWORD=KNLKpAmHqw9DuvPaWN6yhBWaCA
+    base_dir=/mnt/M3/mezzanine/Ventana/2022/09/4432
+    videos=($(ls $base_dir/*.mp4))
+    for video in ${videos[@]}; do
+      time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+       --config ./aipipeline/projects/bio/config/config.yml \
+       --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
+       --min-confidence 0.1 --version megadet-vss-track \
+       --stride-fps 30 \
+       --video $video --flush
+    done
+
+# Run the mega strided tracking pipeline on a single video for the i2map project
+run-mega-track-i2map:
+    #!/usr/bin/env bash
+    export PYTHONPATH=./aipipeline/projects/bio/biotrack:.
+    export REDIS_PASSWORD=KNLKpAmHqw9DuvPaWN6yhBWaCA
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+     --config ./aipipeline/projects/i2map/config/config.yml \
+     --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
+     --min-confidence 0.1 --version megadet-vss-track \
+     --stride-fps 30 --skip-load \
+     --video /mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov
+
+#D1443_20220529T170725Z_h265
+# --video /mnt/M3/mezzanine/Ventana/2024/10/4581/V4581_20241002T195229Z_h265.mp4 --flush
+#--video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4 --flush \

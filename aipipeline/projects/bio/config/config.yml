@@ -23,6 +23,7 @@ sdcat:
 vss:
   project: "901103-biodiversity"
   threshold: 0.1
+  top_k: 1
   model: "google/vit-base-patch16-224"
 
 tator:
