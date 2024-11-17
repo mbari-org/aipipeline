@@ -6,3 +6,8 @@
 # For testing only
 #/mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding,trinity-2_20241021T184730_MossLanding_DSC01676.JPG,trinity-2_20241021T184730_MossLanding_DSC01676.JPG
 /mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding
+/mnt/UAV/Level-1/trinity-2_20240703T153256_Seymour/SONY_DSC-RX1RM2,2024/07/Seymour
+/mnt/UAV/Level-1/trinity-2_20240703T164523_Davenport/SONY_DSC-RX1RM2,2024/07/Davenport
+/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
+/mnt/UAV/Level-1/trinity-2_20240808T171312_Davenport/SONY_DSC-RX1RM2,2024/08/Davenport
+/mnt/UAV/Level-1/trinity-2_20240809T233952_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
