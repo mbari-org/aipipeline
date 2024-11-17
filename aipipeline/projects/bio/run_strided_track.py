@@ -66,12 +66,10 @@ def display_tracks(frames, tracks, frame_num, out_video):
             if pt is not None:
                 # Offset to the right by 10 pixels for better visibility on small objects
                 center = (int(pt[0]) + 10, int(pt[1]))
-                radius = 10
                 color = (255, 255, 255)
                 thickness = 1
-                frame = cv2.circle(frame, center, radius, color, thickness)
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                fontScale = 3
+                fontScale = 1
                 # Draw the track track_id with the label, e.g. 1:Unknown
                 frame = cv2.putText(frame, f"{track.id}:{label}", center, font, fontScale, color, thickness,
                                 cv2.LINE_AA)
@@ -157,7 +155,7 @@ def run_inference_track(
         iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
         ancillary_data_start = get_ancillary_data(md['dive'], config_dict, iso_start_datetime)
         if ancillary_data_start is None or "depthMeters" not in ancillary_data_start:
-            logger.error(f"Failed to get ancillary data for {md['dive']}")
+            logger.error(f"Failed to get ancillary data for {md['dive']} {iso_start_datetime}")
             return
         if ancillary_data_start["depthMeters"] < min_depth:
             logger.info(f"{video_path.name} depth {ancillary_data_start['depthMeters']} "
@@ -205,7 +203,7 @@ def run_inference_track(
                         detections.append(t_loc)
 
             # Run the tracker and clean up the localizations
-            tracks = tracker.update_batch((start_frame, end_frame), frame_stack, detections=detections, max_cost=30)
+            tracks = tracker.update_batch((start_frame, end_frame), frame_stack, detections=detections, max_frames=900, max_cost=10)
             display_tracks(frame_stack_full, tracks, start_frame, out_video)
             clean(output_path)
             all_loc = []
@@ -225,7 +223,7 @@ def run_inference_track(
                         ancillary_data = get_ancillary_data(md['dive'], config_dict, loc_datetime)
 
                         if ancillary_data is None or "depthMeters" not in ancillary_data:
-                            logger.error(f"Failed to get ancillary data for {md['dive']}")
+                            logger.error(f"Failed to get ancillary data for {md['dive']} {iso_start_datetime}")
                             continue
 
                         new_loc = {
