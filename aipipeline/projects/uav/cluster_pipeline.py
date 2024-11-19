@@ -27,7 +27,7 @@ logger.addHandler(handler)
 ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 
-def process_mission(element):
+def process_mission(element, run_vss=False):
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
@@ -68,7 +68,12 @@ def process_mission(element):
         "3",
         "--device",
         "cuda:0",
+        "--skip-visualization",
     ]
+
+    if run_vss:
+        vss_url = config_dict["vss"]["url"]
+        args.extend(["--vss-url", vss_url])
 
     container = run_docker(
         image=config_dict["docker"]["sdcat"],
@@ -99,6 +104,10 @@ def run_pipeline(argv=None):
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config)
 
+    run_vss = False
+    if '--vss' in beam_args:
+        run_vss = True
+
     logger.info("Starting cluster pipeline...")
     with beam.Pipeline(options=options) as p:
         (
@@ -106,7 +115,7 @@ def run_pipeline(argv=None):
             | "Read missions" >> beam.io.ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
             | "Create elements" >> beam.Map(lambda line: (line, config_dict))
-            | "Process missions (cluster)" >> beam.Map(process_mission)
+            | "Process missions (cluster)" >> beam.Map(process_mission, run_vss=run_vss)
         )
 
 
