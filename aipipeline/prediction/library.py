@@ -4,7 +4,8 @@ import logging
 import multiprocessing
 import os
 import shutil
-from datetime import datetime, time
+import time
+from datetime import datetime
 import numpy as np
 from pathlib import Path
 from typing import Dict, List, Any
@@ -85,7 +86,7 @@ def clean_bad_images(element) -> tuple:
     imagelab.find_issues()
     imagelab.report()
     # Columns to check for issues
-    issue_columns = ["is_dark_issue", "is_blurry_issue", "is_near_duplicates_issue", "is_exact_duplicates_issue"]
+    issue_columns = ["is_dark_issue", "is_blurry_issue", "is_exact_duplicates_issue"]
     bad_images  = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
     for img in bad_images:
         os.remove(img)
@@ -106,17 +107,22 @@ def generate_multicrop_views(elements) -> List[tuple]:
     data = []
     small_crop_augmentations = simclr_like_augmentations(image_size=224)
     for count, crop_path, save_path in elements:
-        if count > 100:
-            logger.info(f"Skipping {count} crops in {crop_path}")
-            data.append((count, crop_path, save_path))
-            continue
-
         logger.info(f"Augmenting {count} crops in {crop_path}....")
         num_aug = 0
         for image_path in Path(crop_path).glob("*.jpg"):
             image = cv2.imread(image_path)
             if image is None:
                 logger.error(f"Failed to read {image_path}")
+                continue
+
+            # Rotate all images 180 degrees
+            image = cv2.rotate(image, cv2.ROTATE_180)
+            save_file = image_path.parent / f"{image_path.stem}{MULTIVIEW_SUFFIX}_r.jpg"
+            logger.info(f"Saving {save_file}")
+            cv2.imwrite(save_file.as_posix(), image)
+            num_aug += 1
+
+            if count > 100:
                 continue
 
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -256,6 +262,7 @@ def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: st
     tuple]:
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
+    skip = False
     if processed_dir is None:
         processed_data = config_dict["data"]["processed_path"]
     else:
@@ -284,30 +291,31 @@ def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: st
     n = 3  # Number of retries
     delay_secs = 30  # Delay between retries
 
-    for attempt in range(1, n + 1):
-        try:
-            container = run_docker(
-                image=config_dict["docker"]["voccropper"],
-                name=f"{short_name}-voccrop-{now}",
-                args_list=args,
-                bind_volumes=config_dict["docker"]["bind_volumes"]
-            )
-            if container:
-                logger.info(f"Cropping ROIs in {base_path}....")
-                container.wait()
-                logger.info(f"Done cropping ROIs in {base_path}....")
-                break  # Exit loop if successful
-            else:
-                logger.error(f"Failed to crop ROIs in {base_path}....")
-                return []
-        except Exception as e:
-            logger.error(f"Attempt {attempt}/{n}: Failed to crop ROIs in {base_path}....{e}")
-            if attempt < n:
-                logger.info(f"Retrying in {delay_secs} seconds...")
-                time.sleep(delay_secs)
-            else:
-                logger.error(f"All {n} attempts failed. Giving up.")
-                return []
+    if not skip:
+        for attempt in range(1, n + 1):
+            try:
+                container = run_docker(
+                    image=config_dict["docker"]["voccropper"],
+                    name=f"{short_name}-voccrop-{now}",
+                    args_list=args,
+                    bind_volumes=config_dict["docker"]["bind_volumes"]
+                )
+                if container:
+                    logger.info(f"Cropping ROIs in {base_path}....")
+                    container.wait()
+                    logger.info(f"Done cropping ROIs in {base_path}....")
+                    break  # Exit loop if successful
+                else:
+                    logger.error(f"Failed to crop ROIs in {base_path}....")
+                    return []
+            except Exception as e:
+                logger.error(f"Attempt {attempt}/{n}: Failed to crop ROIs in {base_path}....{e}")
+                if attempt < n:
+                    logger.info(f"Retrying in {delay_secs} seconds...")
+                    time.sleep(delay_secs)
+                else:
+                    logger.error(f"All {n} attempts failed. Giving up.")
+                    return []
 
     # Find the file stats.txt and read it as a json file
     stats_file = Path(f"{base_path}/crops/stats.json")
