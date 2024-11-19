@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.40.0 (2024-11-19)
+
+### Features
+
+- **uav**: Bump min_std from 2. to 4. to reduce detections and run vss after cluster for auto label
+  ([`e735f94`](https://github.com/mbari-org/aipipeline/commit/e735f94158385b5b3d0fc980236b2b24327dcef3))
+
+### Performance Improvements
+
+- Remove is_near_duplicate_issue from clean and add 180 deg augmentation
+  ([`72253e5`](https://github.com/mbari-org/aipipeline/commit/72253e523dbe59cd44c0abda9442676933da78a4))
+
+
 ## v0.39.1 (2024-11-19)
 
 ### Bug Fixes
