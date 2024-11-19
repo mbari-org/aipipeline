@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.39.1 (2024-11-19)
+
+### Bug Fixes
+
+- Correct check for exemplar files with v0.38.2 perf improvement
+  ([`86f585a`](https://github.com/mbari-org/aipipeline/commit/86f585a0ec3c2b6dffdd891caa6bfe97b336cbdd))
+
+### Documentation
+
+- More cleanining of recipes and updated dep build to include biotrack
+  ([`8f3b2e7`](https://github.com/mbari-org/aipipeline/commit/8f3b2e7e8e12955d7b302dbb499d9ef65c681fac))
+
+
 ## v0.39.0 (2024-11-15)
 
 ### Bug Fixes
