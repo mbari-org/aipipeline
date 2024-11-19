@@ -1,6 +1,7 @@
 # aipipeline, Apache-2.0 license
 # Filename: aipiipeline/prediction/vss_load_pipeline.py
 # Description: Run the VSS initialization pipeline
+import json
 import time
 from datetime import datetime
 
@@ -139,10 +140,32 @@ def run_pipeline(argv=None):
 
     conf_files, config_dict = setup_config(args.config)
     labels = extract_labels_config(config_dict)
-    base_path = Path(config_dict["data"]["processed_path"]) / config_dict["data"]["version"] / "cluster"
+    base_path = Path(config_dict["data"]["processed_path"]) / config_dict["data"]["version"]
     options = PipelineOptions(beam_args)
 
-    data = [(label, (base_path / label).as_posix()) for label in labels]
+    if labels == "all":
+        # Find the file stats.txt and read it as a json file
+        stats_file = Path(f"{base_path}/crops/stats.json")
+        if not stats_file.exists():
+            logger.error(f"Cannot find {stats_file}. Exiting.")
+            return []
+
+        data = []
+        with stats_file.open("r") as f:
+            stats = json.load(f)
+            logger.info(f"Found stats: {stats}")
+            total_labels = stats["total_labels"]
+            labels = list(total_labels.keys())
+            logger.info(f"Found labels: {labels}")
+            for label, count in total_labels.items():
+                if count == 0:
+                    logger.info(f"Skipping label {label} with 0 crops")
+                    continue
+                logger.info(f"Found {count} crops for label {label}")
+                data.append((label,f"{base_path}/cluster/{label}") )
+            logger.debug(data)
+    else:
+        data = [(label, (base_path / "cluster" /  label).as_posix()) for label in labels]
 
     with beam.Pipeline(options=options) as p:
         (
