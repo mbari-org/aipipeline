@@ -6,10 +6,11 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
+#  version: "vss_vits14_all"
+  version2: "dino_vits8_20240207_022529"
   version: "Baseline"
-#  labels: "all"
-  labels: "Atolla"
-  download_args: ["--group NMS --verified"]
+  labels: "Acanthamunnopsis miller,Bathochordaeus sinkers,Bolinopsis,Cydippida,Eusergestes similis,Solmissus,Actinopterygii,Pyrosoma,Salpa fusiformis,krill molt,Merluccius productus,Radiozoa,Thalassocracy inconstans"
+  download_args: ["--verified"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -17,7 +18,7 @@ sdcat:
 
 vss:
   project: "i2map"
-  threshold: 0.95
+  threshold: 0.80
   model: "google/vit-base-patch16-224"
 
 tator:

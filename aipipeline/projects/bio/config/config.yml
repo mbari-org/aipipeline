@@ -2,12 +2,12 @@
 # Config file for Bio project production
 redis:
   host: "doris.shore.mbari.org"
-  port: 6381
+  port: 6380
 
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
   version: "Baseline"
-  labels: "Ctenophora sp. A,Aegina citrea,Aegina rosea,Aegina sp. 1,Aglantha,Aglantha digitale,Beroe,Beroe abyssicola,Beroe forskalii,Beroe gracilis,Colobonema,Colobonema sericeum,Merluccius productus,Pantachogon,Pantachogon haeckeli,Praya dubia,Praya dubia nectosome,Teuthoidea,Thalassocalyce,Thalassocalyce inconstans,Vampyroteuthis infernalis,Vitreosalpa gemini,larvacean house,larvacean house outer filter"
+  labels: "all"
   download_args: ["--verified --min-saliency 1000"]
 
 mounts:
@@ -23,7 +23,6 @@ sdcat:
 vss:
   project: "901103-biodiversity"
   threshold: 0.1
-  top_k: 1
   model: "google/vit-base-patch16-224"
 
 tator:

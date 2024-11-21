@@ -8,7 +8,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
   version: "Baseline"
   labels: "all"
-  download_args: ["--group NMS --verified"]
+  download_args: ["--verified"]
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -16,7 +16,7 @@ sdcat:
 
 vss:
   project: "i2map"
-  threshold: 0.9
+  threshold: 0.1
   model: "google/vit-base-patch16-224"
 
 tator:
