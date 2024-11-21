@@ -89,7 +89,7 @@ def run_pipeline(argv=None):
 
     kwargs = {}
     if args.download_args:
-        kwargs["additional_args"] = args.download_args
+        kwargs["additional_args"] = args.download_args.split(" ")
     if args.download_dir:
         kwargs["download_dir"] = args.download_dir
         processed_dir = args.download_dir
