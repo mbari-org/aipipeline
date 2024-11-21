@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.40.2 (2024-11-21)
+
+### Bug Fixes
+
+- Correct parsing of download args
+  ([`09f0a90`](https://github.com/mbari-org/aipipeline/commit/09f0a90a88bb8f8df52de470cb442db2e0243ee0))
+
+
 ## v0.40.1 (2024-11-21)
 
 ### Bug Fixes
