@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.40.1 (2024-11-21)
+
+### Bug Fixes
+
+- Support vss load all
+  ([`3d748aa`](https://github.com/mbari-org/aipipeline/commit/3d748aa8d9bdba2f851acc3b1eba96a49288bbdc))
+
+
 ## v0.40.0 (2024-11-19)
 
 ### Features
