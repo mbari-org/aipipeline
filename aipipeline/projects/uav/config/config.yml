@@ -26,7 +26,7 @@ data:
   processed_path_sdcat: "/mnt/UAV/machineLearning/"
   processed_path: "/mnt/ML_SCRATCH/UAV/"
   version: "Baseline"
-  labels: "Pinniped,Poop,Batray,Bird,Wave,Foam,Egregia,Reflectance,Buoy,Shark,Person,Mooring,Otter,Boat,Kelp,Mola,Secci_Disc,Jelly,Whale,RIB"
+  labels: "all"
   download_args: ["--verified"]
 
 sdcat:
