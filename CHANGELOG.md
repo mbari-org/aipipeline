@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.40.3 (2024-11-22)
+
+### Performance Improvements
+
+- **uav**: Switch to one class detection model and --use-vits in clustering
+  MBARI-org/mbari-uav-vit-b-16
+  ([`80da5c2`](https://github.com/mbari-org/aipipeline/commit/80da5c2fcb828a51cded25af47c695a2e3f313ac))
+
+
 ## v0.40.2 (2024-11-21)
 
 ### Bug Fixes
