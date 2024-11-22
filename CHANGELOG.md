@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.40.4 (2024-11-22)
+
+### Performance Improvements
+
+- **bio**: Add vits model to strided video track
+  ([`4c9027a`](https://github.com/mbari-org/aipipeline/commit/4c9027a82cad578fdee30ab1d7cf2c4e3ebefe80))
+
+
 ## v0.40.3 (2024-11-22)
 
 ### Performance Improvements
