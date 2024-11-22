@@ -30,7 +30,7 @@ data:
   download_args: ["--verified"]
 
 sdcat:
-  model: "MBARI/uav-yolov5-30k"
+  model: "MBARI/yolov5x6-uavs-oneclass"
   ini: "sdcat.ini"
 
 vss:
