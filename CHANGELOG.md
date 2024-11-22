@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.40.5 (2024-11-22)
+
+### Performance Improvements
+
+- **uav**: Increase min saliency to 300 in detect
+  ([`e622e20`](https://github.com/mbari-org/aipipeline/commit/e622e20546034b497fd0563a3db9ac92149f3337))
+
+
 ## v0.40.4 (2024-11-22)
 
 ### Performance Improvements
