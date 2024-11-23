@@ -55,23 +55,26 @@ def process_mission(element) -> str:
     model = config_dict["sdcat"]["model"]
     base_dir = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     if type == "detect":
-        load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
+        load_file_or_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
     elif type == "cluster":
         load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "clusters"
+        # Grab the most recent file
+        all_detections = list(Path(load_dir).rglob("*cluster_detections.csv"))
+        load_file_or_dir = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
     else:
         logger.error(f"Type {type} not supported")
         return f"Type {type} not supported"
 
-    if not load_dir.exists():
-        logger.error(f"Could not find directory: {load_dir}")
-        return f"Could not find directory: {load_dir}"
+    if not load_file_or_dir.exists():
+        logger.error(f"Could not find: {load_file_or_dir}")
+        return f"Could not find: {load_file_or_dir}"
 
-    logger.info(f"Loading {load_dir}")
+    logger.info(f"Loading {load_file_or_dir}")
     args = [
         "load",
         "boxes",
         "--input",
-        load_dir.as_posix(),
+        load_file_or_dir.as_posix(),
         "--config",
         config_files[CONFIG_KEY],
         "--token",
