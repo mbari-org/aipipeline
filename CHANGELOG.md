@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.40.6 (2024-11-23)
+
+### Bug Fixes
+
+- **uav**: Skip over exemplars when loading clustered detections
+  ([`ee81689`](https://github.com/mbari-org/aipipeline/commit/ee81689e9c31a5c49d2c566728138f235467c068))
+
+
 ## v0.40.5 (2024-11-22)
 
 ### Performance Improvements
