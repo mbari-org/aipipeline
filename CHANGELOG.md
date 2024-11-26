@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.41.0 (2024-11-26)
+
+### Features
+
+- **uav**: Jelly heat map
+  ([`bebb389`](https://github.com/mbari-org/aipipeline/commit/bebb389e9fd0e7fe7626e623821bd63bbedf1fce))
+
+
 ## v0.40.6 (2024-11-23)
 
 ### Bug Fixes
