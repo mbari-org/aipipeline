@@ -358,14 +358,9 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_args: List[str] = [],
-             download_dir: str = None) -> List[
-    str]:
+def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
-    if download_dir is None:
-        processed_data = config_dict["data"]["processed_path"]
-    else:
-        processed_data = download_dir
+    processed_data = config_dict["data"]["processed_path"]
     version = config_dict["data"]["version"]
     project = config_dict["tator"]["project"]
     short_name = get_short_name(project)
@@ -382,7 +377,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict, additional_
         "--version",
         version,
     ]
-    args.extend(additional_args)
+    args.extend(config_dict["data"]["download_args"])
     if labels != "all":
         labels_str = ",".join(labels)
         args.extend(["--labels", f'"{labels_str}"'])

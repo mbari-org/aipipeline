@@ -43,14 +43,13 @@ def run_pipeline(argv=None):
     conf_files, config_dict = setup_config(args.config, silent=True)
 
     labels = config_dict["data"]["labels"].split(",")
-    download_args = config_dict["data"]["download_args"]
 
 
     with beam.Pipeline(options=options) as p:
         (
             p
             | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
+            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
         )
 
