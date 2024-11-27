@@ -130,7 +130,6 @@ def run_pipeline(argv=None):
     MIN_DETECTIONS = 2000
     conf_files, config_dict = setup_config(args.config)
     batch_size = int(args.batch_size)
-    download_args = config_dict["data"]["download_args"]
     processed_data = config_dict["data"]["processed_path"]
     base_path = str(os.path.join(processed_data, config_dict["data"]["version"]))
     labels = extract_labels_config(config_dict)
@@ -151,7 +150,7 @@ def run_pipeline(argv=None):
         if not args.skip_download:
             start = (
                 start
-                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, additional_args=download_args)
+                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             )
 
         (

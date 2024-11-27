@@ -40,7 +40,6 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Download and crop unknown images.")
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--labels", required=False, help="Comma separated list of labels to download")
-    parser.add_argument("--download-args", required=False,  help="Additional arguments for download")
     parser.add_argument("--download-dir", required=False, help="Directory to download images")
     parser.add_argument("--skip-clean", required=False, default=False,
                                                     help="Skip cleaning of previously downloaded data")
@@ -87,20 +86,18 @@ def run_pipeline(argv=None):
     if not args.skip_clean:
         clean(download_path.as_posix())
 
-    kwargs = {}
     if args.download_args:
-        kwargs["additional_args"] = args.download_args.split(" ")
+        config_dict["data"]["download_args"] = args.download_args.split(" ")
     if args.download_dir:
-        kwargs["download_dir"] = args.download_dir
-        processed_dir = args.download_dir
-    else:
-        processed_dir = config_dict["data"]["processed_path"]
+        config_dict["data"]["processed_path"] = args.download_dir
+
+    processed_dir = Path(config_dict["data"]["processed_path"])
 
     with beam.Pipeline(options=options) as p:
         (
             p
             | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict, **kwargs)
+            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=processed_dir)
             | "Log results" >> beam.Map(logger.info)
         )
