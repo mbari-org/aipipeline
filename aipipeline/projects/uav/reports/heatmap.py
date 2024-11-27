@@ -6,7 +6,6 @@ import logging
 
 import dotenv
 import pandas as pd
-import plotly.express as px
 import plotly.io as pio
 import plotly.graph_objects as go
 import numpy as np
@@ -51,7 +50,8 @@ def gen_report(config_dict: dict, token: str, label: str = "Jelly"):
     df_loc = df_loc.merge(df_media, left_on="media_ids", right_on="media_ids")
 
     # Save the data to a tsv file
-    df_loc.to_csv(f"{label}_loc_updated{datetime.datetime.now()}.tsv", sep="\t")
+    d = f"{datetime.datetime.now():%Y-%m-%d %H%M%S}"
+    df_loc.to_csv(f"{label}_loc_{d}.tsv", sep="\t")
 
     # Drop the columns that are not needed, and keep the lat and lon
     df_loc = df_loc.drop(columns=["score", "exemplar", "saliency", "comment", "tator_user_sections", "altitude", "make", "cluster", "verified", "delete","model", "FileType"])
