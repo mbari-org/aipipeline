@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.41.1 (2024-12-06)
+
+### Performance Improvements
+
+- Added vits models to project where model exists and clean for sdcat pipeline
+  ([`0a16c0a`](https://github.com/mbari-org/aipipeline/commit/0a16c0af1a24581823d0aa456b1ff0629564849b))
+
+
 ## v0.41.0 (2024-11-26)
 
 ### Features
@@ -141,13 +149,13 @@
 
 ### Performance Improvements
 
-- Removed color jitter from aug and remove all issues, dark, clurry, duplicate, near-duplicate and
-  only cluster is > 500 examples for vss
-  ([`7a38228`](https://github.com/mbari-org/aipipeline/commit/7a38228642548239d6456c030062fb8550dc3924))
-
 - Mostly some cleaning of args and logging for vss_predict_pipeline.py but also bumped the batch
   size to 20 for faster prediction
   ([`84608ad`](https://github.com/mbari-org/aipipeline/commit/84608ad77eb8d81d97db9872e902b8e16b43d42d))
+
+- Removed color jitter from aug and remove all issues, dark, clurry, duplicate, near-duplicate and
+  only cluster is > 500 examples for vss
+  ([`7a38228`](https://github.com/mbari-org/aipipeline/commit/7a38228642548239d6456c030062fb8550dc3924))
 
 
 ## v0.36.5 (2024-11-07)
@@ -275,11 +283,11 @@
 
 ### Features
 
-- **i2map**: Change group MERGE_CLASSIFY to NMS
-  ([`6fb7265`](https://github.com/mbari-org/aipipeline/commit/6fb72654e32b9b705d4e82efd6d61e10355716c3))
-
 - **cfe**: Delete all media by depth
   ([`41a60f9`](https://github.com/mbari-org/aipipeline/commit/41a60f9969dcf59b394741293cca8bc7352403d1))
+
+- **i2map**: Change group MERGE_CLASSIFY to NMS
+  ([`6fb7265`](https://github.com/mbari-org/aipipeline/commit/6fb72654e32b9b705d4e82efd6d61e10355716c3))
 
 - **uav**: Delete all loc in media
   ([`6323700`](https://github.com/mbari-org/aipipeline/commit/63237007002aacd2d9d0ad0c8f31b460fd8bc450))
@@ -493,11 +501,11 @@
 
 ### Features
 
-- Support search pattern left off of saliency pipeline
-  ([`4bb9685`](https://github.com/mbari-org/aipipeline/commit/4bb96855c01f4f0ab188e58756abae5f55a7978d))
-
 - Added download only pipeline
   ([`3d85098`](https://github.com/mbari-org/aipipeline/commit/3d8509852593d892a536a57a452673820ff253f1))
+
+- Support search pattern left off of saliency pipeline
+  ([`4bb9685`](https://github.com/mbari-org/aipipeline/commit/4bb96855c01f4f0ab188e58756abae5f55a7978d))
 
 
 ## v0.17.0 (2024-10-16)
@@ -740,11 +748,11 @@
 
 ### Bug Fixes
 
-- Skip over low scoring threshold
-  ([`8bdc7bf`](https://github.com/mbari-org/aipipeline/commit/8bdc7bf8a1dc681d9f32c1f0de88e69852d7a521))
-
 - Better handling of missing exemplars
   ([`0b05c1a`](https://github.com/mbari-org/aipipeline/commit/0b05c1a664b6d70b501485e8bf6bfe8ea7494dba))
+
+- Skip over low scoring threshold
+  ([`8bdc7bf`](https://github.com/mbari-org/aipipeline/commit/8bdc7bf8a1dc681d9f32c1f0de88e69852d7a521))
 
 ### Build System
 
@@ -841,21 +849,21 @@
 
 ### Features
 
-- Plot names in centroids of each class
-  ([`8c5dd39`](https://github.com/mbari-org/aipipeline/commit/8c5dd39b7009df173f77235e4be006ca2c9ecb48))
-
-- Working download_crop_pipeline.py with updates for voc-cropper:0.4.3
-  ([`76ee970`](https://github.com/mbari-org/aipipeline/commit/76ee970b3cfb02509d4cabeecf7bb4ddb886c9e9))
-
-- Add override for download crop pipeline for various arguments
-  ([`7a307db`](https://github.com/mbari-org/aipipeline/commit/7a307dbdf7a24596161f3ace683a8f042372bf68))
-
 - Add console log to vss accuracy, get class names from redis not config, and handle empty
   predictions
   ([`cc5a517`](https://github.com/mbari-org/aipipeline/commit/cc5a5179d67ce95a938bad039f087b120b14b5af))
 
 - Add more checks for required keys in config
   ([`4446d1d`](https://github.com/mbari-org/aipipeline/commit/4446d1dab81da79a221c6d0aa59156d8e95b02e7))
+
+- Add override for download crop pipeline for various arguments
+  ([`7a307db`](https://github.com/mbari-org/aipipeline/commit/7a307dbdf7a24596161f3ace683a8f042372bf68))
+
+- Plot names in centroids of each class
+  ([`8c5dd39`](https://github.com/mbari-org/aipipeline/commit/8c5dd39b7009df173f77235e4be006ca2c9ecb48))
+
+- Working download_crop_pipeline.py with updates for voc-cropper:0.4.3
+  ([`76ee970`](https://github.com/mbari-org/aipipeline/commit/76ee970b3cfb02509d4cabeecf7bb4ddb886c9e9))
 
 ### Performance Improvements
 
@@ -870,14 +878,14 @@
 
 ### Bug Fixes
 
+- Add augment data clean in case not run before metric
+  ([`a2dcbea`](https://github.com/mbari-org/aipipeline/commit/a2dcbea88838089b03e9f958ef3ee9bc9f02c7a6))
+
 - Added the guano for eval
   ([`c0c9383`](https://github.com/mbari-org/aipipeline/commit/c0c938350c99f77f3cae6622456342ef323fec6e))
 
 - Correct redis port for cfe project
   ([`c4d2e3f`](https://github.com/mbari-org/aipipeline/commit/c4d2e3f26571549e8be0b455753684ce4a028036))
-
-- Add augment data clean in case not run before metric
-  ([`a2dcbea`](https://github.com/mbari-org/aipipeline/commit/a2dcbea88838089b03e9f958ef3ee9bc9f02c7a6))
 
 ### Features
 
@@ -909,14 +917,14 @@
 
 ### Bug Fixes
 
-- Correct uav imports after refactoring munged and merged aidata config
-  ([`9a8bf29`](https://github.com/mbari-org/aipipeline/commit/9a8bf29118684a47ab3982cdea2c0f9874eeb5fd))
-
 - Added new uav missions and fixed mission parse for loading images
   ([`940ed36`](https://github.com/mbari-org/aipipeline/commit/940ed3641bc53663622d584005ba320eb750c34a))
 
 - Correct config ath
   ([`1c53abb`](https://github.com/mbari-org/aipipeline/commit/1c53abbfc2e36b7ff04ceb707df93d29d50c55fe))
+
+- Correct uav imports after refactoring munged and merged aidata config
+  ([`9a8bf29`](https://github.com/mbari-org/aipipeline/commit/9a8bf29118684a47ab3982cdea2c0f9874eeb5fd))
 
 
 ## v0.3.0 (2024-08-27)
