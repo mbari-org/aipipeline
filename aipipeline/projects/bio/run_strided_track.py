@@ -136,7 +136,8 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
     max_secs = kwargs.get("max_seconds", -1)
     max_frames_tracked = kwargs.get("max_frames_tracked", 300)
     min_frames = kwargs.get("min_frames", 5)
-    min_score = kwargs.get("min_score", 0.1)
+    min_score_det = kwargs.get("min_score_det", 0.1)
+    min_score_track = kwargs.get("min_score_track", 0.1)
     gpu_id = kwargs.get("gpu_id", 0)
     imshow = kwargs.get("imshow", False)
     ffmpeg_path = kwargs.get("ffmpeg_path", "/usr/bin/ffmpeg")
@@ -262,8 +263,8 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
                 for track in closed_tracks:
                     logger.info(f"Closed track {track.id} at frame {frame_idx}")
                     best_frame, best_pt, best_labels, best_box, best_scores = track.get_best(rescale=False)
-                    if track.num_frames <= min_frames or best_scores[0] <= min_score:
-                        logger.info(f"Track {track.id} is too short num frames {track.num_frames} or best score {best_scores[0]} is < {min_score}, skipping")
+                    if track.num_frames <= min_frames or best_scores[0] <= min_score_track:
+                        logger.info(f"Track {track.id} is too short num frames {track.num_frames} or best score {best_scores[0]} is < {min_score_track}, skipping")
                         continue
                     best_time_secs = float(best_frame*frame_stride / frame_rate)
                     logger.info(f"Best track {track.id} is {best_pt},{best_box},{best_labels},{best_scores} in frame {best_frame}")
@@ -348,7 +349,7 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
                     (0 <= xx <= threshold or 1 - threshold <= xx <= 1) or
                     (0 <= xy <= threshold or 1 - threshold <= xy <= 1) or
                     allowed_class_names and loc["class_name"] not in allowed_class_names or
-                    loc["confidence"] < min_score
+                    loc["confidence"] < min_score_det
             ):
                 data.remove(loc)
                 continue
@@ -479,9 +480,10 @@ def parse_args():
     )
     parser.add_argument("--config", required=True, help=f"Configuration files. For example: {CONFIG_YAML}")
     parser.add_argument("--video", help="Video file or directory.", required=False, type=str)
-    parser.add_argument("--max-seconds", help="Maximum number of seconds to process.", required=False, type=int)
+    parser.add_argument("--max-seconds", help="Maximum number of seconds to process.", required=False, type=int, default=-1)
     parser.add_argument("--min-frames", help="Minimum number of frames a track must have.", required=False, type=int, default=5)
-    parser.add_argument("--min-score", help="Minimum score for a track to be valid.", required=False, type=float, default=0.1)
+    parser.add_argument("--min-score-track", help="Minimum score for a track to be valid.", required=False, type=float, default=0.1)
+    parser.add_argument("--min-score-det", help="Minimum score for a detection to be valid.", required=False, type=float, default=0.1)
     parser.add_argument("--max-frames-tracked", help="Maximum number of frames a track can have before closing it.", required=False, type=int, default=300)
     parser.add_argument("--version", help="Version name", required=False, type=str)
     parser.add_argument("--gpu-id", help="GPU ID to use for inference.", required=False, type=int, default=0)
