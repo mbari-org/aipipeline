@@ -186,7 +186,12 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
     if not skip_load:
         # Check the beginning and ending of the video depths, and skip if less than 200 meters
         iso_start = md["start_timestamp"]
-        iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
+        try:
+            # Try parsing with fractional seconds
+            iso_start_datetime = datetime.strptime(iso_start, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            # Fallback to parsing without fractional seconds
+            iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
         ancillary_data_start = get_ancillary_data(md['dive'], config_dict, iso_start_datetime)
         if ancillary_data_start is None or "depthMeters" not in ancillary_data_start:
             logger.error(f"Failed to get ancillary data for {md['dive']} {iso_start_datetime}")
@@ -245,7 +250,7 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
             tracks = tracker.update_batch((start_frame, end_frame),
                                           frame_stack,
                                           detections=detections,
-                                          max_empty_frames=4,
+                                          max_empty_frames=5,
                                           max_frames=max_frames_tracked,
                                           max_cost=0.5)
             display_tracks(frame_stack_full, tracks, start_frame, out_video, imshow)
@@ -402,8 +407,12 @@ def run_inference_track(video_file: str, version_id: int = 0, **kwargs):
                     logger.error(f"{video_path.name} failed to get video metadata")
                     return
                 iso_start = md["start_timestamp"]
-                # Convert the start time to a datetime object
-                iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
+                try:
+                    # Try parsing with fractional seconds
+                    iso_start_datetime = datetime.strptime(iso_start, '%Y-%m-%dT%H:%M:%S.%fZ')
+                except ValueError:
+                    # Fallback to parsing without fractional seconds
+                    iso_start_datetime = datetime.strptime(iso_start, "%Y-%m-%dT%H:%M:%SZ")
                 # Queue the video first
                 video_ref_uuid = md["video_reference_uuid"]
                 iso_start = md["start_timestamp"]
