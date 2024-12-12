@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.43.0 (2024-12-12)
+
+### Bug Fixes
+
+- **bio**: Handle both fractional and non-fractional seconds from metadata query and bump empty
+  frames to 5
+  ([`4c4dbf0`](https://github.com/mbari-org/aipipeline/commit/4c4dbf0b5625f9026466db47b54a61129beefb65))
+
+### Documentation
+
+- **bio**: Updated just recipe to include install and processing of single videos and dives
+  ([`6540634`](https://github.com/mbari-org/aipipeline/commit/6540634ed815e20f185c27d812106c9ee70cfb8e))
+
+### Features
+
+- **bio**: Pass through separate score threshold for det/track
+  ([`2d34434`](https://github.com/mbari-org/aipipeline/commit/2d34434e92aede9f9a833b2fe8daa0aa5657daed))
+
+
 ## v0.42.0 (2024-12-12)
 
 ### Features
