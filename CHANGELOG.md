@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.42.0 (2024-12-12)
+
+### Features
+
+- **bio**: Some refactoring, plus added second label_s/score_s based on gcam which is proving to be
+  informative and remove any detections that are blurry which are not useful for detection/tracking
+  ([`f2799b8`](https://github.com/mbari-org/aipipeline/commit/f2799b88b4ca7fc70c91a59308a06a80d323b00b))
+
+
 ## v0.41.1 (2024-12-06)
 
 ### Performance Improvements
