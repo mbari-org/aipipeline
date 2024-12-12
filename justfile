@@ -225,7 +225,7 @@ run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_202
        --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 8 --video {{video}} --max-seconds 30 --flush --gpu-id {{gpu_id}}
+       --stride-fps 15 --video {{video}} --max-seconds 30 --flush --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on an entire dive for the bio project
 run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0':
@@ -250,7 +250,7 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
      } 
     export -f process_file
     # Run 3 video in parallel
-    find  "{{dive}}" -type f | xargs -P 3 -n 1 -I {} bash -c 'process_file "{}"'
+    find  "{{dive}}" -name '*.m*' -type f | xargs -P 3 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
 run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
@@ -261,6 +261,6 @@ run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205
      --config ./aipipeline/projects/i2map/config/config.yml \
      --det-model /mnt/DeepSea-AI/models/megadet \
      --vits-model /mnt/DeepSea-AI/models/i2MAP-vit-b-16 \
-     --min-confidence 0.001 --version megadet-vits-track \
-     --stride-fps 1 --max-frames-tracked 1 --max-seconds 120 --skip-load \
+     --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version megadet-vits-track \
+     --stride-fps 30 --max-frames-tracked 1 --max-seconds 120 --skip-load \
      --video {{video}} --gpu-id {{gpu_id}}
