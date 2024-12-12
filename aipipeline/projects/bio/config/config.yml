@@ -48,9 +48,13 @@ tator:
     attributes:
       Label:
         type: string
+      label_s:
+        type: string
       concept:
         type: string
       score:
+        type: float
+      score_s:
         type: float
       cluster:
         type: string
