@@ -2,6 +2,7 @@ import io
 import json
 import logging
 import os
+import random
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -14,11 +15,13 @@ logger = logging.getLogger(__name__)
 
 def get_ancillary_data(dive: str, config_dict: dict, iso_datetime: datetime) -> dict:
     try:
+        # Create a random index for the container name
+        index = random.randint(0, 1000)
         platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
         platform = ''.join(platform)
         container = run_docker(
             image=config_dict["docker"]["expd"],
-            name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}",
+            name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}-{index}",
             args_list=[platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
             auto_remove=False,
         )
@@ -46,7 +49,6 @@ def get_video_metadata(video_name):
         if os.path.exists(cache_file):
             with open(cache_file, "r") as f:
                 return json.load(f)
-        import pdb; pdb.set_trace()
         query = f"http://m3.shore.mbari.org/vam/v1/media/videoreference/filename/{video_name}"
         logger.info(f"query: {query}")
         # Get the video reference uuid from the rest query JSON response
@@ -91,12 +93,12 @@ def resolve_video_path(video_path: Path) -> Path:
     return resolved_path
 
 
-def video_to_frame(timestamp: str, video_path: Path, output_path: Path):
+def video_to_frame(timestamp: str, video_path: Path, output_path: Path, ffmpeg_path: str = "/usr/bin/ffmpeg"):
     """
     Capture frame with the highest quality jpeg from video at a given time
     """
     command = [
-        "/opt/homebrew/bin/ffmpeg",
+        ffmpeg_path,
         "-loglevel",
         "panic",
         "-nostats",
