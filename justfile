@@ -246,7 +246,7 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
        --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 15 --video $video --gpu-id 1
+       --stride-fps 15 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file
     # Run 3 video in parallel
