@@ -8,12 +8,17 @@ list:
     @just --list --unsorted
 
 # Setup the environment
-install:
+install: update_trackers
     conda run -n aipipeline pip install https://github.com/redis/redis-py/archive/refs/tags/v5.0.9.zip
     git clone http://github.com/mbari-org/aidata.git deps/aidata
+    git clone https://github.com/facebookresearch/co-tracker deps/co-tracker
     conda run -n aipipeline pip install -r deps/aidata/requirements.txt
-    git clone http://github.com/mbari-org/biotrack.git deps/biotrack
-    cd deps/biotrack && poetry install
+    cd deps/co-tracker && conda run -n aipipeline pip install -e .
+    cd .. && mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
+
+# Update the environment. Run this command after checking out any code changes
+update_trackers:
+    conda env update_trackers --file environment.yml --prune
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -75,7 +80,7 @@ load-vss project='uav' :
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Cluster mission in aipipeline/projects/uav/data/missions2process.txt, add --vss to classify clusters with vss
+# Cluster mission in aipipeline/projects/uav/data/missions2process.txt
 cluster-uav *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
@@ -149,16 +154,13 @@ crop project='uav' *more_args="":
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
 
-# Download and crop Unknown detections
-download-crop-unknowns project='uav' labels='Unknown' download-dir='/tmp/download' *more_args="":
+# Download and crop 
+download-crop project='uav':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml \
-        --skip_clean True \
-        --labels {{labels}} \
-        --download-dir {{download-dir}} \
-        {{more_args}}
+        --skip-clean True
 
 # Download only
 download project='uav':
@@ -214,28 +216,51 @@ run-mega-inference:
     --endpoint_url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
     --video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4
 
-# Run the mega strided tracking pipeline on a single video for the bio project
-run-mega-track-bio:
+# Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds
+run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4' gpu_id='0':
     #!/usr/bin/env bash
-    export PYTHONPATH=.:deps/biotrack:.
-    base_dir=/mnt/M3/mezzanine/Ventana/2022/09/4432
-    videos=($(ls $base_dir/*.mp4))
-    for video in ${videos[@]}; do
-      time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+    export PYTHONPATH=deps:deps/biotrack:.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
-       --min-confidence 0.1 --version megadet-vss-track \
-       --stride-fps 30 \
-       --video $video --flush
-    done
+       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
+       --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
+       --det-model /mnt/DeepSea-AI/models/megadet \
+       --stride-fps 8 --video {{video}} --max-seconds 30 --flush --gpu-id {{gpu_id}}
+
+# Run the mega strided tracking pipeline on an entire dive for the bio project
+run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0':
+    #!/usr/bin/env bash
+    export PYTHONPATH=deps:deps/biotrack:.
+    #DIRECTORY=/mnt/M3/mezzanine/Ventana/2022/09/4432/
+    #DIRECTORY=/mnt/M3/mezzanine/DocRicketts/2015/03/720/
+    #DIRECTORY=/mnt/M3/mezzanine/Ventana/2022/10/4433
+    #DIRECTORY=/mnt/M3/mezzanine/Ventana/2022/09/4431
+    #DIRECTORY=/mnt/M3/mezzanine/DocRicketts/2022/05/1443
+    #DIRECTORY=/mnt/M3/mezzanine/DocRicketts/2022/05/1443
+    #DIRECTORY=/mnt/M3/mezzanine/Ventana/2020/12/4315
+    process_file() { 
+     local video="$1"
+     echo "Processing $video"
+     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+       --config ./aipipeline/projects/bio/config/config.yml \
+       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
+       --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
+       --det-model /mnt/DeepSea-AI/models/megadet \
+       --stride-fps 15 --video $video --gpu-id 1
+     } 
+    export -f process_file
+    # Run 3 video in parallel
+    find  "{{dive}}" -type f | xargs -P 3 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
-run-mega-track-i2map:
+run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+    #videos=("i2MAP_20190205T102700Z_200m_F031_17.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov")
+    time python3 aipipeline/projects/bio/run_strided_track.py \
      --config ./aipipeline/projects/i2map/config/config.yml \
-     --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
-     --min-confidence 0.1 --version megadet-vss-track \
-     --stride-fps 30 --skip-load \
-     --video /mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov
+     --det-model /mnt/DeepSea-AI/models/megadet \
+     --vits-model /mnt/DeepSea-AI/models/i2MAP-vit-b-16 \
+     --min-confidence 0.001 --version megadet-vits-track \
+     --stride-fps 1 --max-frames-tracked 1 --max-seconds 120 --skip-load \
+     --video {{video}} --gpu-id {{gpu_id}}
