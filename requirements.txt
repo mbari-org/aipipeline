@@ -13,3 +13,5 @@ apache-beam
 cleanvision
 ultralytics
 yolov5
+huggingface-hub==0.24.7
+tokenizers==0.19.1
