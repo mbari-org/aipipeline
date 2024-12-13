@@ -11,3 +11,5 @@ albumentations
 torch
 apache-beam
 cleanvision
+ultralytics
+yolov5
