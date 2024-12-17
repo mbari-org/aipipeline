@@ -9,9 +9,10 @@ scikit-learn
 matplotlib
 albumentations
 torch
-apache-beam
+apache-beam==2.53.0
 cleanvision
 ultralytics
 yolov5
 huggingface-hub==0.24.7
 tokenizers==0.19.1
+transformers==4.40.2
