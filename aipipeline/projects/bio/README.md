@@ -20,10 +20,10 @@ For example, to run detections
 - and store the results in the "test" section of the database
     
 ```shell
-python scripts/run_strided_inference.py \
-  --config ./aipipeline/projects/bio/config/config.yaml \
+cd 
+python process.py \
+  --config config/config.yaml \
   --video ./data/ctenophora_sp_A_aug/CTENOPHORA_SP_A_AUG_00001.mp4 \
   --stride 2 \
-  --endpoint http://fasta-fasta-1d0o3gwgv046e-143598223.us-west-2.elb.amazonaws.com/predict \
-  --section "test"
+  --endpoint http://fasta-fasta-1d0o3gwgv046e-143598223.us-west-2.elb.amazonaws.com/predict 
 ```

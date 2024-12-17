@@ -24,15 +24,15 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 
-def get_version_id(api: TatorApi, project: Project, version: str) -> int:
+def get_version_id(api: TatorApi, project_id: int, version: str) -> int:
     """
     Get the version ID for the given project
     :param api: :class:`TatorApi` object
-    :param project: project object
+    :param project_id: Project is
     :param version: version name
     :return: version ID
     """
-    versions = api.get_version_list(project=project.id)
+    versions = api.get_version_list(project=project_id)
     logger.debug(versions)
 
     # Find the version by name

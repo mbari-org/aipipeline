@@ -20,6 +20,10 @@ install: update_trackers
 update_trackers:
     conda env update_trackers --file environment.yml --prune
 
+# Copy dev code to the project on doris
+cp-dev:
+    cp -r ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/projects/bio/
+
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
     #!/usr/bin/env bash
@@ -182,27 +186,27 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
 run-ctenoA-test:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
-    --endpoint_url "http://localhost:8001/predict" \
+    --endpoint-url "http://localhost:8001/predict" \
     --video http://m3.shore.mbari.org/videos/M3/mezzanine/DocRicketts/2022/05/1443/D1443_20220529T135615Z_h265.mp4
 
 # Run the strided inference on a collection of videos in a TSV file
 run-ctenoA-prod:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
-    --endpoint_url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
+    --endpoint-url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
     --tsv ./aipipeline/projects/bio/data/videotable.tsv
 
 # Run the mega strided inference only on a single video
 run-mega-inference:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_inference.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "animal" \
     --class-remap "{\"animal\":\"marine organism\"}" \
@@ -243,14 +247,14 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
      echo "Processing $video"
      time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
+       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 15 --video $video --gpu-id {{gpu_id}}
+       --stride-fps 10 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file
-    # Run 3 video in parallel
-    find  "{{dive}}" -name '*.m*' -type f | xargs -P 3 -n 1 -I {} bash -c 'process_file "{}"'
+    # Run 4 video in parallel
+    find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 12 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
 run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
@@ -261,6 +265,29 @@ run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205
      --config ./aipipeline/projects/i2map/config/config.yml \
      --det-model /mnt/DeepSea-AI/models/megadet \
      --vits-model /mnt/DeepSea-AI/models/i2MAP-vit-b-16 \
-     --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version megadet-vits-track \
-     --stride-fps 30 --max-frames-tracked 1 --max-seconds 120 --skip-load \
+     --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version megadet-vits-track \
+     --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
      --video {{video}} --gpu-id {{gpu_id}}
+
+run-mega-track-test-yv5:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
+    time python3 aipipeline/projects/bio/predict.py \
+     --config ./aipipeline/projects/bio/config/config.yml \
+     --det-model /Volumes/DeepSea-AI/models/megadet \
+     --vits-model /Volumes/DeepSea-AI/models/m3midwater-vit-b-16 \
+     --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
+     --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
+     --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
+
+
+run-mega-track-test-fastapiyv5:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
+    time python3 aipipeline/projects/bio/predict.py \
+     --config ./aipipeline/projects/bio/config/config.yml \
+     --vits-model /Volumes/DeepSea-AI/models/m3midwater-vit-b-16 \
+     --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
+     --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
+     --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
+     --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
