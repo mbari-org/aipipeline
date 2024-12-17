@@ -11,8 +11,13 @@ from typing import List, Tuple
 import cv2
 import numpy as np
 import piexif
-from PIL import Image
+from PIL import Image, ImageEnhance
 import pandas as pd
+import torch
+import torchvision.transforms as T
+from torchvision.io import read_image, write_jpeg
+import logging
+
 import xml.etree.ElementTree as ET
 
 from pandas import DataFrame
@@ -85,38 +90,37 @@ def parse_voc_xml(xml_file) -> tuple[
     return paths, boxes, labels, poses, ids
 
 
-def crop_square_image(row: pd.Series, square_dim: int):
+def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
     """
-    Crop the image to a square padding the shortest dimension, then resize it to square_dim x square_dim
-    This also adjusts the crop to make sure the crop is fully in the frame, otherwise the crop that
-    exceeds the frame is filled with black bars - these produce clusters of "edge" objects instead
-    of the detection. Box coordinates are normalized between 0 and 1. Image dimensions are in pixels.
+    Crop the image to a square, pad the shortest dimension, then resize it to square_dim x square_dim.
+    Uses GPU for acceleration.
+
+    :param images:  tensor of images
     :param row: dictionary with the following keys: image_path, crop_path, image_width, image_height, x, y, xx, xy
     :param square_dim: dimension of the square image
+    :param gpu_id: GPU ID to use
     :return:
     """
     try:
-        if not Path(row.image_path).exists():
-            logger.warning(f"Skipping {row.crop_path} because the image {row.image_path} does not exist")
+        # Skip if the crop already exists
+        if Path(row['crop_path']).exists():
             return
 
-        if Path(row.crop_path).exists():  # If the crop already exists, skip it
-            return
-
-        x1 = int(row.image_width * row.x)
-        y1 = int(row.image_height * row.y)
-        x2 = int(row.image_width * row.xx)
-        y2 = int(row.image_height * row.xy)
+        # Calculate bounding box coordinates in pixels
+        x1 = int(row['image_width'] * row['x'])
+        y1 = int(row['image_height'] * row['y'])
+        x2 = int(row['image_width'] * row['xx'])
+        y2 = int(row['image_height'] * row['xy'])
         width = x2 - x1
         height = y2 - y1
         shorter_side = min(height, width)
         longer_side = max(height, width)
         delta = abs(longer_side - shorter_side)
 
-        # Divide the difference by 2 to determine how much padding is needed on each side
+        # Calculate padding
         padding = delta // 2
 
-        # Add the padding to the shorter side of the image
+        # Pad the shorter side
         if width == shorter_side:
             x1 -= padding
             x2 += padding
@@ -124,48 +128,35 @@ def crop_square_image(row: pd.Series, square_dim: int):
             y1 -= padding
             y2 += padding
 
-        # Make sure that the coordinates don't go outside the image
-        # If they do, adjust by the overflow amount
-        if y1 < 0:
-            y1 = 0
-            y2 += abs(y1)
-            if y2 > row.image_height:
-                y2 = row.image_height
-        elif y2 > row.image_height:
-            y2 = row.image_height
-            y1 -= abs(y2 - row.image_height)
-            if y1 < 0:
-                y1 = 0
-        if x1 < 0:
-            x1 = 0
-            x2 += abs(x1)
-            if x2 > row.image_width:
-                x2 = row.image_width
-        elif x2 > row.image_width:
-            x2 = row.image_width
-            x1 -= abs(x2 - row.image_width)
-            if x1 < 0:
-                x1 = 0
+        # Clamp coordinates within image bounds
+        x1, x2 = max(0, x1), min(row['image_width'], x2)
+        y1, y2 = max(0, y1), min(row['image_height'], y2)
 
-        # Crop the image
-        img = Image.open(row.image_path)
-        img = img.crop((x1, y1, x2, y2))
+        # Read the image into a PyTorch tensor and move to GPU
+        img = images[row["batch_idx"]]
 
-        # Resize the image to square_dim x square_dim
-        img = img.resize((square_dim, square_dim), Image.LANCZOS)
+        # Crop the image to the bounding box
+        cropped_img = img[:, y1:y2, x1:x2]
 
-        # Encode the cropped coordinates in the exif data
+        # Resize to the target dimension
+        transform = T.Compose([
+            T.Resize((square_dim, square_dim)),
+        ])
+        resized_img = transform(cropped_img)
+
+        # Move image back to CPU, convert to uint8, and save
+        resized_img = (resized_img * 255).to(torch.uint8).cpu()
+        # Convert BGR to RGB
+        resized_img = resized_img[[2, 1, 0], :, :]
+        write_jpeg(resized_img, row['crop_path'], quality=95)
+
+        # Optionally encode the bounding box as metadata
         bounding_box = f"{x1},{y1},{x2},{y2}"
-        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}}
-        exif_dict["Exif"][piexif.ExifIFD.UserComment] = f"bbox:{bounding_box}".encode("utf-8")
-        exif_bytes = piexif.dump(exif_dict)
-        img.save(row.crop_path, exif=exif_bytes)
-        img.close()
+        logger.info(f"Cropped {row['crop_path']} -> with bbox {bounding_box}")
 
     except Exception as e:
-        logger.exception(f"Error cropping {row.image_path} {e}")
+        logger.exception(f"Error cropping {row['crop_path']}: {e}")
         raise e
-
 
 def max_score_p(model_predictions: List[str], model_scores: List[float]):
     """Find the top prediction"""
