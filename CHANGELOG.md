@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.43.3 (2024-12-17)
+
+### Performance Improvements
+
+- Remove short low scoring tracks
+  ([`c8aed2d`](https://github.com/mbari-org/aipipeline/commit/c8aed2de6221d62979820a90af9c098fe39e97a7))
+
+
 ## v0.43.2 (2024-12-17)
 
 ### Performance Improvements
