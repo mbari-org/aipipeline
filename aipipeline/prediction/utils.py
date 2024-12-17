@@ -102,9 +102,6 @@ def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
     :return:
     """
     try:
-        # Skip if the crop already exists
-        if Path(row['crop_path']).exists():
-            return
 
         # Calculate bounding box coordinates in pixels
         x1 = int(row['image_width'] * row['x'])
@@ -150,10 +147,15 @@ def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
         resized_img = resized_img[[2, 1, 0], :, :]
         write_jpeg(resized_img, row['crop_path'], quality=95)
 
-        # Optionally encode the bounding box as metadata
+        # Encode the cropped coordinates in the exif data of the image
         bounding_box = f"{x1},{y1},{x2},{y2}"
+        exif_dict = {"0th": {}, "Exif": {}, "GPS": {}, "1st": {}}
+        exif_dict["Exif"][piexif.ExifIFD.UserComment] = f"bbox:{bounding_box}".encode("utf-8")
+        exif_bytes = piexif.dump(exif_dict)
+        img = Image.open(row['crop_path'])
+        img.save(row['crop_path'], exif=exif_bytes)
+        img.close()
         logger.info(f"Cropped {row['crop_path']} -> with bbox {bounding_box}")
-
     except Exception as e:
         logger.exception(f"Error cropping {row['crop_path']}: {e}")
         raise e
