@@ -3,19 +3,19 @@ import os
 from datetime import datetime
 
 import dotenv
+import redis
 
 from biotrack.tracker import BioTracker
 
 from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import init_api_project
-from projects.bio.core.args import parse_args
-from projects.bio.core.callback import AncillaryCallback, ExportCallback
+from aipipeline.projects.bio.core.args import parse_args
+from aipipeline.projects.bio.core.callback import AncillaryCallback, ExportCallback
 from aipipeline.db_utils import get_version_id
-import redis
 
-from projects.bio.core.predict import Predictor
-from projects.bio.core.video import VideoSource
-from projects.bio.model.inference import FastAPIYV5, YV5
+from aipipeline.projects.bio.core.predict import Predictor
+from aipipeline.projects.bio.core.video import VideoSource
+from aipipeline.projects.bio.model.inference import FastAPIYV5, YV5
 
 # Global variables
 idv = 1  # video index
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         model = FastAPIYV5(args.endpoint_url)
         batch_size = 1
     else: # Load the YOLOv5 model from a local file
-        model = YV5(args.model)
+        model = YV5(args.det_model, device_num=args.gpu_id)
         batch_size = args.batch_size
 
     source = VideoSource(args.video, batch_size=batch_size)

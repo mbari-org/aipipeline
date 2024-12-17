@@ -1,23 +1,20 @@
 # aipipeline, Apache-2.0 license
 # Filename: projects/bio/core/predict.py
 # Description: Predictor class for bio projects
-import dotenv
 import logging
-import os
-from datetime import datetime
 from pathlib import Path
+from typing import Any
 
-from aipipeline.projects.bio.model.inference import YV5, FastAPIYV5
-from projects.bio.core.bioutils import show_boxes, filter_blur_pred, get_ancillary_data
+from aipipeline.projects.bio.core.bioutils import show_boxes, filter_blur_pred, get_ancillary_data
 from biotrack.tracker import BioTracker
 import torch
 
-from projects.bio.core.video import VideoSource
+from aipipeline.projects.bio.core.video import VideoSource
 
 logger = logging.getLogger(__name__)
 
 class Predictor:
-    def __init__(self, detection_model: YV5, source: VideoSource, tracker: BioTracker, config_dict:dict, redis_queue=None,callbacks=None, **kwargs):
+    def __init__(self, detection_model: Any, source: VideoSource, tracker: BioTracker, config_dict:dict, redis_queue=None,callbacks=None, **kwargs):
         self.md = {}
         self.callbacks = callbacks or []
         self.config = config_dict
@@ -39,11 +36,13 @@ class Predictor:
         self.total_frames = int(self.duration_secs * self.fps)
         self.frame_stride = int(self.fps / self.stride_fps)
         self.batch_size = source.batch_size
-        self.max_secs = kwargs.get("max_secs", -1)
+        self.max_seconds = kwargs.get("max_seconds", None)
         self.imshow =  kwargs.get("imshow", False)
         self.max_frames_tracked = kwargs.get("max_frames_tracked", 100)
         self.redis_queue = redis_queue
         self.min_score_det = kwargs.get("min_score_det", 0.1)
+        self.min_frames = kwargs.get("min_frames", 5)
+        self.min_score_track = kwargs.get("min_score_track", 0.1)
         self.skip_load = kwargs.get("skip_load", False)
         self.version_id = kwargs.get("version_id", -1)
         if self.version_id < 0 and not self.skip_load:
@@ -78,10 +77,11 @@ class Predictor:
         for batch_num, self.batch in enumerate(self.source):
 
             batch_d, batch_c = self.batch
+            frame_num += len(batch_d)
 
             self.run_callbacks("on_predict_batch_start", self.batch)
 
-            current_time_secs = float(frame_num / self.fps)
+            current_time_secs = float(frame_num * self.frame_stride / self.source.frame_rate)
             print(f'Processing batch of {len(batch_d)} images starting at {current_time_secs}')
 
             predictions = self.detection_model.predict_images(batch_d, self.min_score_det)
@@ -122,13 +122,10 @@ class Predictor:
             if self.imshow:
                 show_boxes(batch_d, predictions)
 
-            self.run_callbacks("on_predict_batch_end", (self.skip_load, self.redis_queue, self.version_id, self.config, self, tracks))
-
-            frame_num += len(batch_d)
-            current_time_secs = float(frame_num / self.fps)
+            self.run_callbacks("on_predict_batch_end", (self.skip_load, self.redis_queue, self.version_id, self.config, self, tracks, self.min_frames, self.min_score_track))
 
             self.tracker.purge_closed_tracks()
 
-            if self.max_secs > 0 and current_time_secs > self.max_secs:
+            '''if self.max_seconds and current_time_secs > self.max_seconds:
                 logger.info(f"Stopping at {current_time_secs} seconds")
-                break
+                break'''

@@ -102,12 +102,13 @@ class YV5:
             filtered_boxes = correct_boxes[indices]
             filtered_scores = scores[indices]
             filter_labels = labels[indices]
-            names = self.model.detection_model.names
+            names = self.model.names
 
             for box, score, label in zip(filtered_boxes, filtered_scores, filter_labels):
-                box = box.numpy()
-                score = score.numpy()
+                box = box.cpu().numpy()
+                score = score.cpu().numpy()
                 label_id = int(label)
+                # TODO: handle override of label
                 label = names[label_id]
                 x1, y1, x2, y2 = box
                 w = x2 - x1
