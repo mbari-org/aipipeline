@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.43.4 (2024-12-17)
+
+### Build System
+
+- Fix build conflict in apache-beam/transformers/pyyaml
+  ([`01b19df`](https://github.com/mbari-org/aipipeline/commit/01b19df0b6f29bd8d940b61e68355347b9b875e5))
+
+### Performance Improvements
+
+- **bio**: Parallel crop
+  ([`764f524`](https://github.com/mbari-org/aipipeline/commit/764f52465e3f878cade6a7119801e31190f89fef))
+
+
 ## v0.43.3 (2024-12-17)
 
 ### Performance Improvements
