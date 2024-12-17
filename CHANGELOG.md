@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.43.1 (2024-12-17)
+
+### Performance Improvements
+
+- **bio**: Significant refactor of video processing pipeline into more modular design with callbacks
+  and moved most data to GPU where possible for speed-up.
+  ([`1b3d972`](https://github.com/mbari-org/aipipeline/commit/1b3d972041fe705318cbbab7728e7e281c23dc52))
+
+
 ## v0.43.0 (2024-12-12)
 
 ### Bug Fixes
