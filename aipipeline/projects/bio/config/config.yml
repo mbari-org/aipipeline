@@ -6,7 +6,7 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
-  version: "Baseline"
+  version: "mega-vits-track-gcam"
   labels: "all"
   download_args: ["--verified --min-saliency 1000"]
 

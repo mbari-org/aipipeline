@@ -16,7 +16,7 @@ localizations = api.get_localization_list(project=project, **kwargs)
 print(f"Found {len(localizations)} possible Ctenophora sp. A")
 
 # Save to a tsv file
-with open("localizations.tsv", "w") as f:
+with open("../data/localizations.tsv", "w") as f:
     f.write("database_id\tdive\tiso_datetime\tdepth\tlatitude\tlongitude\ttemperature\toxygen\tx\ty\twidth\theight\tscore\n")
 
     for loc in localizations:
