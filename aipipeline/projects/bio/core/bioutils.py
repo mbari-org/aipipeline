@@ -1,21 +1,22 @@
 # aipipeline, Apache-2.0 license
 # Filename: projects/bio/core/bioutils.py
 # Description: General utility functions for bio projects
-
+import hashlib
+import cv2
+import torch
+import requests
 import io
 import json
 import logging
 import os
 import random
 import subprocess
-import uuid
+from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Dict
+from functools import partial
 
-import cv2
-import torch
-import requests
 from aipipeline.docker.utils import run_docker
 from aipipeline.prediction.utils import crop_square_image
 
@@ -153,7 +154,7 @@ def show_boxes(batch, predictions):
     for batch_idx, img in enumerate(batch):
         # Convert the Tensor to a numpy array
         img = img.cpu().numpy().transpose(1, 2, 0)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
         for pred in predictions:
             if pred['batch_idx'] != batch_idx:
@@ -166,53 +167,70 @@ def show_boxes(batch, predictions):
             img = cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
             # img = cv2.putText(img, f'{self.model.class_names[int(cls)]} {conf:.2f}', (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
         cv2.imshow('frame', img)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(500) & 0xFF == ord('q'):
             break
+
+def detect_blur(image_path: str, threshold: float) -> bool:
+    """Detect if an image is blurry."""
+    image = cv2.imread(image_path)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+    laplacian_variance = laplacian.var()
+    logger.info(f"laplacian_variance: {laplacian_variance} for {image_path}")
+    return laplacian_variance < threshold
+
+
+def crop_and_detect_blur(pred: Dict,
+                         images: torch.Tensor,
+                         crop_path: Path,
+                         image_width: int,
+                         image_height: int) -> Dict:
+    """Crop image and detect blur for a single prediction."""
+    # Generate a unique name for the crop
+    crop_name = hashlib.md5(f"{pred['x']}_{pred['y']}_{pred['w']}_{pred['h']}".encode()).hexdigest()
+    crop_file_path = (crop_path / f"{crop_name}.jpg").as_posix()
+
+    loc = {
+        "x": pred["x"],
+        "y": pred["y"],
+        "xx": pred["x"] + pred['w'],
+        "xy": pred["y"] + pred['h'],
+        "w": pred['w'],
+        "h": pred['h'],
+        "frame": pred['frame'],
+        "image_width": image_width,
+        "image_height": image_height,
+        "confidence": pred['confidence'],
+        "batch_idx": pred['batch_idx'],
+        "crop_path": crop_file_path
+    }
+
+    # Crop the image
+    crop_square_image(images, loc, 224)
+
+    # Check for blurriness
+    if detect_blur(crop_file_path, 2.0):
+        logger.info(f"Detected blur in {crop_file_path}")
+        os.remove(crop_file_path)
+        return None
+    return loc
 
 
 def filter_blur_pred(images: torch.Tensor,
                      predictions: List[dict],
                      crop_path: Path,
                      image_width: int,
-                     image_height: int):
-    filtered_pred = []
-    # TODO: get image width and height from the images tensor
-    for p in predictions:
-        loc = {
-            "x": p["x"],
-            "y": p["y"],
-            "xx": p["x"] + p['w'],
-            "xy": p["y"] + p['h'],
-            "w": p['w'],
-            "h": p['h'],
-            "frame": p['frame'],
-            "image_width": image_width,
-            "image_height": image_height,
-            "confidence": p['confidence'],
-            "batch_idx": p['batch_idx'],
-            "crop_path": (crop_path / f"{uuid.uuid5(uuid.NAMESPACE_DNS, str(p['x']) + str(p['y']) + str(p['w']) + str(p['h']))}.jpg").as_posix()
-        }
+                     image_height: int) -> List[Dict]:
+    """Filter predictions by detecting blur in crops."""
+    # Prepare the partial function
+    process_pred = partial(crop_and_detect_blur, images=images, crop_path=crop_path,
+                           image_width=image_width, image_height=image_height)
 
-        crop_square_image(images, loc, 224)
+    # Use ProcessPoolExecutor to parallelize the processing
+    with ProcessPoolExecutor() as executor:
+        results = list(executor.map(process_pred, predictions))
 
-        # Return true the crop if it has a blurriness score of less than the threshold
-        def detect_blur(image_path, threshold):
-            image = cv2.imread(image_path)
-            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            _, binary_image = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
-            laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-            _, max_val, _, _ = cv2.minMaxLoc(gray)
-            laplacian_variance = laplacian.var()
-            print(f"laplacian_variance: {laplacian_variance} for {image_path}")
-            if laplacian_variance < threshold:
-                return True
-            return False
-
-        if detect_blur(loc["crop_path"], 2.0):
-            print(f"Detected blur in {loc['crop_path']}")
-            os.remove(loc["crop_path"])
-        else:
-            filtered_pred.append(loc)
+    # Filter out None results (blurry images)
+    filtered_pred = [r for r in results if r is not None]
 
     return filtered_pred
-
