@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.43.2 (2024-12-17)
+
+### Performance Improvements
+
+- Move crop to GPU
+  ([`bd11c3e`](https://github.com/mbari-org/aipipeline/commit/bd11c3edb2cac485f76fbae3656c5d88c75b4af2))
+
+
 ## v0.43.1 (2024-12-17)
 
 ### Performance Improvements
