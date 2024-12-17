@@ -5,7 +5,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 
-from projects.bio.core.bioutils import get_ancillary_data, get_video_metadata
+from aipipeline.projects.bio.core.bioutils import get_ancillary_data, get_video_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class ExportCallback(Callback):
 
     def on_predict_batch_end(self, batch):
         """ Check if any tracks are closed and queue the localizations in REDIS"""
-        skip_load, redis_queue, version_id, config_dict, predictor, tracks = batch
+        skip_load, redis_queue, version_id, config_dict, predictor, tracks, min_frames, min_score_track = batch
         if skip_load:
             return
         closed_tracks = [t for t in tracks if t.is_closed()]
@@ -94,6 +94,11 @@ class ExportCallback(Callback):
                 best_frame, best_pt, best_label, best_box, best_score = track.get_best(False)
                 best_time_secs = float(best_frame * predictor.frame_stride / predictor.source.frame_rate)
                 logger.info(f"Best track {track.id} is {best_pt},{best_box},{best_label},{best_score} in frame {best_frame}")
+
+                if track.num_frames <= min_frames or best_score[0] <= min_score_track:
+                    logger.info(
+                        f"Track {track.id} is too short num frames {track.num_frames} or best score {best_score[0]} is < {min_score_track}, skipping")
+                    continue
 
                 loc_datetime = start_datetime + timedelta(seconds=best_time_secs)
                 ancillary_data = get_ancillary_data(predictor.md['dive'], config_dict, loc_datetime)
