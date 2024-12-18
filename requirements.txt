@@ -7,7 +7,7 @@ python-dotenv
 pyyaml
 scikit-learn
 matplotlib
-albumentations
+albumentations==1.4.23
 torch
 apache-beam==2.53.0
 cleanvision
