@@ -90,15 +90,14 @@ def parse_voc_xml(xml_file) -> tuple[
     return paths, boxes, labels, poses, ids
 
 
-def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
+def crop_square_image(image: torch.Tensor, row: dict, square_dim: int):
     """
     Crop the image to a square, pad the shortest dimension, then resize it to square_dim x square_dim.
     Uses GPU for acceleration.
 
-    :param images:  tensor of images
+    :param image:  image tensor
     :param row: dictionary with the following keys: image_path, crop_path, image_width, image_height, x, y, xx, xy
     :param square_dim: dimension of the square image
-    :param gpu_id: GPU ID to use
     :return:
     """
     try:
@@ -129,11 +128,8 @@ def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
         x1, x2 = max(0, x1), min(row['image_width'], x2)
         y1, y2 = max(0, y1), min(row['image_height'], y2)
 
-        # Read the image into a PyTorch tensor and move to GPU
-        img = images[row["batch_idx"]]
-
         # Crop the image to the bounding box
-        cropped_img = img[:, y1:y2, x1:x2]
+        cropped_img = image[:, y1:y2, x1:x2]
 
         # Resize to the target dimension
         transform = T.Compose([
@@ -163,6 +159,7 @@ def crop_square_image(images: torch.Tensor, row: dict, square_dim: int):
 def max_score_p(model_predictions: List[str], model_scores: List[float]):
     """Find the top prediction"""
     max_score = 0.0
+    best_pred = "marine organism"
 
     for row in zip(model_predictions, model_scores):
         prediction, score = row
