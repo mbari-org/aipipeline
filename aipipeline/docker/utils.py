@@ -46,37 +46,33 @@ def run_docker(image: str, name: str, args_list: List[str], env_list: List[str] 
                 logger.info(f"Removing existing container: {name}")
                 container.remove()
 
+        docker_args = {
+            "image": image,
+            "name": name,
+            "command": args,
+            "auto_remove": auto_remove,
+            "volumes": bind_volumes,
+            "environment": env_list,
+            "detach": True,
+            "network_mode": "host",
+            "user": f"{MLDEVOPS_UID}:{MLDEVOPS_GID}"
+        }
+
+        if len(bind_volumes) > 0:
+            docker_args["volumes"] = bind_volumes
+
         if "cuda" in image:
             # Check if CUDA is available using
             if not torch.cuda.is_available():
                 logger.error(f"Sorry, CUDA not available and it is required for the docker image {image}.")
                 return
+            # Add the GPU device
+            docker_args["runtime"] = "nvidia"
+            docker_args["device_requests"] = [docker.types.DeviceRequest(count=1, capabilities=[["gpu"]])]
 
-            # Run the container
-            c = client.containers.run(
-                image,
-                args,
-                name=name,
-                auto_remove=auto_remove,
-                detach=True,
-                runtime="nvidia",
-                device_requests=[docker.types.DeviceRequest(count=1, capabilities=[["gpu"]])],
-                network_mode="host",
-                user=f"{MLDEVOPS_UID}:{MLDEVOPS_GID}",
-                volumes=bind_volumes,
-                environment=env_list,
-            )
-        else:
-            # Run the container
-            c = client.containers.run(
-                image,
-                args,
-                name=name,
-                auto_remove=auto_remove,
-                detach=True,
-                network_mode="host",
-                user=f"{MLDEVOPS_UID}:{MLDEVOPS_GID}",
-                volumes=bind_volumes,
-                environment=env_list,
-            )
-        return c
+        try:
+            container = client.containers.run(**docker_args)
+            return container
+        except Exception as e:
+            logger.error(f"Error running docker: {e}")
+            return None
