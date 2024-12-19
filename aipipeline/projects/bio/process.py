@@ -26,6 +26,10 @@ dotenv.load_dotenv()
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
+# Multiprocessing; spawn is the only method that works with CUDA
+import torch.multiprocessing as mp
+mp.set_start_method('spawn', force=True)
+
 # Logging
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -96,7 +100,7 @@ if __name__ == "__main__":
         model = YV5(args.det_model, device_num=args.gpu_id)
         batch_size = args.batch_size
 
-    source = VideoSource(args.video, batch_size=batch_size)
+    source = VideoSource(**args_dict)
 
     # Create a tracker and predictor
     callbacks = [AncillaryCallback(), ExportCallback()]

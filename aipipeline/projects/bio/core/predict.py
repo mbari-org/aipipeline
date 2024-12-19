@@ -32,9 +32,7 @@ class Predictor:
         self.tracker = tracker
         self.duration_secs = source.duration_secs
         self.fps = source.frame_rate
-        self.stride_fps = kwargs.get("stride_fps", 5)
         self.total_frames = int(self.duration_secs * self.fps)
-        self.frame_stride = int(self.fps / self.stride_fps)
         self.batch_size = source.batch_size
         self.max_seconds = kwargs.get("max_seconds", None)
         self.imshow =  kwargs.get("imshow", False)
@@ -81,17 +79,18 @@ class Predictor:
 
             self.run_callbacks("on_predict_batch_start", self.batch)
 
-            current_time_secs = float(frame_num * self.frame_stride / self.source.frame_rate)
-            print(f'Processing batch of {len(batch_d)} images starting at {current_time_secs}')
+            current_time_secs = float(frame_num * self.source.stride / self.source.frame_rate)
+            logger.info(f'Processing batch of {len(batch_d)} images ending at {current_time_secs}')
 
             predictions = self.detection_model.predict_images(batch_d, self.min_score_det)
-            print(f"Predictions: {predictions}")
+            logger.info(f"Predictions: {predictions}")
             batch_pred.extend(predictions)
 
+            logger.info(f"Filtering blurry detections")
             len_before = len(batch_c)
             filtered_pred = filter_blur_pred(batch_c, batch_pred, self.crop_path, self.source.width, self.source.height)
             len_after = len(filtered_pred)
-            print(f"Filtered {len_before - len_after} blurry detections")
+            logger.info(f"Filtered {len_before - len_after} blurry detections")
 
             start_frame = max(0, batch_num*len(batch_d))
             end_frame = batch_num * len(batch_d)
@@ -99,16 +98,17 @@ class Predictor:
             # Convert the x, y to the image coordinates
             det_n = []
             for i, d in enumerate(filtered_pred):
-                t_d = { "x": d["x"] * self.source.width,
-                        "y": d["y"] * self.source.height,
-                        "xx": (d["x"] + d["w"]) * self.source.width,
-                        "xy": (d["y"] + d["h"]) * self.source.height,
+                t_d = { "x": d["x"],
+                        "y": d["y"],
+                        "xx": (d["x"] + d["w"]),
+                        "xy": (d["y"] + d["h"]),
                         "frame": d["frame"],
                         "batch_idx": d["batch_idx"],
                         "score": d["confidence"],
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
-            print(f"Tracking {len(det_n)} detections from frame {start_frame} to {end_frame}")
+                logger.info(f"Detection {i} {t_d}")
+            logger.info(f"Tracking {len(det_n)} detections from frame {start_frame} to {end_frame}")
             batch_pred = []
 
             tracks = self.tracker.update_batch((start_frame, end_frame),
@@ -122,10 +122,14 @@ class Predictor:
             if self.imshow:
                 show_boxes(batch_d, predictions)
 
-            self.run_callbacks("on_predict_batch_end", (self.skip_load, self.redis_queue, self.version_id, self.config, self, tracks, self.min_frames, self.min_score_track))
+            closed_tracks = [t for t in tracks if t.is_closed()]
+            self.run_callbacks("on_predict_batch_end", (self.skip_load, self.redis_queue, self.version_id, self.config, self, closed_tracks, self.min_frames, self.min_score_track))
 
             self.tracker.purge_closed_tracks()
 
-            '''if self.max_seconds and current_time_secs > self.max_seconds:
-                logger.info(f"Stopping at {current_time_secs} seconds")
-                break'''
+            if self.max_seconds and current_time_secs > self.max_seconds:
+                logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
+                self.run_callbacks("on_predict_batch_end", (
+                self.skip_load, self.redis_queue, self.version_id, self.config, self, tracks, self.min_frames,
+                self.min_score_track))
+                break
