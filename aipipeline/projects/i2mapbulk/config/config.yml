@@ -9,7 +9,7 @@ data:
 #  version: "vss_vits14_all"
   version2: "dino_vits8_20240207_022529"
   version: "Baseline"
-  labels: "Acanthamunnopsis miller,Bathochordaeus sinkers,Bolinopsis,Cydippida,Eusergestes similis,Solmissus,Actinopterygii,Pyrosoma,Salpa fusiformis,krill molt,Merluccius productus,Radiozoa,Thalassocracy inconstans"
+  labels: "Acanthamunnopsis miller,Bathochordaeus sinker,Bolinopsis,Cydippida,Eusergestes similis,Solmissus,Actinopterygii,Pyrosoma,Salpa fusiformis,krill molt,Merluccius productus,Radiozoa,Thalassocracy inconstans"
   download_args: ["--verified"]
 
 sdcat:
