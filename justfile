@@ -22,7 +22,11 @@ update_trackers:
 
 # Copy dev code to the project on doris
 cp-dev:
-    cp -r ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/projects/bio/
+    cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
+    cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
+    cp ./aipipeline/projects/bio/core/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/core/
+    cp ./aipipeline/prediction/*.py /Volumes/dcline/code/aipipeline/aipipeline/prediction/
+    cp ./aipipeline/metrics/*.py /Volumes/dcline/code/aipipeline/aipipeline/metrics/
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -224,17 +228,18 @@ run-mega-inference:
 run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.7 --min-frames 5 --version mega-vits-track-gcam \
+       --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 10 --version delme \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 15 --video {{video}} --max-seconds 30 --flush --gpu-id {{gpu_id}}
+       --stride-fps 1 --video {{video}} --max-seconds 10 --flush --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on an entire dive for the bio project
 run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
+    export MPLCONFIGDIR=/tmp
     #DIRECTORY=/mnt/M3/mezzanine/Ventana/2022/09/4432/
     #DIRECTORY=/mnt/M3/mezzanine/DocRicketts/2015/03/720/
     #DIRECTORY=/mnt/M3/mezzanine/Ventana/2022/10/4433
@@ -245,23 +250,23 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
     process_file() { 
      local video="$1"
      echo "Processing $video"
-     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
+       --max-frames-tracked 200 --min-score-det 0.1 --batch-size 60 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 10 --video $video --gpu-id {{gpu_id}}
+       --stride-fps 1 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file
-    # Run 4 video in parallel
-    find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 12 -n 1 -I {} bash -c 'process_file "{}"'
+    # Run 1 video in parallel
+    find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 1 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
 run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
     #videos=("i2MAP_20190205T102700Z_200m_F031_17.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov")
-    time python3 aipipeline/projects/bio/run_strided_track.py \
+    time python3 aipipeline/projects/bio/process.py \
      --config ./aipipeline/projects/i2map/config/config.yml \
      --det-model /mnt/DeepSea-AI/models/megadet \
      --vits-model /mnt/DeepSea-AI/models/i2MAP-vit-b-16 \
