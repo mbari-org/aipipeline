@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.43.5 (2024-12-19)
+
+### Bug Fixes
+
+- Handle failed video capture and simplify args
+  ([`14dd788`](https://github.com/mbari-org/aipipeline/commit/14dd788a188bb24302faa27aab27f5e11cee1b51))
+
+- Switch to frame stride and correct conversion of tracking coordinates
+  ([`485cbfb`](https://github.com/mbari-org/aipipeline/commit/485cbfb282584abd2cee29cc1d543d20c5db4f67))
+
+
 ## v0.43.4 (2024-12-17)
 
 ### Build System
