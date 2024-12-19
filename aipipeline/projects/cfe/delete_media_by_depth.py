@@ -21,8 +21,8 @@ for media in medias:
     boxes = api.get_localization_list(project=project, media_id=[media.id])
     num_boxes += len(boxes)
     # Delete the media
-    # response = api.delete_media(id=media.id)
-    # print(f"  Deleted media {media.id}. {response}")
+    # response = api.delete_media(track_id=media.track_id)
+    # print(f"  Deleted media {media.track_id}. {response}")
 
 
 print(f"Deleted {len(medias)} media with a total of {num_boxes} boxes.")
