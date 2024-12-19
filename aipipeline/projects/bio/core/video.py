@@ -9,8 +9,9 @@ import torch
 
 class VideoSource:
 
-    def __init__(self, video, batch_size:int, device_id: int = 0, det_size=(1280, 1280), track_size=(640,480), **kwargs):
+    def __init__(self, video, **kwargs):
         self.video = video
+        self.cap = None
         supported_ext = [".mp4", ".avi", ".mov"]
         if not Path(video).exists() or not Path(video).is_file():
             raise ValueError(f"Video file not found: {video}")
@@ -22,10 +23,11 @@ class VideoSource:
         self.frame_width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         self.frame_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.duration_secs = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
-        self.batch_size = batch_size
+        self.batch_size = kwargs.get("batch_size", 1)
         self.stride = kwargs.get("stride", 4)
-        self.det_size = det_size
-        self.track_size = track_size
+        self.det_size = (1280, 1280)
+        self.track_size = (640,480)
+        device_id = kwargs.get("device_id", 0)
         self.device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
         self.current_frame = 0
         self.frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -72,7 +74,7 @@ class VideoSource:
     def __next__(self):
         frames = []
         batch_cnt = 0
-        while batch_cnt < self.batch_size: #or self.current_frame >= self.frame_count:
+        while batch_cnt < self.batch_size:
             ret, frame = self.cap.read()
             if not ret:
                 raise StopIteration
@@ -92,7 +94,8 @@ class VideoSource:
         return img
 
     def close(self):
-        self.cap.release()
+        if self.cap:
+            self.cap.release()
 
     @property
     def duration(self):
