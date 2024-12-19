@@ -100,7 +100,7 @@ def match_date(date_attr, time_attr, name):
 
 
 df_media = pd.DataFrame()
-df_media["id"] = [m.id for m in medias]
+df_media["track_id"] = [m.id for m in medias]
 df_media["name"] = [m.name for m in medias]
 df_media["date_attr"] = [m.attributes["date"] for m in medias]
 df_media["time_attr"] = [m.attributes["time"] for m in medias]
