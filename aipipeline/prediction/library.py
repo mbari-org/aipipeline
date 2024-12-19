@@ -363,7 +363,8 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
     processed_data = config_dict["data"]["processed_path"]
     version = config_dict["data"]["version"]
     project = config_dict["tator"]["project"]
-    short_name = get_short_name(project)
+    host = config_dict["tator"]["host"]
+    short_name = get_short_name(project + host.split(".")[0])
     args = [
         "download",
         "dataset",
