@@ -54,7 +54,6 @@ class YV5:
         self.model.shape = (1280, 1280)
         self.model.conf = 0.01 # confidence threshold (0-1)
         self.model.max_det = 500  # maximum number of detections per image
-        self.shape = (1280, 1280)  # resize to this shape
         self.last_frame = 0
         self.has_gpu = torch.cuda.is_available()
         self.device_id = device_num
@@ -65,7 +64,7 @@ class YV5:
 
     @property
     def model_shape(self):
-        return self.shape
+        return self.model.shape
 
     def yolo_to_corner_format(self, boxes):
         # boxes: Tensor of shape (N, 4) with (cx, cy, w, h)
@@ -82,12 +81,17 @@ class YV5:
         :param images: List of images
         :return: A list of detections for each image, where each detection is a list of dictionaries.
         """
+        time_start = time.time()
+        logger.info(f"Predicting on {len(images)} images")
         raw_detections = self.model(images, size=self.model_shape[0])
+        logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
+
         threshold = 0.01  # 1% threshold
         iou_threshold = 0.5
         batch_size = raw_detections.shape[0]
 
         all_detections = []
+        logger.info(f"Running NMS on {batch_size} batches")
         for batch_idx in range(batch_size):
             predictions = raw_detections[batch_idx]
             scores = predictions[:, 4]
@@ -144,6 +148,8 @@ class YV5:
                     "confidence": score
                 })
             self.last_frame += 1
+
+        logger.info(f"Finished NMS on {batch_size} batches")
 
         return all_detections
 

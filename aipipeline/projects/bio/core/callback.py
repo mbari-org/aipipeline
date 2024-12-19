@@ -3,6 +3,7 @@
 # Description: Custom callback for bio projects
 import json
 import logging
+import math
 from datetime import datetime, timedelta
 
 from aipipeline.projects.bio.core.bioutils import get_ancillary_data, get_video_metadata
@@ -79,20 +80,19 @@ class ExportCallback(Callback):
             output_path.unlink()
 
     def on_predict_batch_end(self, batch):
-        """ Check if any tracks are closed and queue the localizations in REDIS"""
+        """ Queue track localizations in REDIS"""
         skip_load, redis_queue, version_id, config_dict, predictor, tracks, min_frames, min_score_track = batch
         if skip_load:
             return
-        closed_tracks = [t for t in tracks if t.is_closed()]
 
-        if len(closed_tracks) > 0:
+        if len(tracks) > 0:
             start_datetime = datetime.fromisoformat(predictor.md["start_timestamp"])
             config_dict = config_dict
 
-            for track in closed_tracks:
+            for track in tracks:
                 logger.info(f"Closed track {track.id}")
                 best_frame, best_pt, best_label, best_box, best_score = track.get_best(False)
-                best_time_secs = float(best_frame * predictor.frame_stride / predictor.source.frame_rate)
+                best_time_secs = float(best_frame * predictor.source.stride / predictor.source.frame_rate)
                 logger.info(f"Best track {track.id} is {best_pt},{best_box},{best_label},{best_score} in frame {best_frame}")
 
                 if track.num_frames <= min_frames or best_score[0] <= min_score_track:
@@ -108,13 +108,13 @@ class ExportCallback(Callback):
                     continue
 
                 new_loc = {
-                    "x1": float(max(best_box[0], 0.0)),
-                    "y1": float(max(best_box[1], 0.0)),
-                    "x2": float(best_box[2]),
-                    "y2": float(best_box[3]),
+                    "x1": max(float(best_box[0]*predictor.source.width), 0.),
+                    "y1": max(float(best_box[1]*predictor.source.height), 0.),
+                    "x2": float(best_box[2]*predictor.source.width),
+                    "y2": float(best_box[3]*predictor.source.height),
                     "width": int(predictor.source.width),
                     "height": int(predictor.source.height),
-                    "frame": int(best_frame * predictor.frame_stride),
+                    "frame": int((best_frame + 1) * predictor.source.stride),
                     "version_id": int(version_id),
                     "score": float(best_score[0]),
                     "score_s": float(best_score[1]),
@@ -130,7 +130,6 @@ class ExportCallback(Callback):
                     "oxygen": ancillary_data["oxygen"],
                 }
                 logger.info(f"queuing loc: {new_loc} {predictor.md['dive']} {loc_datetime}")
-                json.dumps(new_loc)
                 redis_queue.hset(f"locs:{predictor.md['video_reference_uuid']}", str(self.num_loaded), json.dumps(new_loc))
                 logger.info(f"{predictor.source.name} found total possible {self.num_loaded} localizations")
                 self.num_loaded += 1

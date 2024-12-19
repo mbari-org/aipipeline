@@ -11,11 +11,9 @@ import logging
 import os
 import random
 import subprocess
-from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
-from functools import partial
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.prediction.utils import crop_square_image
@@ -180,41 +178,44 @@ def detect_blur(image_path: str, threshold: float) -> bool:
     return laplacian_variance < threshold
 
 
-def crop_and_detect_blur(pred: Dict,
-                         images: torch.Tensor,
+def crop_and_detect_blur(preds: List[Dict],
+                         image: torch.Tensor,
                          crop_path: Path,
                          image_width: int,
-                         image_height: int) -> Dict:
-    """Crop image and detect blur for a single prediction."""
-    # Generate a unique name for the crop
-    crop_name = hashlib.md5(f"{pred['x']}_{pred['y']}_{pred['w']}_{pred['h']}".encode()).hexdigest()
-    crop_file_path = (crop_path / f"{crop_name}.jpg").as_posix()
+                         image_height: int) ->  List[Dict]:
+    """Crop image and detect blur for detections in an image."""
+    locs = []
 
-    loc = {
-        "x": pred["x"],
-        "y": pred["y"],
-        "xx": pred["x"] + pred['w'],
-        "xy": pred["y"] + pred['h'],
-        "w": pred['w'],
-        "h": pred['h'],
-        "frame": pred['frame'],
-        "image_width": image_width,
-        "image_height": image_height,
-        "confidence": pred['confidence'],
-        "batch_idx": pred['batch_idx'],
-        "crop_path": crop_file_path
-    }
+    for pred in preds:
+        # Generate a unique name for the crop
+        crop_name = hashlib.md5(f"{pred['x']}_{pred['y']}_{pred['w']}_{pred['h']}".encode()).hexdigest()
+        crop_file_path = (crop_path / f"{crop_name}.jpg").as_posix()
 
-    # Crop the image
-    crop_square_image(images, loc, 224)
+        loc = {
+            "x": pred["x"],
+            "y": pred["y"],
+            "xx": pred["x"] + pred['w'],
+            "xy": pred["y"] + pred['h'],
+            "w": pred['w'],
+            "h": pred['h'],
+            "frame": pred['frame'],
+            "image_width": image_width,
+            "image_height": image_height,
+            "confidence": pred['confidence'],
+            "batch_idx": pred['batch_idx'],
+            "crop_path": crop_file_path
+        }
 
-    # Check for blurriness
-    if detect_blur(crop_file_path, 2.0):
-        logger.info(f"Detected blur in {crop_file_path}")
-        os.remove(crop_file_path)
-        return None
-    return loc
+        # Crop the image
+        crop_square_image(image, loc, 224)
 
+        # Check for blurriness
+        if detect_blur(crop_file_path, 2.0):
+            logger.info(f"Detected blur in {crop_file_path}")
+            os.remove(crop_file_path)
+        else:
+            locs.append(loc)
+    return locs
 
 def filter_blur_pred(images: torch.Tensor,
                      predictions: List[dict],
@@ -222,15 +223,11 @@ def filter_blur_pred(images: torch.Tensor,
                      image_width: int,
                      image_height: int) -> List[Dict]:
     """Filter predictions by detecting blur in crops."""
-    # Prepare the partial function
-    process_pred = partial(crop_and_detect_blur, images=images, crop_path=crop_path,
-                           image_width=image_width, image_height=image_height)
+    if len(predictions) == 0:
+        return []
 
-    # Use ProcessPoolExecutor to parallelize the processing
-    with ProcessPoolExecutor() as executor:
-        results = list(executor.map(process_pred, predictions))
-
-    # Filter out None results (blurry images)
-    filtered_pred = [r for r in results if r is not None]
-
+    num_images = images.size(0)
+    pred_by_image = {i: [p for p in predictions if p['batch_idx'] == i] for i in range(num_images)}
+    filtered_pred = [crop_and_detect_blur(pred_by_image[i], images[i], crop_path, image_width, image_height) for i in range(num_images)]
+    filtered_pred = [loc for locs in filtered_pred for loc in locs]
     return filtered_pred
