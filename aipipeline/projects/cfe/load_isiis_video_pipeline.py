@@ -37,13 +37,13 @@ def load_video(element) -> str:
     # /mnt/CFElab/Data_archive/Videos/ISIIS/COOK/VideosMP4/20230712_RachelCarson,2023/07/RachelCarson
     logger.info(f"Processing element {element}")
     line, config_dict = element
-    mission_name, mission_dir, section = parse_mission_string(line)
+    platform_name, mission_dir, section = parse_mission_string(line)
 
-    if not mission_name:
-        logger.error(f"Could not find mission name in path: {line} that ends with {POSSIBLE_PLATFORMS}")
-        return f"Could not find mission name in path: {line} that ends with {POSSIBLE_PLATFORMS}"
+    if not platform_name:
+        logger.error(f"Could not find platform name in path: {line} that ends with {POSSIBLE_PLATFORMS}")
+        return f"Could not find platform name in path: {line} that ends with {POSSIBLE_PLATFORMS}"
 
-    logger.info(f"Mission name: {mission_name}")
+    logger.info(f"Platform: {platform_name}")
 
     project = config_dict["tator"]["project"]
 
@@ -63,18 +63,18 @@ def load_video(element) -> str:
 
     container = run_docker(
         image=config_dict["docker"]["aidata"],
-        name=f"aidata-video-load-{mission_name}",
+        name=f"aidata-isiis-video-load-{platform_name}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"]
     )
     if container:
-        logger.info(f"Video loading for {mission_name}...")
+        logger.info(f"Video loading for {platform_name}...")
         container.wait()
-        logger.info(f"Videos loaded for {mission_name}")
-        return f"Mission {mission_name} videos loaded."
+        logger.info(f"Videos loaded for {platform_name}")
+        return f"Mission {platform_name} videos loaded."
     else:
-        logger.error(f"Failed to load videos for {mission_name}")
-        return f"Failed to load Videos for {mission_name}"
+        logger.error(f"Failed to load videos for {platform_name}")
+        return f"Failed to load Videos for {platform_name}"
 
 
 
