@@ -1,5 +1,6 @@
 # aipipeline/projects/cfe/config.yml
 # Config file for CFE project production
+
 redis:
   host: "doris.shore.mbari.org"
   port: 6382
@@ -38,3 +39,32 @@ tator:
   project: "902111-CFE"
   host: "mantis.shore.mbari.org"
   url_load: "http://mantis.shore.mbari.org:8001/label/id"
+  image:
+    attributes:
+      iso_datetime:
+        type: datetime
+      depth:
+        type: float
+  video:
+    attributes:
+      iso_start_datetime:
+        type: datetime
+  box:
+    attributes:
+      Label:
+        type: string
+      score:
+        type: float
+      cluster:
+        type: string
+      saliency:
+        type: float
+      area:
+        type: int
+      exemplar:
+        type: bool
+
+plugins:
+  - name: "extractor"
+    module: "aidata.plugins.extractors.tap_cfe_media"
+    function: "extract_media"
