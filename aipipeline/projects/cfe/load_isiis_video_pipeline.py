@@ -11,7 +11,7 @@ import logging
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
-from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
+from aipipeline.projects.cfe.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
