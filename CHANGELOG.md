@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.45.0 (2024-12-20)
+
+### Features
+
+- **cfe**: Added common args for cfe and added missing mission_name
+  ([`5aff45d`](https://github.com/mbari-org/aipipeline/commit/5aff45d022721c67ebb00572ddb7cf3dc2fb52e3))
+
+
 ## v0.44.0 (2024-12-20)
 
 ### Features
