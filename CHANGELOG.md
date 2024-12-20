@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.45.1 (2024-12-20)
+
+### Bug Fixes
+
+- **cfe**: Correct platform parse based on directory naming convention
+  ([`5221134`](https://github.com/mbari-org/aipipeline/commit/5221134ac3fc54539813fb5a0c472f3be6c49471))
+
+
 ## v0.45.0 (2024-12-20)
 
 ### Features
