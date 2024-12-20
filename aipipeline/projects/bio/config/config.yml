@@ -1,5 +1,6 @@
-# aipipeline/projects/biodiversity/config.yml
-# Config file for Bio project production
+# aipipeline/projects/bio/config.yml
+# Config File for BioDiversity Project Production
+
 redis:
   host: "doris.shore.mbari.org"
   port: 6380
@@ -29,21 +30,18 @@ tator:
   project: "901103-biodiversity"
   host: "mantis.shore.mbari.org"
   url_load: "http://mantis.shore.mbari.org:8001/label/id"
-
   image:
     attributes:
-      date:
+      video_reference_uuid:
         type: string
-      time:
-        type: string
-
+      index_elapsed_time_millis:
+        type: int
   video:
     attributes:
       video_reference_uuid:
         type: string
       iso_start_datetime:
         type: datetime
-
   box:
     attributes:
       Label:
@@ -68,6 +66,5 @@ tator:
         type: bool
       verified:
         type: bool
-
 
 ffmpeg_path: "/usr/bin/ffmpeg"

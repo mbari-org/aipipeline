@@ -37,22 +37,19 @@ tator:
     attributes:
       Label:
         type: string
-      concept:
-        type: string
       score:
         type: float
       cluster:
         type: string
-      saliency:
-        type: float
-      group:
-        type: string
-      obs_uuid:
-        type: string
-      exemplar:
-        type: bool
       verified:
+        type: bool
+      delete:
         type: bool
 
 
 ffmpeg_path: "/usr/bin/ffmpeg"
+
+plugins:
+  - name: "extractor"
+    module: "aidata.plugins.extractors.tap_i2map_media"
+    function: "extract_media"

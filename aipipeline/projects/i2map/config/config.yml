@@ -1,5 +1,5 @@
 # aipipeline/projects/i2map/config.yml
-# Config file for i2map project production
+# Config file for BioDiversity Project Production
 redis:
   host: "doris.shore.mbari.org"
   port: 6380
@@ -10,12 +10,24 @@ data:
   labels: "all"
   download_args: ["--verified"]
 
+mounts:
+  - name: "video"
+    path: "/mnt/M3"
+    host: "m3.shore.mbari.org"
+    nginx_root: "/M3"
+
+  - name: "image"
+    path: "/raid/bio"
+    host: "digits-dev-box-fish.shore.mbari.org"
+    nginx_root: "/bio"
+    port: 8081
+
 sdcat:
   model: "hustvl/yolos-tiny"
   ini: "sdcat.ini"
 
 vss:
-  project: "i2map"
+  project: "901103-biodiversity"
   threshold: 0.1
   model: "google/vit-base-patch16-224"
 
@@ -23,21 +35,23 @@ tator:
   project: "901103-biodiversity"
   host: "mantis.shore.mbari.org"
   url_load: "http://mantis.shore.mbari.org:8001/label/id"
-
   image:
     attributes:
       date:
         type: string
       time:
         type: string
-
   box:
     attributes:
       Label:
         type: string
+      label_s:
+        type: string
       concept:
         type: string
       score:
+        type: float
+      score_s:
         type: float
       cluster:
         type: string
@@ -47,10 +61,16 @@ tator:
         type: string
       obs_uuid:
         type: string
+      obs_url:
+        type: string
       exemplar:
         type: bool
       verified:
         type: bool
 
-
 ffmpeg_path: "/usr/bin/ffmpeg"
+
+plugins:
+  - name: "extractor"
+    module: "aidata.plugins.extractors.tap_i2map_media"
+    function: "extract_media"
