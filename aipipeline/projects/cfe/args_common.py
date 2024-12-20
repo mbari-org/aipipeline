@@ -28,16 +28,15 @@ def parse_args(argv, logger):
     return args, beam_args
 
 def parse_mission_string(line: str):
-    import re
     mission_parts = line.split(",")
     mission_dir = mission_parts[0]
     section = mission_parts[1]
-    # # The mission name is the string that includes a regexp with the platform name, e.g. <anything>-<platform>-<anything>
-    mission_name = None
+    # The platform name is in the name of the mission directory
+    # RachelCarson from
+    # /mnt/CFELab/Data_archive/Images/ISIIS/COOK/VideosMP4/20230712_RachelCarson/2023-07-12\ 09-14-56.898,2023/07
+    platform_name = None
     for p in POSSIBLE_PLATFORMS:
-        search = re.findall(fr'.*/-{p}', mission_dir)
-        if search:
-            mission_name = search[0].replace("/", "")
+        if p in mission_dir:
+            platform_name = p
             break
-
-    return mission_name, mission_dir, section
+    return platform_name, mission_dir, section
