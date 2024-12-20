@@ -29,6 +29,11 @@ mounts:
     host: "mantis.shore.mbari.org"
     nginx_root: "/CFElab"
 
+  - name: "video"
+    path: "/mnt/CFElab"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/CFElab"
+
 tator:
   project: "902111-CFE"
   host: "mantis.shore.mbari.org"
