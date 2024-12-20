@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.44.0 (2024-12-20)
+
+### Features
+
+- **cfe**: Video loading pipeline initial check-in
+  ([`a7200ab`](https://github.com/mbari-org/aipipeline/commit/a7200ab690aaa2978b37b4e540bb021c0038635f))
+
+
 ## v0.43.5 (2024-12-19)
 
 ### Bug Fixes
