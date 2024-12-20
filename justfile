@@ -88,7 +88,16 @@ load-vss project='uav' :
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Cluster mission in aipipeline/projects/uav/data/missions2process.txt
+# Load cfe ISII mission videos in aipipeline/project/cfe/data/missions-to-process.txt
+load-cfe-isiis-videos *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/cfe
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_video_pipeline.py \
+    --missions $PROJECT_DIR/data/missions-to-process.txt \
+    --config $PROJECT_DIR/config/config.yml \
+    {{more_args}}
+# Cluster mission in aipipeline/projects/uav/data/missions-to-process.txt
 cluster-uav *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
@@ -98,7 +107,7 @@ cluster-uav *more_args="":
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
-# Detect mission in aipipeline/projects/uav/data/missions2process.txt
+# Detect mission in aipipeline/projects/uav/data/missions-to-process.txt
 detect-uav *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
@@ -108,27 +117,27 @@ detect-uav *more_args="":
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
-# Detect mission data in aipipeline/projects/uav/data/missions2process.txt
+# Detect mission data in aipipeline/projects/uav/data/missions-to-process.txt
 detect-uav-test:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export TEST_DIR=./test/projects/uav
     export PYTHONPATH=.
-    echo $TEST_DIR/data/trinity-2_20240702T162557_Seacliff/SONY_DSC-RX1RM2 > $TEST_DIR/data/missions2process.txt
+    echo $TEST_DIR/data/trinity-2_20240702T162557_Seacliff/SONY_DSC-RX1RM2 > $TEST_DIR/data/missions-to-process.txt
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py \
-    --missions $TEST_DIR/data/missions2process.txt \
+    --missions $TEST_DIR/data/missions-to-process.txt \
     --config $TEST_DIR/config/config_macos.yml
 
-# Load uav mission images in aipipeline/projects/uav/data/missions2process.txt
+# Load uav mission images in aipipeline/projects/uav/data/missions-to-process.txt
 load-uav-images:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_image_pipeline.py \
-    --missions $PROJECT_DIR/data/missions2process.txt \
+    --missions $PROJECT_DIR/data/missions-to-process.txt \
     --config $PROJECT_DIR/config/config.yml
 
-# Load uav detections/clusters in aipipeline/projects/uav/data/missions2process.txt
+# Load uav detections/clusters in aipipeline/projects/uav/data/missions-to-process.txt
 load-uav type="cluster":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/uav
