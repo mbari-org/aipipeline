@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.46.0 (2024-12-21)
+
+### Features
+
+- **cfe**: Rachelcarson/2023/07 ISIIS video load
+  ([`ccdf54e`](https://github.com/mbari-org/aipipeline/commit/ccdf54ea024c0fb565ce2da73f771d0e1bf71b36))
+
+
 ## v0.45.1 (2024-12-20)
 
 ### Bug Fixes
