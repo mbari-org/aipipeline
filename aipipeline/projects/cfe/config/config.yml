@@ -7,6 +7,9 @@ redis:
 
 docker:
   bind_volumes:
+   /mnt/CFElab:
+     bind: /mnt/CFElab
+     mode: ro
 
 data:
   raw_data_path: "/mnt/CFElab/"
@@ -47,6 +50,8 @@ tator:
         type: float
   video:
     attributes:
+      iso_datetime:
+        type: datetime
       iso_start_datetime:
         type: datetime
   box:
