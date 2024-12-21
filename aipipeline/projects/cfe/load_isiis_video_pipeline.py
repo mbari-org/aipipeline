@@ -50,9 +50,9 @@ def load_video(element) -> str:
     logger.info(f"Loading videos in {mission_dir} to Tator project {project} in section {section}")
     args = [
         "load",
-        "video",
+        "videos",
         "--input",
-        mission_dir,
+        f"'{mission_dir}'",
         "--config",
         f"/tmp/{project}/config.yml",
         "--token",

@@ -33,7 +33,7 @@ def parse_mission_string(line: str):
     section = mission_parts[1]
     # The platform name is in the name of the mission directory
     # RachelCarson from
-    # /mnt/CFELab/Data_archive/Images/ISIIS/COOK/VideosMP4/20230712_RachelCarson/2023-07-12\ 09-14-56.898,2023/07
+    # /mnt/CFELab/Data_archive/Images/ISIIS/COOK/VideosMP4/20230712_RachelCarson/2023-07-12\ 09-14-56.898,RachelCarson/2023/07
     platform_name = None
     for p in POSSIBLE_PLATFORMS:
         if p in mission_dir:
