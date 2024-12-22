@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/predictions/download-crop-pipeline.py
+# Filename: aipipeline/prediction/download-crop-pipeline.py
 # Description: Download dataset of images and prepare them running vss pipelines
 import glob
 from datetime import datetime
@@ -86,19 +86,18 @@ def run_pipeline(argv=None):
     if not args.skip_clean:
         clean(download_path.as_posix())
 
-    if args.download_args:
-        config_dict["data"]["download_args"] = args.download_args.split(" ")
     if args.download_dir:
         config_dict["data"]["processed_path"] = args.download_dir
 
-    processed_dir = Path(config_dict["data"]["processed_path"])
+    download_args = config_dict["data"]["download_args"]
+    download_args.extend(["--crop-roi", "--resize", "224"])
+    config_dict["data"]["download_args"] = download_args
 
     with beam.Pipeline(options=options) as p:
         (
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
-            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict, processed_dir=processed_dir)
             | "Log results" >> beam.Map(logger.info)
         )
 
