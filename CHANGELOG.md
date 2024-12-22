@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.46.1 (2024-12-22)
+
+### Performance Improvements
+
+- Add crop resize from aidata to download crop pipeline
+  ([`188044e`](https://github.com/mbari-org/aipipeline/commit/188044e04e061d7d402cdc91415bc78a2d5bd9fe))
+
+
 ## v0.46.0 (2024-12-21)
 
 ### Features
