@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.47.0 (2024-12-23)
+
+### Features
+
+- Added cleanvision to all projects
+  ([`ca24a03`](https://github.com/mbari-org/aipipeline/commit/ca24a03f984a50ccf5dd32eabf122d294e4317fd))
+
+
 ## v0.46.1 (2024-12-22)
 
 ### Performance Improvements
