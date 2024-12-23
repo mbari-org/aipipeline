@@ -10,6 +10,12 @@ data:
   version: "mega-vits-track-gcam"
   labels: "all"
   download_args: ["--verified --min-saliency 1000"]
+  cleanvision_issues:
+    - name: "low_information"
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
+    - name: "exact_duplicates"
 
 mounts:
   - name: "video"

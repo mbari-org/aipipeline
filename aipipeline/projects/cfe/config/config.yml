@@ -17,6 +17,12 @@ data:
   version: "Baseline"
   labels: "bloom,long_particle_blur,diatom_chain,aggregate,artifact,phaeocystis,copepod,rhizaria,particle_blur,larvacean,fecal_pellet,football,centric_diatom,gelatinous"
   download_args: ["--verified"]
+  cleanvision_issues:
+    - name: "low_information"
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
+    - name: "exact_duplicates"
 
 sdcat:
   model: "hustvl/yolos-tiny"

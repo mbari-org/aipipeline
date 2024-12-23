@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipipeline/prediction/download-crop-pipeline.py
+# Filename: aipipeline/prediction/download_crop_pipeline.py
 # Description: Download dataset of images and prepare them running vss pipelines
 import glob
 from datetime import datetime
@@ -12,7 +12,8 @@ from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
 from aipipeline.config_setup import extract_labels_config, setup_config
-from aipipeline.prediction.library import download, crop_rois_voc, clean
+from aipipeline.prediction.library import download, crop_rois_voc, clean, compute_stats, generate_multicrop_views, \
+    clean_images, remove_multicrop_views
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -86,6 +87,9 @@ def run_pipeline(argv=None):
     if not args.skip_clean:
         clean(download_path.as_posix())
 
+    # Always remove any previous augmented data before starting
+    remove_multicrop_views(download_path.as_posix())
+
     if args.download_dir:
         config_dict["data"]["processed_path"] = args.download_dir
 
@@ -97,7 +101,9 @@ def run_pipeline(argv=None):
         (
             p
             | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
+            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
+            | "Generate views" >> beam.Map(generate_multicrop_views)
+            | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
         )
 
