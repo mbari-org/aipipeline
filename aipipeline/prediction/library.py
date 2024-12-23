@@ -76,29 +76,34 @@ def generate_multicrop_views2(image) -> List[tuple]:
     return data
 
 
-def clean_bad_images(element) -> tuple:
+def clean_bad_images(element, config_dict: Dict) -> tuple:
     count, crop_path, save_path = element
     num_removed = 0
     # Check if any images exist
     if count == 0:
         return count, crop_path, save_path
     imagelab = Imagelab(data_path=crop_path)
-    imagelab.find_issues()
+    issues = {
+        issue["name"]: {key: value for key, value in issue.items() if key != "name"}
+        for issue in config_dict["data"]["cleanvision_issues"]
+    }
+    imagelab.find_issues(issues)
     imagelab.report()
-    # Columns to check for issues
-    issue_columns = ["is_dark_issue", "is_blurry_issue", "is_exact_duplicates_issue"]
-    bad_images  = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
+    # Create column names for issues, e.g. is_dark_issue, is_blurry_issue, is_exact_duplicates_issue
+    # from dark, blurry, and exact_duplicates
+    issue_columns = [f"is_{issue}_issue" for issue in issues.keys()]
+    bad_images = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
     for img in bad_images:
         os.remove(img)
         num_removed += 1
-    logger.info(f"Removed {num_removed} dark or blurry images in {crop_path}")
+    logger.info(f"Removed {num_removed} images in {crop_path} using cleanvision {issues}")
     return count - num_removed, crop_path, save_path
 
 
-def clean_images(elements) -> List[tuple]:
+def clean_images(elements, config_dict: Dict) -> List[tuple]:
     logger.info(f"Cleaning bad images in {elements} ")
     for element in elements:
-        clean_bad_images(element)
+        clean_bad_images(element, config_dict)
 
     return elements
 
@@ -257,6 +262,38 @@ def gen_machine_friendly_label(label: str) -> str:
     label_machine_friendly = label_machine_friendly.replace(".", "")
     return label_machine_friendly
 
+def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
+    if processed_dir is None:
+        processed_data = config_dict["data"]["processed_path"]
+    else:
+        processed_data = processed_dir
+    base_path = os.path.join(processed_data, config_dict["data"]["version"])
+
+    # Find the file stats.txt and read it as a json file
+    stats_file = Path(f"{base_path}/crops/stats.json")
+    if not stats_file.exists():
+        logger.error(f"Cannot find {stats_file}. Did voc-cropper run successfully?")
+        return []
+
+    data = []
+    with stats_file.open("r") as f:
+        stats = json.load(f)
+        logger.info(f"Found stats: {stats}")
+        total_labels = stats["total_labels"]
+        labels = list(total_labels.keys())
+        logger.info(f"Found labels: {labels}")
+        for label, count in total_labels.items():
+            if count == 0:
+                logger.info(f"Skipping label {label} with 0 crops")
+                continue
+            if labels_filter and 'all' not in labels_filter and label not in labels_filter:
+                logger.info(f"Skipping label {label} not in {labels_filter}")
+                continue
+            logger.info(f"Found {count} crops for label {label}")
+            # Total number of crops, and paths to crops and cluster output respectively
+            data.append((count, f"{base_path}/crops/{label}", f"{base_path}/cluster/{label}"))
+        logger.debug(data)
+    return data
 
 def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: str = None, image_dir: str = None) -> List[
     tuple]:
@@ -317,32 +354,7 @@ def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: st
                     logger.error(f"All {n} attempts failed. Giving up.")
                     return []
 
-    # Find the file stats.txt and read it as a json file
-    stats_file = Path(f"{base_path}/crops/stats.json")
-    if not stats_file.exists():
-        logger.error(f"Cannot find {stats_file}. Did voc-cropper run successfully?")
-        return []
-
-    data = []
-    with stats_file.open("r") as f:
-        stats = json.load(f)
-        logger.info(f"Found stats: {stats}")
-        total_labels = stats["total_labels"]
-        labels = list(total_labels.keys())
-        logger.info(f"Found labels: {labels}")
-        for label, count in total_labels.items():
-            if count == 0:
-                logger.info(f"Skipping label {label} with 0 crops")
-                continue
-            if labels_filter and 'all' not in labels_filter and label not in labels_filter:
-                logger.info(f"Skipping label {label} not in {labels_filter}")
-                continue
-            logger.info(f"Found {count} crops for label {label}")
-            # Total number of crops, and paths to crops and cluster output respectively
-            data.append((count, f"{base_path}/crops/{label}", f"{base_path}/cluster/{label}"))
-        logger.debug(data)
-    return data
-
+    return compute_stats(labels_filter, config_dict, processed_dir=processed_dir)
 
 def clean(base_path: str) -> str:
     # Remove any existing data, except for downloaded images

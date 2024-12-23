@@ -17,12 +17,11 @@ from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_
 from aipipeline.prediction.library import (
     download,
     crop_rois_voc,
-    generate_multicrop_views,
     get_short_name,
     gen_machine_friendly_label,
     clean,
     batch_elements,
-    ProcessClusterBatch, remove_multicrop_views, clean_images,
+    ProcessClusterBatch, remove_multicrop_views, clean_images, generate_multicrop_views,
 )
 
 logger = logging.getLogger(__name__)
@@ -157,7 +156,7 @@ def run_pipeline(argv=None):
             start
             | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
-            | "Clean dark blurry examples" >> beam.Map(clean_images)
+            | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=batch_size))
             | 'Process cluster ROI batches' >> beam.ParDo(ProcessClusterBatch(config_dict=config_dict, min_detections=MIN_DETECTIONS))
             | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)

@@ -23,6 +23,12 @@ data:
   version: "Baseline"
   labels: "all"
   download_args: ["--verified"]
+  cleanvision_issues:
+    - name: "low_information"
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
+    - name: "exact_duplicates"
 
 sdcat:
   model: "MBARI/yolov5x6-uavs-oneclass"

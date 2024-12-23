@@ -20,13 +20,23 @@ install: update_trackers
 update_trackers:
     conda env update_trackers --file environment.yml --prune
 
-# Copy dev code to the project on doris
-cp-dev:
-    cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
-    cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
-    cp ./aipipeline/projects/bio/core/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/core/
+
+# Copy core dev code to the project on doris
+cp-core:
     cp ./aipipeline/prediction/*.py /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     cp ./aipipeline/metrics/*.py /Volumes/dcline/code/aipipeline/aipipeline/metrics/
+    cp justfile /Volumes/dcline/code/aipipeline/justfile
+
+# Copy uav dev code to the project on doris
+cp-dev-uav:
+    cp ./aipipeline/projects/uav/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/uav/
+    cp ./aipipeline/projects/uav/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/uav/config/
+
+# Copy bio dev code to the project on doris
+cp-dev-bio:
+    cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
+    cp ./aipipeline/projects/bio/config/ /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/config/
+    cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -172,12 +182,12 @@ crop project='uav' *more_args="":
         {{more_args}}
 
 # Download and crop 
-download-crop project='uav':
+download-crop project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml \
-        --skip-clean True
+        {{more_args}}
 
 # Download only
 download project='uav':
@@ -261,10 +271,10 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
      echo "Processing $video"
      time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.1 --batch-size 60 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
+       --max-frames-tracked 200 --min-score-det 0.1 --batch-size 34 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/megadet \
-       --stride-fps 1 --video $video --gpu-id {{gpu_id}}
+       --stride 16 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file
     # Run 1 video in parallel

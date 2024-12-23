@@ -11,6 +11,8 @@ data:
   version: "Baseline"
   labels: "Acanthamunnopsis miller,Bathochordaeus sinker,Bolinopsis,Cydippida,Eusergestes similis,Solmissus,Actinopterygii,Pyrosoma,Salpa fusiformis,krill molt,Merluccius productus,Radiozoa,Thalassocracy inconstans"
   download_args: ["--verified"]
+  cleanvision_issues:
+    - name: "exact_duplicates"
 
 sdcat:
   model: "hustvl/yolos-tiny"

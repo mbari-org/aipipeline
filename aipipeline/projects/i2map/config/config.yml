@@ -9,6 +9,8 @@ data:
   version: "Baseline"
   labels: "all"
   download_args: ["--verified"]
+  cleanvision_issues:
+    - name: "exact_duplicates"
 
 mounts:
   - name: "video"
