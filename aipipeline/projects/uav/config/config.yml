@@ -29,6 +29,7 @@ data:
     - name: "blurry"
     - name: "dark"
     - name: "exact_duplicates"
+    - name: "near_duplicates"
 
 sdcat:
   model: "MBARI/yolov5x6-uavs-oneclass"
