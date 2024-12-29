@@ -101,7 +101,7 @@ def run_pipeline(argv=None):
         (
             p
             | "Start download" >> beam.Create([labels])
-            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
+            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
