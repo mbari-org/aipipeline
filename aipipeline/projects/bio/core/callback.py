@@ -3,7 +3,6 @@
 # Description: Custom callback for bio projects
 import json
 import logging
-import math
 from datetime import datetime, timedelta
 
 from aipipeline.projects.bio.core.bioutils import get_ancillary_data, get_video_metadata
