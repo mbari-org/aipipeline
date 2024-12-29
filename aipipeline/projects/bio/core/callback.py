@@ -110,8 +110,8 @@ class ExportCallback(Callback):
                 new_loc = {
                     "x1": max(float(best_box[0]*predictor.source.width), 0.),
                     "y1": max(float(best_box[1]*predictor.source.height), 0.),
-                    "x2": float(best_box[2]*predictor.source.width),
-                    "y2": float(best_box[3]*predictor.source.height),
+                    "x2": min(float(best_box[2]*predictor.source.width), predictor.source.width),
+                    "y2": min(float(best_box[3]*predictor.source.height), predictor.source.height),
                     "width": int(predictor.source.width),
                     "height": int(predictor.source.height),
                     "frame": int((best_frame + 1) * predictor.source.stride),
