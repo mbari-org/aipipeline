@@ -102,6 +102,7 @@ def run_pipeline(argv=None):
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
+            | "Compute stats" >> beam.Map(compute_stats, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
