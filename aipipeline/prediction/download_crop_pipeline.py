@@ -42,6 +42,7 @@ def run_pipeline(argv=None):
     parser.add_argument("--config", required=True, help="Config file path")
     parser.add_argument("--labels", required=False, help="Comma separated list of labels to download")
     parser.add_argument("--download-dir", required=False, help="Directory to download images")
+    parser.add_argument("--version", required=False, help="Version of the dataset")
     parser.add_argument("--skip-clean", required=False, default=False,
                                                     help="Skip cleaning of previously downloaded data")
     args, beam_args = parser.parse_known_args(argv)
@@ -52,6 +53,9 @@ def run_pipeline(argv=None):
         download_path = Path(args.download_dir)
     else:
         download_path = Path(config_dict["data"]["processed_path"])
+
+    if args.version:
+        config_dict["data"]["version"] = args.version
 
     if args.labels:
         config_dict["data"]["labels"] = args.labels
