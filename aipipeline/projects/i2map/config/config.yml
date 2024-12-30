@@ -10,6 +10,7 @@ data:
   labels: "all"
   download_args: ["--verified"]
   cleanvision_issues:
+    - name: "dark"
     - name: "exact_duplicates"
 
 mounts:
