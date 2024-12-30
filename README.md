@@ -69,38 +69,48 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 ```shell
 just list
 ```
-
-| Recipe Name                      | Description                                                                                                 |
-|----------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `list`                           | List recipes                                                                                               |
-| `install`                        | Setup the environment                                                                                      |
-| `update_trackers`                | Update the environment. Run this command after checking out any code changes                               |
-| `plot-tsne-vss project='uav'`    | Generate a tsne plot of the VSS database                                                                   |
-| `optimize-vss project='uav'`     | Optimize the VSS database                                                                                  |
-| `calc-acc-vss project='uav'`     | Calculate the accuracy of the VSS database; run after download, then optimize                              |
-| `reset-vss-all`                  | Reset the VSS database, removing all data. Proceed with caution!!                                          |
-| `reset-vss project='uav'`        | Reset the VSS database, removing all data. Run before init-vss or when creating the database. Run with e.g. `uav` |
-| `remove-vss project='uav'`       | Remove an entry from the VSS database, e.g., `remove-vss i2map --doc 'doc:marine organism:*'`              |
-| `init-vss project='uav'`         | Initialize the VSS database for a project                                                                  |
-| `load-vss project='uav'`         | Load already computed exemplars into the VSS database                                                      |
-| `cluster-uav`                    | Cluster mission in `aipipeline/projects/uav/data/missions2process.txt`                                     |
-| `detect-uav`                     | Detect mission in `aipipeline/projects/uav/data/missions2process.txt`                                      |
-| `detect-uav-test`                | Detect mission data in `aipipeline/projects/uav/data/missions2process.txt`                                 |
-| `load-uav-images`                | Load UAV mission images in `aipipeline/projects/uav/data/missions2process.txt`                             |
-| `load-uav type="cluster"`        | Load UAV detections/clusters in `aipipeline/projects/uav/data/missions2process.txt`                        |
-| `fix-uav-metadata`               | Fix UAV metadata lat/lon/alt                                                                               |
-| `compute-saliency project='uav'` | Compute saliency for downloaded VOC data and update the Tator database                                     |
-| `crop project='uav'`             | Crop detections from VOC formatted downloads                                                               |
-| `download-crop project='uav'`    | Download and crop                                                                                          |
-| `download project='uav'`         | Download only                                                                                              |
-| `predict-vss project='uav'`      | Predict images using the VSS database, e.g., `predict-vss image_dir='/tmp/download'`                       |
-| `run-ctenoA-test`                | Run the strided inference on a single video                                                                |
-| `run-ctenoA-prod`                | Run the strided inference on a collection of videos in a TSV file                                          |
-| `run-mega-inference`             | Run the mega strided inference only on a single video                                                      |
-| `run-mega-track-bio-video`       | Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds                |
-| `run-mega-track-bio-dive`        | Run the mega strided tracking pipeline on an entire dive for the bio project                               |
-| `run-mega-track-i2map`           | Run the mega strided tracking pipeline on a single video for the i2map project                             |
-
+| Recipe Name                      | Description                                                                                                        |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| list                             | List recipes                                                                                                      |
+| install                          | Setup the environment                                                                                             |
+| cp-env                           | Copy the default .env file to the project                                                                         |
+| update_trackers                  | Update the environment. Run this command after checking out any code changes                                      |
+| cp-core                          | Copy core dev code to the project on doris                                                                        |
+| cp-dev-uav                       | Copy uav dev code to the project on doris                                                                         |
+| cp-dev-bio                       | Copy bio dev code to the project on doris                                                                         |
+| cp-dev-i2map                     | Copy i2map dev code to the project on doris                                                                       |
+| plot-tsne-vss project='uav'      | Generate a tsne plot of the VSS database                                                                          |
+| optimize-vss project='uav'       | Optimize the VSS database                                                                                         |
+| calc-acc-vss project='uav'       | Calculate the accuracy of the VSS database; run after download, then optimize                                     |
+| reset-vss-all                    | Reset the VSS database, removing all data. Proceed with caution!!                                                 |
+| reset-vss project='uav'          | Reset the VSS database, removing all data. Run before init-vss or when creating the database.                     |
+| remove-vss project='uav'         | Remove an entry from the VSS database                                                                             |
+| init-vss project='uav'           | Initialize the VSS database for a project                                                                        |
+| load-vss project='uav'           | Load already computed exemplars into the VSS database                                                            |
+| load-cfe-isiis-videos            | Load CFE ISII mission videos                                                                                      |
+| cluster-uav                      | Cluster mission in UAV data                                                                                       |
+| detect-uav                       | Detect mission in UAV data                                                                                        |
+| detect-uav-test                  | Detect mission data in UAV data                                                                                   |
+| load-uav-images                  | Load UAV mission images                                                                                           |
+| load-uav type="cluster"          | Load UAV detections/clusters                                                                                      |
+| fix-uav-metadata                 | Fix UAV metadata lat/lon/alt                                                                                      |
+| compute-saliency project='uav'   | Compute saliency for VOC data                                                                                     |
+| crop project='uav'               | Crop detections from VOC formatted downloads                                                                      |
+| download-crop project='uav'      | Download and crop                                                                                                 |
+| download project='uav'           | Download only                                                                                                    |
+| predict-vss project='uav'        | Predict images using the VSS database                                                                            |
+| run-ctenoA-test                  | Run strided inference on a single video                                                                           |
+| run-ctenoA-prod                  | Run strided inference on a collection of videos                                                                   |
+| run-mega-inference               | Run mega strided inference on a single video                                                                      |
+| run-mega-track-bio-video         | Run mega tracking pipeline on a single video for bio project                                                     |
+| run-mega-track-bio-dive          | Run mega tracking pipeline on an entire dive for bio project                                                     |
+| run-mega-track-i2map-video       | Run mega tracking pipeline on a single video for i2map project                                                   |
+| run-mega-track-test-1min         | Run mega tracking pipeline on a single video for testing                                                         |
+| run-mega-track-test-fastapiyv5   | Test pipeline using FastAPI                                                                                      |
+| gen-cfe-data                     | Generate training data for the CFE project                                                                       |
+| gen-i2map-data                   | Generate training data for the i2map project                                                                     |
+| gen-i2mapbulk-data               | Generate training data for the i2map project from the bulk server                                                |
+| gen-uav-data                     | Generate training data for the UAV project                                                                       |
 
 --
 

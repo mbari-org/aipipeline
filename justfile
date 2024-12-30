@@ -1,7 +1,9 @@
 #!/usr/bin/env just --justfile
 
-# Source the .env file
+# copy the default .env file
+## Source the .env file and support an alternative name
 set dotenv-load := true
+set dotenv-filename := x'${ENV_FILE:-.env}'
 
 # List recipes
 list:
@@ -16,6 +18,9 @@ install: update_trackers
     cd deps/co-tracker && conda run -n aipipeline pip install -e .
     cd .. && mkdir checkpoints && cd checkpoints && wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
 
+# Copy the default .env file to the project
+cp-env:
+  @cp .env.mantis .env
 # Update the environment. Run this command after checking out any code changes
 update_trackers:
     conda env update_trackers --file environment.yml --prune
@@ -37,6 +42,11 @@ cp-dev-bio:
     cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
     cp ./aipipeline/projects/bio/config/ /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/config/
     cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
+
+# Copy i2map dev code to the project on doris
+cp-dev-i2map:
+    cp ./aipipeline/projects/i2map/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
+    cp ./aipipeline/projects/i2mapbulk/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -281,10 +291,9 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
     find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 1 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
-run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
+run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
-    #videos=("i2MAP_20190205T102700Z_200m_F031_17.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov" "i2MAP_20190205T104923Z_400m_F031_19.mov")
     time python3 aipipeline/projects/bio/process.py \
      --config ./aipipeline/projects/i2map/config/config.yml \
      --det-model /mnt/DeepSea-AI/models/megadet \
@@ -293,7 +302,8 @@ run-mega-track-i2map video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205
      --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
      --video {{video}} --gpu-id {{gpu_id}}
 
-run-mega-track-test-yv5:
+# Run the mega strided tracking pipeline on a single video to test the pipeline
+run-mega-track-test-1min:
     #!/usr/bin/env bash
     export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
     time python3 aipipeline/projects/bio/predict.py \
@@ -303,7 +313,6 @@ run-mega-track-test-yv5:
      --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
      --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
-
 
 run-mega-track-test-fastapiyv5:
     #!/usr/bin/env bash
@@ -315,3 +324,22 @@ run-mega-track-test-fastapiyv5:
      --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
+
+# Generate training data for the CFE project
+gen-cfe-data:
+  just --justfile {{justfile()}} download-crop cfe --skip-clean True --version Baseline
+
+# Generate training data for the i2map project
+gen-i2map-data:
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True --version Baseline
+
+# Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
+gen-i2mapbulk-data:
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version Baseline
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version dino_vits8_20240207_022529
+
+# Generate training data for the uav project
+gen-uav-data:
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True --version Baseline
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True --version yolov5x6-uavs-oneclass-uav-vit-b-16
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True --version uav-yolov5-30k-vs
