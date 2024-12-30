@@ -1,6 +1,28 @@
 # CHANGELOG
 
 
+## v0.47.1 (2024-12-30)
+
+### Bug Fixes
+
+- Add stats generation after download in download_crop_pipeline.py
+  ([`86237d3`](https://github.com/mbari-org/aipipeline/commit/86237d31a537838505bb8c337500c10b4e93a45b))
+
+- Clean only versioned dir not parent
+  ([`5b830e1`](https://github.com/mbari-org/aipipeline/commit/5b830e1f3448dff40e34859e41133ec454a09954))
+
+- Remove voc crop and replace with download in download_crop_pipeline.py
+  ([`016d515`](https://github.com/mbari-org/aipipeline/commit/016d515a758ca93a3cdab4cd999530b8cecd48e5))
+
+- **bio**: Bound boxes before redis load
+  ([`fcf3678`](https://github.com/mbari-org/aipipeline/commit/fcf3678189247156605a2e6cb25ec0e0975ba2d1))
+
+### Performance Improvements
+
+- **uav**: Remove near duplicates to reduce training time
+  ([`302479d`](https://github.com/mbari-org/aipipeline/commit/302479d2f7428f8417392a2258ce4db533c03906))
+
+
 ## v0.47.0 (2024-12-23)
 
 ### Features
