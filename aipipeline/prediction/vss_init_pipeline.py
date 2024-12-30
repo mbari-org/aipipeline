@@ -135,11 +135,13 @@ def run_pipeline(argv=None):
 
     options = PipelineOptions(beam_args)
 
+    download_path = Path(config_dict["data"]["processed_path"])
+    version_path = download_path / config_dict["data"]["version"]
     if not args.skip_clean:
-        clean(base_path)
+        clean(version_path.as_posix())
 
     # Always remove any previous augmented data before starting
-    remove_multicrop_views(base_path)
+    remove_multicrop_views(version_path.as_posix())
 
     with beam.Pipeline(options=options) as p:
         start = (
