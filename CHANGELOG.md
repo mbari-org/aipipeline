@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.47.2 (2024-12-30)
+
+### Documentation
+
+- Updated with latest justfile
+  ([`bf649c4`](https://github.com/mbari-org/aipipeline/commit/bf649c42068ef4a51c3f5bc094cdedb326ec52cc))
+
+### Performance Improvements
+
+- **uav**: Switch to latest mbari-uav-vit-b-16-20241230 model
+  ([`948ba99`](https://github.com/mbari-org/aipipeline/commit/948ba995ed47007c110959c9b032e1204ff58889))
+
+
 ## v0.47.1 (2024-12-30)
 
 ### Bug Fixes
