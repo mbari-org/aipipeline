@@ -77,9 +77,11 @@ def generate_multicrop_views2(image) -> List[tuple]:
 
 
 def clean_bad_images(element, config_dict: Dict) -> tuple:
-    count, crop_path, save_path = element
+    _, crop_path, save_path = element
     num_removed = 0
     # Check if any images exist
+    images = Path(crop_path).glob("*.jpg|*.png|*.jpeg|*.JPG|*.PNG|*.JPEG")
+    count = len(list(images))
     if count == 0:
         return count, crop_path, save_path
     imagelab = Imagelab(data_path=crop_path)
@@ -96,7 +98,7 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     for img in bad_images:
         os.remove(img)
         num_removed += 1
-    logger.info(f"Removed {num_removed} images in {crop_path} using cleanvision {issues}")
+    logger.info(f"Removed {num_removed} of {count} images in {crop_path} using cleanvision {issues}")
     return count - num_removed, crop_path, save_path
 
 
@@ -397,7 +399,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
     else:
         labels = []
 
-    now = datetime.now().strftime("%Y%m%d.%f")
+    now = datetime.now().strftime("%Y%m%d")#.%f")
     logger.info(f"Downloading data for labels: {labels}....")
     container = run_docker(
         image=config_dict["docker"]["aidata"],
