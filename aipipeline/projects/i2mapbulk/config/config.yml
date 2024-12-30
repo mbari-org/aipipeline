@@ -5,7 +5,7 @@ redis:
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/i2map"
+  processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
 #  version: "vss_vits14_all"
   version2: "dino_vits8_20240207_022529"
   version: "Baseline"
