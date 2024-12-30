@@ -9,6 +9,9 @@ docker:
     /mnt/UAV:
       bind: /mnt/UAV
       mode: rw
+    /mnt/DeepSea-AI:
+      bind: /mnt/DeepSea-AI
+      mode: ro
 
 mounts:
   - name: "image"
