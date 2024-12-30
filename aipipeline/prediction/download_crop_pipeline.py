@@ -84,11 +84,12 @@ def run_pipeline(argv=None):
         raise ValueError(
             f"Download directory {args.download_dir} is not a child of any of the bind volumes in the docker config")
 
+    version_path = download_path / config_dict["data"]["version"]
     if not args.skip_clean:
-        clean(download_path.as_posix())
+        clean(version_path.as_posix())
 
     # Always remove any previous augmented data before starting
-    remove_multicrop_views(download_path.as_posix())
+    remove_multicrop_views(version_path.as_posix())
 
     if args.download_dir:
         config_dict["data"]["processed_path"] = args.download_dir
