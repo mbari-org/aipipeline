@@ -2,6 +2,7 @@
 # Filename: projects/uav/load-sdcat-pipeline.py
 # Description: Load detections into Tator from sdcat clustering
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -9,6 +10,8 @@ import apache_beam as beam
 import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
+
+from pandas import read_csv
 
 from aipipeline.projects.uav.args_common import parse_args, parse_mission_string, POSSIBLE_PLATFORMS
 from aipipeline.docker.utils import run_docker
@@ -37,7 +40,7 @@ if not TATOR_TOKEN:
     exit(-1)
 
 
-def process_mission(element) -> str:
+def load_mission(element) -> str:
     # Data is in the format
     # <path>,<tator section>,<start image>,<end image>
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
@@ -69,38 +72,56 @@ def process_mission(element) -> str:
         logger.error(f"Could not find: {load_file_or_dir}")
         return f"Could not find: {load_file_or_dir}"
 
-    logger.info(f"Loading {load_file_or_dir}")
-    args = [
-        "load",
-        "boxes",
-        "--input",
-        load_file_or_dir.as_posix(),
-        "--config",
-        config_files[CONFIG_KEY],
-        "--token",
-        TATOR_TOKEN,
-        "--version",
-        version,
-        "--exclude",
-        "Poop",
-        "--exclude",
-        "Batray",
-        "--exclude",
-        "Unknown",
-    ]
+    load_min_score = config_dict["data"]["load_min_score"]
 
-    container = run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f"aidata-sdcat-load-{type}-{mission_name}",
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"],
-    )
-    if container:
-        logger.info(f"Loading {mission_name}....")
-        container.wait()
-        logger.info(f"Done loading {mission_name}....")
-    else:
-        logger.error(f"Failed to load {mission_name}....")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Read in all the detections and filter out the ones below the min score in the score column
+        if load_file_or_dir.is_dir():
+            for d in load_file_or_dir.rglob("*.csv"):
+                detections = read_csv(load_file_or_dir)
+                detections = detections[detections["score"] >= load_min_score]
+                detections.to_csv(Path(tmpdir) / d.name, index=False)
+        else:
+            detections = read_csv(load_file_or_dir)
+            detections = detections[detections["score"] >= load_min_score]
+            detections.to_csv(Path(tmpdir) / load_file_or_dir.name, index=False)
+
+        logger.info(f"Loading {load_file_or_dir}")
+        args = [
+            "load",
+            "boxes",
+            "--input",
+            load_file_or_dir.as_posix(),
+            "--config",
+            config_files[CONFIG_KEY],
+            "--token",
+            TATOR_TOKEN,
+            "--version",
+            version,
+            "--exclude",
+            "Poop",
+            "--exclude",
+            "Batray",
+            "--exclude",
+            "Wave",
+            "--exclude",
+            "Foam",
+            "--exclude",
+            "Reflectance",
+        ]
+
+        container = run_docker(
+            image=config_dict["docker"]["aidata"],
+            name=f"aidata-sdcat-load-{type}-{mission_name}",
+            args_list=args,
+            bind_volumes=config_dict["docker"]["bind_volumes"],
+        )
+        if container:
+            logger.info(f"Loading {mission_name}....")
+            container.wait()
+            logger.info(f"Done loading {mission_name}....")
+        else:
+            logger.error(f"Failed to load {mission_name}....")
 
     return f"Mission {mission_name} processed."
 
@@ -127,7 +148,7 @@ def run_pipeline(argv=None):
             | "Read missions" >> beam.io.ReadFromText(args.missions)
             | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
             | "Create elements" >> beam.Map(lambda line: (line, config_file, config_dict, beam_args_dict['--type']))
-            | f"Load missions ({beam_args_dict['--type']})" >> beam.Map(process_mission)
+            | f"Load missions ({beam_args_dict['--type']})" >> beam.Map(load_mission)
             | "Log results" >> beam.Map(logger.info)
         )
 

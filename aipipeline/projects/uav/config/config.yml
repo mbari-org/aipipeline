@@ -26,6 +26,7 @@ data:
   version: "Baseline"
   labels: "all"
   download_args: ["--verified"]
+  load_min_score: 0.7
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
