@@ -8,7 +8,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
   version: "Baseline"
   labels: "all"
-  download_args: ["--verified"]
+  download_args: ["--verified", "--generator", "vars-labelbot", "--group", "NMS"]
   cleanvision_issues:
     - name: "dark"
     - name: "exact_duplicates"
