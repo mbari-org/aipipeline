@@ -1,6 +1,31 @@
 # CHANGELOG
 
 
+## v0.48.0 (2024-12-31)
+
+### Bug Fixes
+
+- **i2map**: Download filtered results by vars-labelbot and group
+  ([`11a97bc`](https://github.com/mbari-org/aipipeline/commit/11a97bc7ba2ab86dbee1eee7f6da3cdb1ad78575))
+
+### Features
+
+- Generates csv of stats to share with team;combine stats.json in nested directories of multiple
+  versions
+  ([`50931d2`](https://github.com/mbari-org/aipipeline/commit/50931d2b9afa483c7eef1bb37a59bcf7dccd9b40))
+
+- Support --version override in download_crop_pipeline.py
+  ([`a16c3ee`](https://github.com/mbari-org/aipipeline/commit/a16c3eedd84cbdcd91a14e86671939bed8d577d5))
+
+- **uav**: Filter results by min score before loading
+  ([`950ea3d`](https://github.com/mbari-org/aipipeline/commit/950ea3d91775eb409780f02a89be6eee8c43d756))
+
+### Performance Improvements
+
+- **i2map**: Remove dark images
+  ([`9a7c299`](https://github.com/mbari-org/aipipeline/commit/9a7c299972feaa0a250bff13d7075488f5b24290))
+
+
 ## v0.47.2 (2024-12-30)
 
 ### Documentation

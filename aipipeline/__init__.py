@@ -1,2 +1,2 @@
 # aipipeline/__init__.py
-__version__ = "0.47.2"
+__version__ = "0.48.0"
