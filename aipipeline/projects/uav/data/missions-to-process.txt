@@ -16,8 +16,8 @@
 #/mnt/UAV/Level-1/trinity-2_20240809T233952_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
 #/mnt/UAV/Level-1/trinity-2_20240820T233850_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
 # Load these images
-/mnt/UAV/Level-1/trinity-2_20241218T193813_Seymour,2024/12/Seymour
-/mnt/UAV/Level-1/trinity-2_20241218T210331_Davenport,2024/12/Davenport
-/mnt/UAV/Level-1/trinity-2_20241219T193922_Monterey,2024/12/Monterey
-/mnt/UAV/Level-1/trinity-2_20241220T190455_NewBrighton,2024/12/NewBrighton
-/mnt/UAV/Level-1/trinity-2_20241220T201451_Seacliff,2024/12/Seacliff
+/mnt/UAV/Level-1/trinity-2_20241218T193813_Seymour/SONY_DSC-RX1RM2,2024/12/Seymour
+/mnt/UAV/Level-1/trinity-2_20241218T210331_Davenport/SONY_DSC-RX1RM2,2024/12/Davenport
+/mnt/UAV/Level-1/trinity-2_20241219T193922_Monterey/SONY_DSC-RX1RM2,2024/12/Monterey
+/mnt/UAV/Level-1/trinity-2_20241220T190455_NewBrighton/SONY_DSC-RX1RM2,2024/12/NewBrighton
+/mnt/UAV/Level-1/trinity-2_20241220T201451_Seacliff/SONY_DSC-RX1RM2,2024/12/Seacliff
