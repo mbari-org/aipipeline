@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.48.1 (2025-01-01)
+
+### Performance Improvements
+
+- **uav**: Switch to 8 block size model /mnt/DeepSea-AI/models/UAV/mbari-uav-vit-b-8-20241231
+  ([`490a345`](https://github.com/mbari-org/aipipeline/commit/490a34503163ba305e995d70c1434c95ef3ae89f))
+
+
 ## v0.48.0 (2024-12-31)
 
 ### Bug Fixes
