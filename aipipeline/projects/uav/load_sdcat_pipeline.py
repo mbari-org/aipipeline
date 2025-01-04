@@ -74,54 +74,42 @@ def load_mission(element) -> str:
 
     load_min_score = config_dict["data"]["load_min_score"]
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # Read in all the detections and filter out the ones below the min score in the score column
-        if load_file_or_dir.is_dir():
-            for d in load_file_or_dir.rglob("*.csv"):
-                detections = read_csv(load_file_or_dir)
-                detections = detections[detections["score"] >= load_min_score]
-                detections.to_csv(Path(tmpdir) / d.name, index=False)
-        else:
-            detections = read_csv(load_file_or_dir)
-            detections = detections[detections["score"] >= load_min_score]
-            detections.to_csv(Path(tmpdir) / load_file_or_dir.name, index=False)
+    logger.info(f"Loading detections in {load_file_or_dir} >= {load_min_score}....")
+    args = [
+        "load",
+        "boxes",
+        "--input",
+        load_file_or_dir.as_posix(),
+        "--config",
+        config_files[CONFIG_KEY],
+        "--token",
+        TATOR_TOKEN,
+        "--version",
+        version,
+        "--min-score",
+        str(load_min_score),
+        "--exclude",
+        "Poop",
+        "--exclude",
+        "Wave",
+        "--exclude",
+        "Foam",
+        "--exclude",
+        "Reflectance"
+    ]
 
-        logger.info(f"Loading {load_file_or_dir}")
-        args = [
-            "load",
-            "boxes",
-            "--input",
-            load_file_or_dir.as_posix(),
-            "--config",
-            config_files[CONFIG_KEY],
-            "--token",
-            TATOR_TOKEN,
-            "--version",
-            version,
-            "--exclude",
-            "Poop",
-            "--exclude",
-            "Batray",
-            "--exclude",
-            "Wave",
-            "--exclude",
-            "Foam",
-            "--exclude",
-            "Reflectance",
-        ]
-
-        container = run_docker(
-            image=config_dict["docker"]["aidata"],
-            name=f"aidata-sdcat-load-{type}-{mission_name}",
-            args_list=args,
-            bind_volumes=config_dict["docker"]["bind_volumes"],
-        )
-        if container:
-            logger.info(f"Loading {mission_name}....")
-            container.wait()
-            logger.info(f"Done loading {mission_name}....")
-        else:
-            logger.error(f"Failed to load {mission_name}....")
+    container = run_docker(
+        image=config_dict["docker"]["aidata"],
+        name=f"aidata-sdcat-load-{type}-{mission_name}",
+        args_list=args,
+        bind_volumes=config_dict["docker"]["bind_volumes"],
+    )
+    if container:
+        logger.info(f"Loading {mission_name}....")
+        container.wait()
+        logger.info(f"Done loading {mission_name}....")
+    else:
+        logger.error(f"Failed to load {mission_name}....")
 
     return f"Mission {mission_name} processed."
 
