@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.48.2 (2025-01-08)
+
+### Performance Improvements
+
+- Remove 180 rotation in augmentation; this is handled in training now
+  ([`507bacd`](https://github.com/mbari-org/aipipeline/commit/507bacd75e4b163bcddd49997955dfd14c5a00b7))
+
+
 ## v0.48.1 (2025-01-01)
 
 ### Performance Improvements
