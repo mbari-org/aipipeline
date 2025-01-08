@@ -122,13 +122,7 @@ def generate_multicrop_views(elements) -> List[tuple]:
                 logger.error(f"Failed to read {image_path}")
                 continue
 
-            # Rotate all images 180 degrees
-            image = cv2.rotate(image, cv2.ROTATE_180)
-            save_file = image_path.parent / f"{image_path.stem}{MULTIVIEW_SUFFIX}_r.jpg"
-            logger.info(f"Saving {save_file}")
-            cv2.imwrite(save_file.as_posix(), image)
-            num_aug += 1
-
+            # Skip if more than 100 examples
             if count > 100:
                 continue
 
