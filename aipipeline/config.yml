@@ -1,6 +1,7 @@
 # aipipeline/config.yml
-# Config file for aippipeline library components
-# These can be overridden by the project config.yml
+# Config file for common aipipeline library components
+# These can be overridden per project by the config.yml in the project directory,
+# e.g. aipipeline/projects/i2map/config.yml
 docker:
   aidata: 'mbari/aidata:latest-cuda124'
   sdcat: 'mbari/sdcat:latest-cuda124'
