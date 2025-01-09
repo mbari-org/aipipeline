@@ -1,8 +1,10 @@
+# aipipeline, Apache-2.0 license
+# Filename: projects/bio/process.py
+# Description: Compute stats for downloaded datasets and save to a csv file
+from datetime import datetime
+import dotenv
 import logging
 import os
-from datetime import datetime
-
-import dotenv
 import redis
 
 from biotrack.tracker import BioTracker
@@ -15,7 +17,7 @@ from aipipeline.db_utils import get_version_id
 
 from aipipeline.projects.bio.core.predict import Predictor
 from aipipeline.projects.bio.core.video import VideoSource
-from aipipeline.projects.bio.model.inference import FastAPIYV5, YV5
+from aipipeline.prediction.inference import FastAPIYV5, YV5
 
 # Global variables
 idv = 1  # video index

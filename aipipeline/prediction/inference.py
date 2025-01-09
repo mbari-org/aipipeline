@@ -1,12 +1,11 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/bio/model/inference.py
-# Description: Base class for detection models
+# Filename: prediction/inference.py
+# Description: model inference classes for projects
 import glob
 import logging
 import time
-import uuid
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List, Any
 
 import numpy as np
 import requests
@@ -27,7 +26,7 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 # and log to file
 now = datetime.now()
-log_filename = f"bio_model_{now:%Y%m%d}.log"
+log_filename = f"inference_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
