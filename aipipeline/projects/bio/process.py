@@ -39,7 +39,7 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 # and log to file
 now = datetime.now()
-log_filename = f"predictor_{now:%Y%m%d}.log"
+log_filename = f"process_bio_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
