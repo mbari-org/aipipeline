@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.48.3 (2025-01-10)
+
+### Performance Improvements
+
+- **i2map**: Sdcat switch to 8 block model and skip blurry
+  ([`fa95645`](https://github.com/mbari-org/aipipeline/commit/fa9564564e326843cd4389115cec71ee67d24933))
+
+
 ## v0.48.2 (2025-01-08)
 
 ### Performance Improvements
