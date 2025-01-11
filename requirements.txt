@@ -2,13 +2,16 @@ opencv-python-headless
 requests
 pandas
 docker==7.1.0
+piexif
 plotly
 python-dotenv
 pyyaml
 scikit-learn
 matplotlib
 albumentations==1.4.23
+tator
 torch
+torchvision
 apache-beam==2.53.0
 cleanvision
 ultralytics
