@@ -68,7 +68,7 @@ def run_docker(image: str, name: str, args_list: List[str], env_list: List[str] 
                 return
             # Add the GPU device
             docker_args["runtime"] = "nvidia"
-            docker_args["device_requests"] = [docker.types.DeviceRequest(count=1, capabilities=[["gpu"]])]
+            docker_args["device_requests"] = [docker.types.DeviceRequest(count=-1, capabilities=[["gpu"]])]
 
         try:
             container = client.containers.run(**docker_args)
