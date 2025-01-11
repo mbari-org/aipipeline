@@ -1,23 +1,23 @@
-#<path>,<tator section>,<start image>,<end image>
-#/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01345.JPG,trinity-2_20240820T160209_Seymour_DSC01345.JPG
-#/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01353.JPG,trinity-2_20240820T160209_Seymour_DSC01353.JPG
-#/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01531.JPG,trinity-2_20240820T160209_Seymour_DSC01531.JPG
-#/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01354.JPG,trinity-2_20240820T160209_Seymour_DSC01354.JPG
+#<gpu device>,<path>,<tator section>,<start image>,<end image>
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01345.JPG,trinity-2_20240820T160209_Seymour_DSC01345.JPG
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01353.JPG,trinity-2_20240820T160209_Seymour_DSC01353.JPG
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01531.JPG,trinity-2_20240820T160209_Seymour_DSC01531.JPG
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240820T160209_Seymour/SONY_DSC-RX1RM2,2024/08/NewBrighton,trinity-2_20240820T160209_Seymour_DSC01354.JPG,trinity-2_20240820T160209_Seymour_DSC01354.JPG
 # For testing only
-#/mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding,trinity-2_20241021T184730_MossLanding_DSC01676.JPG,trinity-2_20241021T184730_MossLanding_DSC01676.JPG
-#/mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding
-#/mnt/UAV/Level-1/trinity-2_20240703T153256_Seymour/SONY_DSC-RX1RM2,2024/07/Seymour
-#/mnt/UAV/Level-1/trinity-2_20240703T164523_Davenport/SONY_DSC-RX1RM2,2024/07/Davenport
-#/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
-#/mnt/UAV/Level-1/trinity-2_20240808T171312_Davenport/SONY_DSC-RX1RM2,2024/08/Davenport
-#/mnt/UAV/Level-1/trinity-2_20240618T152524_NewBrighton/SONY_DSC-RX1RM2,2024/06/NewBrighton
-#/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding,trinity-2_20241021T184730_MossLanding_DSC01676.JPG,trinity-2_20241021T184730_MossLanding_DSC01676.JPG
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20241021T184730_MossLanding/SONY_DSC-RX1RM2,2024/10/MossLanding
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240703T153256_Seymour/SONY_DSC-RX1RM2,2024/07/Seymour
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240703T164523_Davenport/SONY_DSC-RX1RM2,2024/07/Davenport
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240808T171312_Davenport/SONY_DSC-RX1RM2,2024/08/Davenport
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240618T152524_NewBrighton/SONY_DSC-RX1RM2,2024/06/NewBrighton
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240725T201926_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton
 # Pending new model training
-#/mnt/UAV/Level-1/trinity-2_20240809T233952_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
-#/mnt/UAV/Level-1/trinity-2_20240820T233850_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240809T233952_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
+#cuda:0,/mnt/UAV/Level-1/trinity-2_20240820T233850_NewBrighton/SONY_DSC-RX1RM2,2024/08/NewBrighton
 # Load these images
-/mnt/UAV/Level-1/trinity-2_20241218T193813_Seymour/SONY_DSC-RX1RM2,2024/12/Seymour
-/mnt/UAV/Level-1/trinity-2_20241218T210331_Davenport/SONY_DSC-RX1RM2,2024/12/Davenport
-/mnt/UAV/Level-1/trinity-2_20241219T193922_Monterey/SONY_DSC-RX1RM2,2024/12/Monterey
-/mnt/UAV/Level-1/trinity-2_20241220T190455_NewBrighton/SONY_DSC-RX1RM2,2024/12/NewBrighton
-/mnt/UAV/Level-1/trinity-2_20241220T201451_Seacliff/SONY_DSC-RX1RM2,2024/12/Seacliff
+cuda:0,/mnt/UAV/Level-1/trinity-2_20241218T193813_Seymour/SONY_DSC-RX1RM2,2024/12/Seymour
+cuda:0,/mnt/UAV/Level-1/trinity-2_20241218T210331_Davenport/SONY_DSC-RX1RM2,2024/12/Davenport
+cuda:0,/mnt/UAV/Level-1/trinity-2_20241219T193922_Monterey/SONY_DSC-RX1RM2,2024/12/Monterey
+cuda:0,/mnt/UAV/Level-1/trinity-2_20241220T190455_NewBrighton/SONY_DSC-RX1RM2,2024/12/NewBrighton
+cuda:0,/mnt/UAV/Level-1/trinity-2_20241220T201451_Seacliff/SONY_DSC-RX1RM2,2024/12/Seacliff

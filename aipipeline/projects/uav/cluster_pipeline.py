@@ -29,10 +29,10 @@ ENVIRONMENT = os.getenv("ENVIRONMENT") if os.getenv("ENVIRONMENT") else None
 
 def process_mission(element):
     # Data is in the format
-    # <path>,<tator section>,<start image>,<end image>
-    # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
+    # <gpu device>,<path>,<tator section>,<start image>,<end image>
+    # cuda:0,/mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
-    line, config_dict = element
+    gpu_device, line, config_dict = element
     mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
@@ -67,7 +67,7 @@ def process_mission(element):
         "--min-cluster-size",
         "3",
         "--device",
-        "cuda:0",
+        str(gpu_device),
         "--skip-visualization",
         "--use-vits"
     ]
