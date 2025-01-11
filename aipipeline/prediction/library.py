@@ -80,9 +80,13 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     _, crop_path, save_path = element
     num_removed = 0
     # Check if any images exist
-    images = Path(crop_path).glob("*.jpg|*.png|*.jpeg|*.JPG|*.PNG|*.JPEG")
-    count = len(list(images))
+    crop_path = Path(crop_path)
+    acceptable_extensions = [".jpg", ".png", ".jpeg", ".JPG", ".PNG", ".JPEG"]
+    count = 0
+    for ext in acceptable_extensions:
+        count += len(list(crop_path.glob(f"*{ext}")))
     if count == 0:
+        logger.info(f"No images found in {crop_path}")
         return count, crop_path, save_path
     imagelab = Imagelab(data_path=crop_path)
     issues = {
