@@ -18,7 +18,7 @@ docker:
       mode: rw
     /mnt/DeepSea-AI:
       bind: /mnt/DeepSea-AI
-      mode: ro
+      mode: rw
 
 vss:
   url: "http://doris.shore.mbari.org:8000/knn"
