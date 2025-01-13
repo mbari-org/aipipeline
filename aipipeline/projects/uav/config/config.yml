@@ -36,7 +36,7 @@ data:
     - name: "near_duplicates"
 
 sdcat:
-  model: "MBARI/yolov5x6-uavs-oneclass"
+  model: "/mnt/DeepSea-AI/models/MBARI-org--yolov5x6-uavs-oneclass"
   ini: "sdcat.ini"
 
 vss:

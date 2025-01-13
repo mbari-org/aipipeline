@@ -46,7 +46,7 @@ def load_mission(element) -> str:
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
     line, config_files, config_dict, type = element
-    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+    _, mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
@@ -124,6 +124,10 @@ def run_pipeline(argv=None):
     if '--type' not in beam_args:
         logger.error("Type must be specified, e.g. --type detect or --type cluster")
         return
+
+    # Set the version if specified
+    if args.version:
+        config_dict["data"]["version"] = args.version
 
     # Convert extra args to a dictionary, e.g. --type detect -> {'--type': 'detect'}
     beam_args_dict = {}

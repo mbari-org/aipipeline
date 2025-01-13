@@ -32,8 +32,8 @@ def process_mission(element):
     # <gpu device>,<path>,<tator section>,<start image>,<end image>
     # cuda:0,/mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
-    gpu_device, line, config_dict = element
-    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+    line, config_dict = element
+    gpu_device, mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     project = config_dict["tator"]["project"]
@@ -44,6 +44,8 @@ def process_mission(element):
         logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
         return f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}"
 
+    if Path(model).is_dir():
+        model = Path(model).name
 
     det_dir = base_path / mission_name / "detections" / "combined" / model / "det_filtered"
     save_dir = base_path / mission_name / "detections" / "combined" / model / "clusters"
@@ -64,8 +66,6 @@ def process_mission(element):
         str(det_dir),
         "--save-dir",
         str(save_dir),
-        "--min-cluster-size",
-        "3",
         "--device",
         str(gpu_device),
         "--skip-visualization",

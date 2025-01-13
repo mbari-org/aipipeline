@@ -37,7 +37,7 @@ def load_images(element) -> str:
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Processing element {element}")
     line, config_dict = element
-    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+    _, mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
