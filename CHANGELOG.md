@@ -1,6 +1,28 @@
 # CHANGELOG
 
 
+## v0.49.0 (2025-01-13)
+
+### Bug Fixes
+
+- Correct clean imagesearch
+  ([`321cbe5`](https://github.com/mbari-org/aipipeline/commit/321cbe53002391977a9a79de6edc85d90ac6c393))
+
+### Features
+
+- **i2map**: 200 meter cluster bulk and load pipeline; processes and loads top two scores for
+  further exploration of fish clustering and improved training data
+  ([`140cf77`](https://github.com/mbari-org/aipipeline/commit/140cf77a7f411230199d568dba6d4d53d355bce5))
+
+### Performance Improvements
+
+- Enable all GPU in docker execution
+  ([`887f910`](https://github.com/mbari-org/aipipeline/commit/887f910dca1d57f4bc8a5d71415168609c19fbc0))
+
+- Set CUDA_VISIBLE_DEVICES to expose two GPUs
+  ([`86b1d21`](https://github.com/mbari-org/aipipeline/commit/86b1d21d9cfd0b5822170d588a7fb3ea5df68eb2))
+
+
 ## v0.48.4 (2025-01-10)
 
 ### Performance Improvements
