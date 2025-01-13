@@ -10,9 +10,8 @@ data:
   labels: "all"
   download_args: ["--verified", "--generator", "vars-labelbot", "--group", "NMS"]
   cleanvision_issues:
-    - name: "dark"
-    - name: "exact_duplicates"
-
+    - name: "low_information"
+      threshold: 0.5
 mounts:
   - name: "video"
     path: "/mnt/M3"

@@ -1,0 +1,2 @@
+#input directory to process, output directory to save the results
+/mnt/ML_SCRATCH/i2mapbulkunk/Baseline/crops/Unknown/,/mnt/ML_SCRATCH/i2mapbulkprocessed/clusters/

@@ -21,7 +21,7 @@ For example, to run detections
     
 ```shell
 cd 
-python process.py \
+python cluster_pipeline.py \
   --config config/config.yaml \
   --video ./data/ctenophora_sp_A_aug/CTENOPHORA_SP_A_AUG_00001.mp4 \
   --stride 2 \
