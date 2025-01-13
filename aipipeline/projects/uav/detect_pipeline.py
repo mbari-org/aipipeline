@@ -44,7 +44,7 @@ def run_mission_detect(element) -> Any:
     # /mnt/UAV/Level-1/trinity-2_20240702T153433_NewBrighton/SONY_DSC-RX1RM2,2024/07/NewBrighton,DSC00100.JPG,DSC00301.JPG
     logger.info(f"Running mission detect {element}")
     line, config_dict, conf_files = element
-    mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
+    gpu_device, mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     model = config_dict["sdcat"]["model"]
@@ -64,7 +64,7 @@ def run_mission_detect(element) -> Any:
     args = [
         "detect",
         "--device",
-        "cuda:0",
+        str(gpu_device),
         "--config-ini",
         conf_files[SDCAT_KEY],
         "--scale-percent",

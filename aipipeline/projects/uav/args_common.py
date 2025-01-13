@@ -30,8 +30,9 @@ def parse_args(argv, logger):
 def parse_mission_string(line: str):
     import re
     mission_parts = line.split(",")
-    mission_dir = mission_parts[0]
-    section = mission_parts[1]
+    gpu_device = mission_parts[0]
+    mission_dir = mission_parts[1]
+    section = mission_parts[2]
     # # The mission name is the string that includes a regexp with the platform name, e.g. trinity-<anything>
     mission_name = None
     for p in POSSIBLE_PLATFORMS:
@@ -40,6 +41,6 @@ def parse_mission_string(line: str):
             mission_name = search[0].replace("/", "")
             break
 
-    start_image = mission_parts[2] if len(mission_parts) > 2 else None
-    end_image = mission_parts[3] if len(mission_parts) > 3 else None
-    return mission_name, mission_dir, section, start_image, end_image
+    start_image = mission_parts[3] if len(mission_parts) > 3 else None
+    end_image = mission_parts[4] if len(mission_parts) > 4 else None
+    return gpu_device, mission_name, mission_dir, section, start_image, end_image
