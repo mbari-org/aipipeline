@@ -24,8 +24,9 @@ cp-env:
 # Update the environment. Run this command after checking out any code changes
 update_trackers:
     conda env update_trackers --file environment.yml --prune
-
-
+# Update environment
+update-env:
+  conda env update --file environment.yml --prune
 # Copy core dev code to the project on doris
 cp-core:
     cp ./aipipeline/prediction/*.py /Volumes/dcline/code/aipipeline/aipipeline/prediction/
@@ -47,6 +48,8 @@ cp-dev-bio:
 cp-dev-i2map:
     cp ./aipipeline/projects/i2map/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
     cp ./aipipeline/projects/i2mapbulk/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
+    cp ./aipipeline/projects/i2mapbulk/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/
+#    cp ./aipipeline/projects/i2mapbulk/data/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/data/
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -123,7 +126,7 @@ cluster-uav *more_args="":
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/cluster_pipeline.py \
-    --missions $PROJECT_DIR/data/missions2process.txt \
+    --missions $PROJECT_DIR/data/missions-to-process.txt \
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
@@ -133,7 +136,7 @@ detect-uav *more_args="":
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/detect_pipeline.py \
-    --missions $PROJECT_DIR/data/missions2process.txt \
+    --missions $PROJECT_DIR/data/missions-to-process.txt \
     --config $PROJECT_DIR/config/config.yml \
     {{more_args}}
 
@@ -163,7 +166,7 @@ load-uav type="cluster":
     export PROJECT_DIR=./aipipeline/projects/uav
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_sdcat_pipeline.py \
-    --missions $PROJECT_DIR/data/missions2process.txt \
+    --missions $PROJECT_DIR/data/missions-to-process.txt \
     --config $PROJECT_DIR/config/config.yml \
     --type {{type}}
 
@@ -219,7 +222,7 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
 run-ctenoA-test:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/cluster_pipeline.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
     --endpoint-url "http://localhost:8001/predict" \
@@ -229,7 +232,7 @@ run-ctenoA-test:
 run-ctenoA-prod:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/cluster_pipeline.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
     --endpoint-url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
@@ -239,7 +242,7 @@ run-ctenoA-prod:
 run-mega-inference:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/cluster_pipeline.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "animal" \
     --class-remap "{\"animal\":\"marine organism\"}" \
@@ -314,6 +317,7 @@ run-mega-track-test-1min:
      --stride-fps 15 --max-seconds 60 --imshow --skip-load  \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
 
+# Run the mega strided tracking pipeline on a single video for the bio project with FastAPI
 run-mega-track-test-fastapiyv5:
     #!/usr/bin/env bash
     export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
@@ -325,6 +329,23 @@ run-mega-track-test-fastapiyv5:
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
 
+# Run inference and cluster on i2MAP bulk data run with ENV_FILE=.env.i2map just run-i2mapbulk-inference
+cluster-i2mapbulk:
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    export MPLCONFIGDIR=/tmp
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2mapbulk/cluster_pipeline.py \
+    --config ./aipipeline/projects/i2mapbulk/config/config.yml \
+    --vits-model /Users/dcline/Dropbox/data/i2MAP/mbari-i2map-vit-b-8l-20250108 \
+    --version mbari-i2map-vit-b-8l-20250108 \
+    --data aipipeline/projects/i2mapbulk/data/bydepth.txt
+
+# Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
+load-i2mapbulk data='data':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2mapbulk/load_pipeline.py \
+    --config ./aipipeline/projects/i2mapbulk/config/config.yml --data {{data}} --version mbari-i2map-vit-b-8-20250108
 # Generate training data for the CFE project
 gen-cfe-data:
   just --justfile {{justfile()}} download-crop cfe --skip-clean True --version Baseline
@@ -335,18 +356,17 @@ gen-i2map-data:
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --version Baseline
-  just --justfile {{justfile()}} download-crop i2mapbulk --version dino_vits8_20240207_022529
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version Baseline
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version dino_vits8_20240207_022529
 
 # Generate training data for the uav project
 gen-uav-data:
-    just --justfile {{justfile()}} download-crop i2map --skip-clean True --version Baseline
-    just --justfile {{justfile()}} download-crop i2map --skip-clean True --version yolov5x6-uavs-oneclass-uav-vit-b-16
-    just --justfile {{justfile()}} download-crop i2map --skip-clean True --version uav-yolov5-30k
+    just --justfile {{justfile()}} download-crop uav --skip-clean True --version Baseline
+    just --justfile {{justfile()}} download-crop uav --skip-clean True --version yolov5x6-uavs-oneclass-uav-vit-b-16
+    just --justfile {{justfile()}} download-crop uav --skip-clean True --version uav-yolov5-30k
 
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline python3 aipipeline/prediction/gen_stats.py --data {{data}} --prefix {{project}}
-
