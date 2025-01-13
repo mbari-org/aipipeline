@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.49.1 (2025-01-13)
+
+### Performance Improvements
+
+- **uav**: Support either gpu/cpu processing and load model from local mount for speedup
+  ([`82da909`](https://github.com/mbari-org/aipipeline/commit/82da90991a04183c25a82872212da14956493d2a))
+
+
 ## v0.49.0 (2025-01-13)
 
 ### Bug Fixes
