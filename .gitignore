@@ -4,6 +4,12 @@
 
 # data
 data/
+*.tsv
+*.csv
+*.png
+*.jpg
+*.env*
+*.json
 
 # Node artifact files
 node_modules/
