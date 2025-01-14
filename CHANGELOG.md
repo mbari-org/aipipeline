@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.49.2 (2025-01-14)
+
+### Bug Fixes
+
+- **uav**: Handle bogus path to detections or clusters and use version defined in config.yml
+  ([`cc4cba0`](https://github.com/mbari-org/aipipeline/commit/cc4cba099735ae73da96c0dbf9dd58b69a04f368))
+
+
 ## v0.49.1 (2025-01-13)
 
 ### Performance Improvements
