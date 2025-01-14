@@ -68,6 +68,10 @@ def load_mission(element) -> str:
         logger.error(f"Type {type} not supported")
         return f"Type {type} not supported"
 
+    if load_file_or_dir is None:
+        logger.error(f"Could not find any detections or clusters in {base_dir}. Is the {base_dir} directory correct?")
+        return f"Could not find any detections or clusters in {base_dir}.Is the {base_dir} directory correct?"
+
     if not load_file_or_dir.exists():
         logger.error(f"Could not find: {load_file_or_dir}")
         return f"Could not find: {load_file_or_dir}"
@@ -124,10 +128,6 @@ def run_pipeline(argv=None):
     if '--type' not in beam_args:
         logger.error("Type must be specified, e.g. --type detect or --type cluster")
         return
-
-    # Set the version if specified
-    if args.version:
-        config_dict["data"]["version"] = args.version
 
     # Convert extra args to a dictionary, e.g. --type detect -> {'--type': 'detect'}
     beam_args_dict = {}
