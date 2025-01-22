@@ -36,9 +36,23 @@ data:
     - name: "near_duplicates"
 
 sdcat:
-  model: "/mnt/DeepSea-AI/models/MBARI-org--yolov5x6-uavs-oneclass"
   ini: "sdcat.ini"
-
+  detect_args:
+    - "--scale-percent"
+    - "100"
+    - "--model"
+    - "/mnt/DeepSea-AI/models/UAV/mbari-uav-yolo11x-jelly/"
+    - "--model-type"
+    - "yolov11
+    - "--slice-size-width"
+    - "640"
+    - "--slice-size-height"
+    - "640"
+    - "--conf"
+    - "0.1"
+  cluster_args:
+    - "--skip-visualization"
+    - "--use-vits"
 vss:
   project: "901902-uavs"
   threshold: 0.1

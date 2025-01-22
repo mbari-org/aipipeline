@@ -3,25 +3,18 @@
 # Description: Batch process missions with sdcat detection
 import multiprocessing
 import os
-import uuid
 from datetime import datetime
 from typing import Any
 
 import apache_beam as beam
-import pandas as pd
 from apache_beam.options.pipeline_options import PipelineOptions
 from apache_beam.io import ReadFromText
 from pathlib import Path
-from multiprocessing import Pool
 import logging
-import io
-import tqdm
 
 from aipipeline.docker.utils import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 from aipipeline.config_setup import setup_config, SDCAT_KEY
-from aipipeline.prediction.library import run_vss
-from aipipeline.prediction.utils import crop_square_image
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -47,7 +40,7 @@ def run_mission_detect(element) -> Any:
     gpu_device, mission_name, mission_dir, section, start_image, end_image = parse_mission_string(line)
 
     base_path = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
-    model = config_dict["sdcat"]["model"]
+    add_args = config_dict["sdcat"]["detect_args"]
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
@@ -67,21 +60,13 @@ def run_mission_detect(element) -> Any:
         str(gpu_device),
         "--config-ini",
         conf_files[SDCAT_KEY],
-        "--scale-percent",
-        "50",
-        "--model",
-        model,
-        "--slice-size-width",
-        "1280",
-        "--slice-size-height",
-        "1280",
-        "--conf",
-        "0.1",
         "--save-dir",
         str(save_dir),
         "--image-dir",
         mission_dir,
     ]
+    if add_args:
+        args += add_args
 
     if start_image:
         args += ["--start-image", start_image]
