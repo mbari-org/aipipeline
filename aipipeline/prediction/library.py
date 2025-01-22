@@ -386,10 +386,10 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
         "--config",
         conf_files[CONFIG_KEY],
         "--base-path",
-        processed_data,
-        "--version",
-        version,
+        processed_data
     ]
+    if version and len(version) > 0:
+        args.extend(["--version", version])
     args.extend(config_dict["data"]["download_args"])
     if labels != "all":
         labels_str = ",".join(labels)
