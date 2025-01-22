@@ -42,7 +42,7 @@ def process_mission(element):
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}")
-        return f"Could not find mission name in path: {line} that starts with {POSSIBLE_PLATFORMS}"
+        mission_name = "NO_MISSION_NAME"
 
     if Path(model).is_dir():
         model = Path(model).name

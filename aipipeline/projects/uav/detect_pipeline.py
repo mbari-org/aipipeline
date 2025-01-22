@@ -51,7 +51,7 @@ def run_mission_detect(element) -> Any:
 
     if not mission_name:
         logger.error(f"Could not find mission name in path: {mission_dir} that starts with {POSSIBLE_PLATFORMS}")
-        return f"Could not find mission name in path: {mission_dir}"
+        mission_name = "NO_MISSION_NAME"
 
     save_dir = base_path / mission_name / "detections" / "combined"
     if not os.path.exists(mission_dir):
