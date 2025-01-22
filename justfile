@@ -348,22 +348,19 @@ load-i2mapbulk data='data':
     --config ./aipipeline/projects/i2mapbulk/config/config.yml --data {{data}} --version mbari-i2map-vit-b-8-20250108
 # Generate training data for the CFE project
 gen-cfe-data:
-  just --justfile {{justfile()}} download-crop cfe --skip-clean True --version Baseline
+  just --justfile {{justfile()}} download-crop cfe --skip-clean True
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --version Baseline
+  just --justfile {{justfile()}} download-crop i2map
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version Baseline
-  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --version dino_vits8_20240207_022529
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True
 
 # Generate training data for the uav project
 gen-uav-data:
-    just --justfile {{justfile()}} download-crop uav --skip-clean True --version Baseline
-    just --justfile {{justfile()}} download-crop uav --skip-clean True --version yolov5x6-uavs-oneclass-uav-vit-b-16
-    just --justfile {{justfile()}} download-crop uav --skip-clean True --version uav-yolov5-30k
+    just --justfile {{justfile()}} download-crop uav --skip-clean True
 
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
