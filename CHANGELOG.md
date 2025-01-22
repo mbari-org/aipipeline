@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.51.3 (2025-01-22)
+
+### Bug Fixes
+
+- Handle empty data versions
+  ([`2527f4a`](https://github.com/mbari-org/aipipeline/commit/2527f4ab38b94f0965846b6afc2c8c24af2a0ac1))
+
+
 ## v0.51.2 (2025-01-22)
 
 ### Performance Improvements
