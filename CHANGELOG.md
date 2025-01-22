@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.51.1 (2025-01-22)
+
+### Bug Fixes
+
+- **uav**: Handle models hosted locally instead of huggingface
+  ([`43ed3cd`](https://github.com/mbari-org/aipipeline/commit/43ed3cda6dda0c3a4cd2db96ee9bbe23a621a569))
+
+
 ## v0.51.0 (2025-01-22)
 
 ### Features
