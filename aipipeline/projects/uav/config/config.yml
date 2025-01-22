@@ -43,13 +43,14 @@ sdcat:
     - "--model"
     - "/mnt/DeepSea-AI/models/UAV/mbari-uav-yolo11x-jelly/"
     - "--model-type"
-    - "yolov11
+    - "ultralytics"
     - "--slice-size-width"
     - "640"
     - "--slice-size-height"
     - "640"
     - "--conf"
-    - "0.1"
+    - "0.005"
+    - "--skip-saliency"
   cluster_args:
     - "--skip-visualization"
     - "--use-vits"
