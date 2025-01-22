@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.51.2 (2025-01-22)
+
+### Performance Improvements
+
+- **uav**: Reduce conf to improve detection
+  ([`36c1c5e`](https://github.com/mbari-org/aipipeline/commit/36c1c5e820cd8fcc2ec954ed22c025949acf4911))
+
+
 ## v0.51.1 (2025-01-22)
 
 ### Bug Fixes
