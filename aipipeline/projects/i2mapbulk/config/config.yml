@@ -8,8 +8,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
 #  version: "vss_vits14_all"
   processed_path_sdcat: "/mnt/ML_SCRATCH/i2mapbulkprocessed"
-  version2: "dino_vits8_20240207_022529"
-  version: "Baseline"
+  version: ""
   labels: "Acanthamunnopsis miller,Bathochordaeus sinker,Bolinopsis,Cydippida,Eusergestes similis,Haliscera conica,Solmissus,Actinopterygii,Pyrosoma,Salpa fusiformis,krill molt,Merluccius productus,Radiozoa,Thalassocracy inconstans"
   download_args: ["--verified"]
   load_min_score: 0.7
