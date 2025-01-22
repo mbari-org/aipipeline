@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.50.0 (2025-01-22)
+
+### Features
+
+- Handle processing non mission collections for evaluating models
+  ([`5fa21c2`](https://github.com/mbari-org/aipipeline/commit/5fa21c2af1cb0ec726fd1441cb0be7418acacb3e))
+
+
 ## v0.49.2 (2025-01-14)
 
 ### Bug Fixes
