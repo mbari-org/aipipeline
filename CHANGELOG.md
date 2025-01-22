@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.51.0 (2025-01-22)
+
+### Features
+
+- **uav**: Sam based segmentation to fix too large boxes on some localizations
+  ([`69e03f0`](https://github.com/mbari-org/aipipeline/commit/69e03f03c79404f4145798ca21f94ed341d02e1a))
+
+
 ## v0.50.0 (2025-01-22)
 
 ### Features
