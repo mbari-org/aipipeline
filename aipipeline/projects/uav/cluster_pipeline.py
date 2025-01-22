@@ -49,6 +49,7 @@ def process_mission(element):
 
     det_dir = base_path / mission_name / "detections" / "combined" / model / "det_filtered"
     save_dir = base_path / mission_name / "detections" / "combined" / model / "clusters"
+    add_args = config_dict["sdcat"]["cluster_args"]
 
     if not det_dir.exists():
         logger.error(f"Could not find directory: {det_dir}")
@@ -67,10 +68,11 @@ def process_mission(element):
         "--save-dir",
         str(save_dir),
         "--device",
-        str(gpu_device),
-        "--skip-visualization",
-        "--use-vits"
+        str(gpu_device)
     ]
+
+    if add_args:
+        args += add_args
 
     container = run_docker(
         image=config_dict["docker"]["sdcat"],
