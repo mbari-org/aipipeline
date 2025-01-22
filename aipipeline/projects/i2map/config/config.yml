@@ -6,7 +6,7 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
-  version: "Baseline"
+  version: ""
   labels: "all"
   download_args: ["--verified", "--generator", "vars-labelbot", "--group", "NMS"]
   cleanvision_issues:

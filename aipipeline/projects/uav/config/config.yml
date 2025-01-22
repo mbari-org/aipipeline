@@ -23,7 +23,7 @@ data:
   raw_path: "/mnt/UAV/"
   processed_path_sdcat: "/mnt/UAV/machineLearning/"
   processed_path: "/mnt/ML_SCRATCH/UAV/"
-  version: "Baseline"
+  version: ""
   labels: "all"
   download_args: ["--verified"]
   load_min_score: 0.7
