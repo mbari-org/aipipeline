@@ -56,13 +56,19 @@ def load_mission(element) -> str:
 
     version = config_dict["data"]["version"]
     model = config_dict["sdcat"]["model"]
+    model_path = Path(model)
+    # If the model is a path, use the last part of the path as the model name
+    if model_path.is_dir():
+        model_name_friendly = model_path.parts[-1]
+    else:
+        model_name_friendly = model
     base_dir = Path(config_dict["data"]["processed_path_sdcat"]) / "seedDetections"
     if type == "detect":
-        load_file_or_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "det_filtered"
+        load_file_or_dir = Path(base_dir) / mission_name / "detections" / "combined" / model_name_friendly / "det_filtered"
     elif type == "cluster":
-        load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model / "clusters"
+        load_dir = Path(base_dir) / mission_name / "detections" / "combined" / model_name_friendly / "clusters"
         # Grab the most recent file
-        all_detections = list(Path(load_dir).rglob("*cluster_detections.csv"))
+        all_detections = list(Path(load_dir).glob("*cluster_detections.csv"))
         load_file_or_dir = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
     else:
         logger.error(f"Type {type} not supported")
