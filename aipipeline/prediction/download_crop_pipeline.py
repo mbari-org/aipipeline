@@ -45,6 +45,8 @@ def run_pipeline(argv=None):
     parser.add_argument("--version", required=False, help="Version of the dataset")
     parser.add_argument("--skip-clean", required=False, default=False,
                                                     help="Skip cleaning of previously downloaded data")
+    parser.add_argument("--use-cleanvision", required=False,
+                                                    help="Clean of bad data using cleanvision")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -103,15 +105,24 @@ def run_pipeline(argv=None):
     config_dict["data"]["download_args"] = download_args
 
     with beam.Pipeline(options=options) as p:
-        (
+        download_views = (
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             | "Compute stats" >> beam.Map(compute_stats, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
+        )
+        if args.use_cleanvision:
+          (
+            download_views
             | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.info)
-        )
+         )
+        else:
+            (
+            download_views
+            | "Log results" >> beam.Map(logger.info)
+            )
 
 
 if __name__ == "__main__":

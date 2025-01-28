@@ -194,7 +194,7 @@ crop project='uav' *more_args="":
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
 
-# Download and crop 
+# Download and crop with defaults for project; download with custom args e.g. download-crop i2map --config ./aipipeline/projects/i2map/config/config_unknown.yml
 download-crop project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
@@ -329,15 +329,13 @@ run-mega-track-test-fastapiyv5:
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
 
-# Run inference and cluster on i2MAP bulk data run with ENV_FILE=.env.i2map just run-i2mapbulk-inference
+# Run inference and cluster on i2MAP bulk data run with ENV_FILE=.env.i2map just cluster-i2mapbulk
 cluster-i2mapbulk:
     #!/usr/bin/env bash
     export PYTHONPATH=.
     export MPLCONFIGDIR=/tmp
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2mapbulk/cluster_pipeline.py \
-    --config ./aipipeline/projects/i2mapbulk/config/config.yml \
-    --vits-model /Users/dcline/Dropbox/data/i2MAP/mbari-i2map-vit-b-8l-20250108 \
-    --version mbari-i2map-vit-b-8l-20250108 \
+    --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
@@ -345,22 +343,27 @@ load-i2mapbulk data='data':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2mapbulk/load_pipeline.py \
-    --config ./aipipeline/projects/i2mapbulk/config/config.yml --data {{data}} --version mbari-i2map-vit-b-8-20250108
+    --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml --data {{data}}
+
+# Download i2mpabulk data run with ENV_FILE=.env.i2map just download-i2mapbulk
+download-i2mapbulk:
+  just --justfile {{justfile()}} download-crop i2mapbulk --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml
+
 # Generate training data for the CFE project
 gen-cfe-data:
   just --justfile {{justfile()}} download-crop cfe --skip-clean True
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True T --use-cleanvision True
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --use-cleanvision True
 
 # Generate training data for the uav project
 gen-uav-data:
-    just --justfile {{justfile()}} download-crop uav --skip-clean True
+  just --justfile {{justfile()}} download-crop uav --skip-clean True
 
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
