@@ -16,7 +16,7 @@ from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
 from aipipeline.prediction.library import (
     download,
-    crop_rois_voc,
+    compute_stats,
     get_short_name,
     gen_machine_friendly_label,
     clean,
@@ -143,20 +143,16 @@ def run_pipeline(argv=None):
     # Always remove any previous augmented data before starting
     remove_multicrop_views(version_path.as_posix())
 
-    with beam.Pipeline(options=options) as p:
-        start = (
-            p
-            | "Create labels" >> beam.Create([labels])
-        )
-        if not args.skip_download:
-            start = (
-                start
-                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
-            )
+    download_args = config_dict["data"]["download_args"]
+    download_args.extend(["--crop-roi", "--resize", "224"])
+    config_dict["data"]["download_args"] = download_args
 
+    with beam.Pipeline(options=options) as p:
         (
-            start
-            | "Crop ROI" >> beam.Map(crop_rois_voc, config_dict=config_dict)
+            p
+            | "Start download" >> beam.Create([labels])
+            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
+            | "Compute stats" >> beam.Map(compute_stats, config_dict=config_dict)
             | "Generate views" >> beam.Map(generate_multicrop_views)
             | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
             | 'Batch cluster ROI elements' >> beam.FlatMap(lambda x: batch_elements(x, batch_size=batch_size))
