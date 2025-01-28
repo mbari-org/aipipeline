@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.52.0 (2025-01-28)
+
+### Bug Fixes
+
+- Working vss init with some refactored library calls
+  ([`3730fcb`](https://github.com/mbari-org/aipipeline/commit/3730fcb7ef8b56c87a482151d9edcb9c1a17b090))
+
+### Features
+
+- Add --use-cleanvision as option as it is not appropriate for all datasets
+  ([`eb97d9a`](https://github.com/mbari-org/aipipeline/commit/eb97d9afe0ce72711565659b2617862f8a9f811e))
+
+
 ## v0.51.3 (2025-01-22)
 
 ### Bug Fixes
