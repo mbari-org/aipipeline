@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.52.2 (2025-02-13)
+
+### Bug Fixes
+
+- **bio**: Pad output of video to extend 10 frames beyond last and reset the frame position to zero
+  to fix playback misalignment
+  ([`ba545c8`](https://github.com/mbari-org/aipipeline/commit/ba545c8bde298e9f9a48ab0e29263a9ede21f3b7))
+
+
 ## v0.52.1 (2025-02-13)
 
 ### Documentation
