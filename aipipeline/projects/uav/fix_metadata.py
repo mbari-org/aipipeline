@@ -88,7 +88,6 @@ def match_date(date_attr, time_attr, name):
         return datetime.strptime(str, "%Y:%m:%dT%H:%M:%S").replace(tzinfo=pytz.utc)
 
     # Date is not in the filename - it is in the exif data
-    # import pdb; pdb.set_trace()
     exif = piexif.load(name)
     if "Exif" in exif and piexif.ExifIFD.DateTimeOriginal in exif["Exif"]:
         date_time_str = exif["Exif"][piexif.ExifIFD.DateTimeOriginal].decode("utf-8")
