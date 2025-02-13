@@ -138,7 +138,6 @@ if __name__ == "__main__":
         tracks_best_csv.sort_values(by=["frame"], inplace=True)
         columns_best = tracks_best_csv.columns
 
-        # if no data in tracks_mot, exit
         if tracks_best_csv.empty:
             logger.error(f"No tracks found in {tracks_best_csv}")
             exit(1)
@@ -148,9 +147,10 @@ if __name__ == "__main__":
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         out_video = cv2.VideoWriter(out_video_path.as_posix(), fourcc, source.fps, source.size)
         logger.info(f"Creating video {out_video_path} with {len(tracks_best_csv)} tracks")
-        max_frame = int(tracks_best_csv["frame"].max())
+        max_frame = int(tracks_best_csv["frame"].max() + 10) # Add 10 frames to the end to ensure all tracks are included
         by_frame = tracks_best_csv.groupby("frame") # Group by frame
         frame_num = 0
+        source.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
         while True:
             # Read the frame and create the annotations if the frame is in the best tracks
             ret, frame = source.cap.read()
@@ -176,6 +176,6 @@ if __name__ == "__main__":
                 if y1 < 50:
                     y1 = 50
                 cv2.putText(frame, f"{track_id}: {label}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 1)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
             out_video.write(frame)
             frame_num += 1
