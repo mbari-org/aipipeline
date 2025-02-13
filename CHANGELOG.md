@@ -1,6 +1,23 @@
 # CHANGELOG
 
 
+## v0.52.1 (2025-02-13)
+
+### Documentation
+
+- **bio**: Updated README with up-to-date example of arguments
+  ([`d74a8d4`](https://github.com/mbari-org/aipipeline/commit/d74a8d448d0bfb43947c1fd17fa9b6bea20e1dc6))
+
+- **bio**: Updated README with up-to-date example of arguments
+  ([`04d62ba`](https://github.com/mbari-org/aipipeline/commit/04d62ba52ea9cc7b12de70c8ee82d5c5f28b0b12))
+
+### Performance Improvements
+
+- **bio**: Working with improved stride performance and added skip load logic to avoid overhead of
+  any database calls for development.
+  ([`48ac07f`](https://github.com/mbari-org/aipipeline/commit/48ac07f9d07ae6919ddc5bc9e7630b3cc1bb5e76))
+
+
 ## v0.52.0 (2025-01-28)
 
 ### Bug Fixes
