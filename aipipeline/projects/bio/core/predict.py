@@ -2,16 +2,31 @@
 # Filename: projects/bio/core/predict.py
 # Description: Predictor class for bio projects
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 from aipipeline.projects.bio.core.bioutils import show_boxes, filter_blur_pred, get_ancillary_data
 from biotrack.tracker import BioTracker
 import torch
 
 from aipipeline.projects.bio.core.video import VideoSource
 
+# Logging
 logger = logging.getLogger(__name__)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# Also log to the console
+console = logging.StreamHandler()
+logger.addHandler(console)
+logger.setLevel(logging.INFO)
+# and log to file
+now = datetime.now()
+log_filename = f"predict_{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 class Predictor:
     def __init__(self, detection_model: Any, source: VideoSource, tracker: BioTracker, config_dict:dict, redis_queue=None,callbacks=None, **kwargs):
@@ -23,7 +38,7 @@ class Predictor:
         self.source = source
         self.device_id = kwargs.get("device_id", 0)
         self.has_gpu = torch.cuda.is_available()
-        self.output_path = Path("/tmp") / source.name
+        self.output_path = Path("/tmp") / source.video_name
         frame_path = self.output_path / "frames"
         self.crop_path = self.output_path / "crops"
         frame_path.mkdir(parents=True, exist_ok=True)
@@ -43,8 +58,9 @@ class Predictor:
         self.min_score_track = kwargs.get("min_score_track", 0.1)
         self.skip_load = kwargs.get("skip_load", False)
         self.version_id = kwargs.get("version_id", -1)
+        self.best_csv_path = self.output_path / "best_track.csv"
         if self.version_id < 0 and not self.skip_load:
-            raise ValueError("Need to set the database version,e.g. --version Baseline if loading to the database")
+            raise ValueError("Need to set the database version, e.g. --version Baseline if loading to the database")
 
     def run_callbacks(self, method_name, *args):
         for callback in self.callbacks:
@@ -52,84 +68,98 @@ class Predictor:
             if callable(method):
                 method(*args)
 
-    def predict(self):
-        self.run_callbacks("on_predict_start", self.redis_queue, self, self.source.name)
-        if self.md is None or 'dive' not in self.md:
-            logger.error("No dive metadata found")
-            return
+    @property
+    def best_pred_path(self):
+        return self.best_csv_path
 
-        date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
-        if date_start is None or "depthMeters" not in date_start:
-            logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
-            return
+    def predict(self, skip_load:bool=False):
+        self.run_callbacks("on_predict_start", self, self)
 
-        depth = date_start["depthMeters"]
+        if not skip_load:
+            if self.md is None or 'dive' not in self.md:
+                logger.error("No dive metadata found")
+                return
 
-        if depth < self.min_depth:
-            logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
-            return
+            date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
+            if date_start is None or "depthMeters" not in date_start:
+                logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
+                return
 
-        frame_num = 0
+            depth = date_start["depthMeters"]
+
+            if depth < self.min_depth:
+                logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
+                return
+
+        true_frame_num = 0
         batch_pred = []
 
         for batch_num, self.batch in enumerate(self.source):
 
-            batch_d, batch_c = self.batch
-            frame_num += len(batch_d)
+            batch_t = self.batch # Batch tensor of images preprocessed
+            true_frame_range = np.arange(true_frame_num, true_frame_num + len(batch_t)).tolist()
 
-            self.run_callbacks("on_predict_batch_start", self.batch)
+            current_time_secs = float(true_frame_num / self.source.frame_rate)
+            logger.info(f'Processing batch of {len(batch_t)} images ending at {current_time_secs}')
 
-            current_time_secs = float(frame_num * self.source.stride / self.source.frame_rate)
-            logger.info(f'Processing batch of {len(batch_d)} images ending at {current_time_secs}')
-
-            predictions = self.detection_model.predict_images(batch_d, self.min_score_det)
-            logger.info(f"Predictions: {predictions}")
-            batch_pred.extend(predictions)
+            batch_s = batch_t[::self.source.stride]  # Only detect in every stride image
+            image_stack_p = torch.nn.functional.interpolate(batch_s, size=(1280,1280), mode='bilinear', align_corners=False) # Resize for detection
+            predictions = self.detection_model.predict_images(image_stack_p, self.min_score_det)
 
             logger.info(f"Filtering blurry detections")
-            len_before = len(batch_c)
-            filtered_pred = filter_blur_pred(batch_c, batch_pred, self.crop_path, self.source.width, self.source.height)
-            len_after = len(filtered_pred)
-            logger.info(f"Filtered {len_before - len_after} blurry detections")
+            filtered_pred = filter_blur_pred(batch_s, predictions, self.crop_path, self.source.width, self.source.height)
+            batch_pred.extend(filtered_pred)
 
-            start_frame = max(0, batch_num*len(batch_d))
-            end_frame = batch_num * len(batch_d)
-
-            # Convert the x, y to the image coordinates
+            # Convert the x, y to the image coordinates and adjust the frame number to reflect the stride
             det_n = []
             for i, d in enumerate(filtered_pred):
                 t_d = { "x": d["x"],
                         "y": d["y"],
                         "xx": (d["x"] + d["w"]),
                         "xy": (d["y"] + d["h"]),
-                        "frame": d["frame"],
-                        "batch_idx": d["batch_idx"],
+                        "w": d["w"],
+                        "h": d["h"],
+                        "frame": max(0, d["frame"] * self.source.stride - 1),
                         "score": d["confidence"],
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
                 logger.info(f"Detection {i} {t_d}")
-            logger.info(f"Tracking {len(det_n)} detections from frame {start_frame} to {end_frame}")
+            logger.info(f"Tracking {len(det_n)} detections from frame {true_frame_range[0]} to {true_frame_range[-1]}")
             batch_pred = []
 
-            tracks = self.tracker.update_batch((start_frame, end_frame),
-                                          self.source.frame_stack(),
-                                          detections=det_n,
-                                          max_empty_frames=5,
-                                          max_frames=self.max_frames_tracked,
-                                          max_cost=0.5)
+            image_stack_t = torch.nn.functional.interpolate(batch_t, size=(self.tracker.model_height, self.tracker.model_width), mode='bilinear', align_corners=False)
+            image_stack = (image_stack_t * 255.0).byte()  # Denormalize and convert to uint8
+            image_stack = image_stack.cpu().numpy()  # Convert to NumPy array
+            image_stack = image_stack.transpose(0, 2, 3, 1)[..., ::-1]  # Reverse transpose and channel order (BGR to RGB)
 
-            # Display the results
+            tracks = self.tracker.update_batch(true_frame_range[0],
+                                          image_stack.copy(),
+                                          detections=det_n,
+                                          max_empty_frames=self.source.stride*3,
+                                          max_frames=self.max_frames_tracked,
+                                          max_cost=0.03,
+                                          imshow=self.imshow)
+
+            # Display the predictions
             if self.imshow:
-                show_boxes(batch_d, predictions)
+                show_boxes(image_stack_p, det_n)
+
+            # Report how many tracks are greater than the minimum frames
+            good_tracks = [t for t in tracks if t.num_frames > self.min_frames]
+            logger.info("===============================================")
+            logger.info(f"Number of tracks {len(tracks)}")
+            logger.info(f"Number of good tracks {len(good_tracks)}")
+            for t in good_tracks:
+                t.dump()
 
             closed_tracks = [t for t in tracks if t.is_closed()]
-            self.run_callbacks("on_predict_batch_end", (self.skip_load, self.redis_queue, self.version_id, self.config, self, closed_tracks, self.min_frames, self.min_score_track))
-
-            self.tracker.purge_closed_tracks()
+            self.run_callbacks("on_predict_batch_end", self, (self, closed_tracks))
 
             if self.max_seconds and current_time_secs > self.max_seconds:
                 logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
-                self.run_callbacks("on_predict_batch_end", (
-                self.skip_load, self.redis_queue, self.version_id, self.config, self, tracks, self.min_frames,
-                self.min_score_track))
+                self.tracker.close_all_tracks()
+                self.run_callbacks("on_predict_batch_end", self, (self, tracks))
                 break
+
+            self.tracker.purge_closed_tracks()
+            true_frame_num += len(batch_t)

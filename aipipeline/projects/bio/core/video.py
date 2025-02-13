@@ -25,19 +25,20 @@ class VideoSource:
         self.duration_secs = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
         self.batch_size = kwargs.get("batch_size", 1)
         self.stride = kwargs.get("stride", 4)
-        self.det_size = (1280, 1280)
-        self.track_size = (640,480)
         device_id = kwargs.get("device_id", 0)
         self.device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
         self.current_frame = 0
         self.frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        self.image_stack = []
 
     def __del__(self):
         self.close()
 
     @property
-    def name(self):
+    def size(self):
+        return self.frame_width, self.frame_height
+
+    @property
+    def video_name(self):
         return Path(self.video).name
 
     @property
@@ -46,12 +47,9 @@ class VideoSource:
 
     def preprocess(self, images):
         imgs = []
-        imgs_classify = []
         for img in images:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            img_det = cv2.resize(img, self.det_size)
-            imgs.append(img_det)
-            imgs_classify.append(img)
+            imgs.append(img)
 
         # Transpose to match PyTorch format: (channels, height, width)
         img = np.stack(imgs)
@@ -59,39 +57,23 @@ class VideoSource:
         img = np.ascontiguousarray(img)  # contiguous
         img = torch.from_numpy(img)
         img = img.float() / 255.0 # Normalize to [0, 1]
-        self.image_stack = img
+        return img
 
-        imgs_classify = np.stack(imgs_classify)
-        imgs_classify = imgs_classify[..., ::-1].transpose((0, 3, 1, 2))
-        imgs_classify = np.ascontiguousarray(imgs_classify)  # contiguous
-        imgs_classify = torch.from_numpy(imgs_classify)
-        imgs_classify = imgs_classify.float() / 255.0 # Normalize to [0, 1]
-        return img, imgs_classify
 
     def __iter__(self):
         return self
 
     def __next__(self):
         frames = []
-        batch_cnt = 0
-        while batch_cnt < self.batch_size:
+        while len(frames) < self.batch_size:
             ret, frame = self.cap.read()
             if not ret:
                 raise StopIteration
-            if self.current_frame % self.stride == 0 and self.current_frame > 0:
-                frames.append(frame)
-                batch_cnt += 1
+            frames.append(frame)
             self.current_frame += 1
         if not frames:
             raise StopIteration
         return self.preprocess(frames)
-
-    def frame_stack(self):
-        # Convert the images back to numpy array from a contiguous tensor
-        img = (self.image_stack * 255.0).byte()  # Denormalize and convert to uint8
-        img = img.cpu().numpy()  # Convert to NumPy array
-        img = img.transpose(0, 2, 3, 1)[..., ::-1]  # Reverse transpose and channel order (BGR to RGB)
-        return img
 
     def close(self):
         if self.cap:

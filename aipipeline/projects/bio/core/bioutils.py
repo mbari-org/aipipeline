@@ -149,13 +149,13 @@ def seconds_to_timestamp(seconds):
 
 def show_boxes(batch, predictions):
     scale_w, scale_h = 1280, 1280
-    for batch_idx, img in enumerate(batch):
+    for frame, img in enumerate(batch):
         # Convert the Tensor to a numpy array
         img = img.cpu().numpy().transpose(1, 2, 0)
         img = cv2.cvtColor(img, cv2.COLOR_RGBA2RGB)
 
         for pred in predictions:
-            if pred['batch_idx'] != batch_idx:
+            if pred['frame'] != frame:
                 continue
             x1, y1, x2, y2 = pred['x'], pred['y'], pred['x'] + pred['w'], pred['y'] + pred['h']
             # Scale the bounding box
@@ -167,6 +167,7 @@ def show_boxes(batch, predictions):
         cv2.imshow('frame', img)
         if cv2.waitKey(500) & 0xFF == ord('q'):
             break
+
 
 def detect_blur(image_path: str, threshold: float) -> bool:
     """Detect if an image is blurry."""
@@ -202,7 +203,6 @@ def crop_and_detect_blur(preds: List[Dict],
             "image_width": image_width,
             "image_height": image_height,
             "confidence": pred['confidence'],
-            "batch_idx": pred['batch_idx'],
             "crop_path": crop_file_path
         }
 
@@ -227,7 +227,7 @@ def filter_blur_pred(images: torch.Tensor,
         return []
 
     num_images = images.size(0)
-    pred_by_image = {i: [p for p in predictions if p['batch_idx'] == i] for i in range(num_images)}
+    pred_by_image = {i: [p for p in predictions if p['frame'] == i] for i in range(num_images)}
     filtered_pred = [crop_and_detect_blur(pred_by_image[i], images[i], crop_path, image_width, image_height) for i in range(num_images)]
     filtered_pred = [loc for locs in filtered_pred for loc in locs]
     return filtered_pred
