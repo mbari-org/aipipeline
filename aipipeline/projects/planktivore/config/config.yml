@@ -1,0 +1,81 @@
+# aipipeline/projects/planktivore/config.yml
+# Config file for Planktivore project production
+
+redis:
+  host: "doris.shore.mbari.org"
+  port: 6382
+
+docker:
+  bind_volumes:
+   /mnt/DeepSea-AI:
+     bind: /mnt/DeepSea-AI
+     mode: rw
+
+data:
+  raw_data_path: "/mnt/DeepSea-AI/data/Planktivore/raw"
+  processed_path: "/mnt/DeepSea-AI/data/Planktivore/processed"
+  version: "Baseline"
+  labels: ""
+  download_args: ["--verified"]
+  cleanvision_issues:
+    - name: "low_information"
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
+    - name: "exact_duplicates"
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  ini: "sdcat.ini"
+
+vss:
+  project: "902004-Planktivore"
+  threshold: 0.8
+  model: "google/vit-base-patch16-224"
+
+mounts:
+  - name: "image"
+    path: "/mnt/DeepSea-AI"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/DeepSea-AI"
+
+  - name: "video"
+    path: "/mnt/DeepSea-AI"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/DeepSea-AI"
+
+tator:
+  project: "902004-Planktivore"
+  host: "mantis.shore.mbari.org"
+  url_load: "http://mantis.shore.mbari.org:8001/label/id"
+  image:
+    attributes:
+      iso_datetime:
+        type: datetime
+      depth:
+        type: float
+  video:
+    attributes:
+      iso_datetime:
+        type: datetime
+      iso_start_datetime:
+        type: datetime
+  box:
+    attributes:
+      Label:
+        type: string
+      label_s:
+        type: string
+      score:
+        type: float
+      score_s:
+        type: float
+      cluster:
+        type: string
+
+ffmpeg_path: "/usr/bin/ffmpeg"
+
+plugins:
+  - name: "extractor"
+    module: "mbari_aidata.plugins.extractors.tap_planktivore_media"
+    function: "extract_media"
