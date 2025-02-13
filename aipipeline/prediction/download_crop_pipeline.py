@@ -43,10 +43,8 @@ def run_pipeline(argv=None):
     parser.add_argument("--labels", required=False, help="Comma separated list of labels to download")
     parser.add_argument("--download-dir", required=False, help="Directory to download images")
     parser.add_argument("--version", required=False, help="Version of the dataset")
-    parser.add_argument("--skip-clean", required=False, default=False,
-                                                    help="Skip cleaning of previously downloaded data")
-    parser.add_argument("--use-cleanvision", required=False,
-                                                    help="Clean of bad data using cleanvision")
+    parser.add_argument("--skip-clean", action="store_true", help="Skip cleaning of previously downloaded data")
+    parser.add_argument("--use-cleanvision", action="store_true", help="Clean of bad data using cleanvision")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -91,7 +89,7 @@ def run_pipeline(argv=None):
             f"Download directory {args.download_dir} is not a child of any of the bind volumes in the docker config")
 
     version_path = download_path / config_dict["data"]["version"]
-    if not args.skip_clean:
+    if args.skip_clean:
         clean(version_path.as_posix())
 
     # Always remove any previous augmented data before starting
