@@ -50,9 +50,6 @@ def load(element, config_dict) -> str:
     # Get the minimum score to load
     load_min_score = config_dict["data"]["load_min_score"]
 
-    # Get the version
-    version_id = get_version_id(api, project_id, config_dict["data"]["version"])
-
     # Bulk replace the detections, only keeping scores that sum to greater than the score threshold in the score and score_s columns
     # This captures both confident score and those that have confusion
     def filter_scores(x):
@@ -99,10 +96,6 @@ def run_pipeline(argv=None):
     # Overwrite the config_dict with the command line arguments
     if args.min_score:
         config_dict["data"]["load_min_score"] = args.min_score
-
-    if args.version:
-        config_dict["data"]["version"] = args.version
-
 
     with beam.Pipeline(options=options) as p:
         (
