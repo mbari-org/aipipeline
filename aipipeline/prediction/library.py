@@ -47,33 +47,14 @@ def remove_multicrop_views(data_dir: str):
         logger.info(f"Removing augmented {file}")
         file.unlink()
 
-
-def simclr_like_augmentations(image_size):
-    import albumentations as albu
-    return albu.Compose([
-        albu.RandomResizedCrop(height=image_size, width=image_size, scale=(0.2, 1.0), p=1.0),
-        albu.HorizontalFlip(p=0.5),
-        albu.GaussianBlur(blur_limit=(3, 7), sigma_limit=0.1, p=0.5),
-        albu.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+def mbari_augmentations(image_size: int):
+    import albumentations as A
+    return A.Compose([
+        A.HorizontalFlip(p=1.0),
+        A.RandomResizedCrop(size=(image_size,image_size), scale=(0.5, 1.0), p=1.0),
+        A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0.1, p=0.5),
         ToTensorV2()
     ])
-
-
-def generate_multicrop_views2(image) -> List[tuple]:
-    data = []
-    small_crop_augmentations = simclr_like_augmentations(image_size=190)
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    multicrop = [small_crop_augmentations(image=image)['image'] for _ in range(2)]
-    for i, crop in enumerate(multicrop):
-        # Extract the augmented image and convert it back to BGR
-        augmented_image = crop.numpy()
-        mean = np.array([0.485, 0.456, 0.406])
-        std = np.array([0.229, 0.224, 0.225])
-        augmented_image = std[:, None, None] * augmented_image + mean[:, None, None]
-        augmented_image = np.clip(augmented_image.transpose(1, 2, 0) * 255, 0, 255).astype(np.uint8)
-        augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
-        data.append(augmented_image)
-    return data
 
 
 def clean_bad_images(element, config_dict: Dict) -> tuple:
@@ -116,7 +97,8 @@ def clean_images(elements, config_dict: Dict) -> List[tuple]:
 
 def generate_multicrop_views(elements) -> List[tuple]:
     data = []
-    small_crop_augmentations = simclr_like_augmentations(image_size=224)
+
+    small_crop_augmentations = mbari_augmentations(image_size=224)
     for count, crop_path, save_path in elements:
         logger.info(f"Augmenting {count} crops in {crop_path}....")
         num_aug = 0
@@ -130,23 +112,16 @@ def generate_multicrop_views(elements) -> List[tuple]:
             if count > 100:
                 continue
 
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            small_crops = [small_crop_augmentations(image=image)['image'] for _ in range(6)]
-            multicrop = small_crops
+            img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) # As required for albumentations
+            multicrop = [small_crop_augmentations(image=img)['image'] for _ in range(4)]
             for i, crop in enumerate(multicrop):
-                # Extract the augmented image and convert it back to BGR
-                augmented_image = crop.numpy()
-                mean = np.array([0.485, 0.456, 0.406])
-                std = np.array([0.229, 0.224, 0.225])
-                augmented_image = std[:, None, None] * augmented_image + mean[:, None, None]
-                augmented_image = np.clip(augmented_image.transpose(1, 2, 0) * 255, 0, 255).astype(np.uint8)
-                augmented_image = cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR)
+                augmented_image = crop.permute(1, 2, 0).cpu().numpy() # Convert to numpy
 
                 # Save the augmented image using the same name as the original image with an index
                 # This avoids overwriting the original image and allows the loader to still use the database index stem
                 save_file = image_path.parent / f"{image_path.stem}{MULTIVIEW_SUFFIX}{i}.jpg"
                 logger.info(f"Saving {save_file}")
-                cv2.imwrite(save_file.as_posix(), augmented_image)
+                cv2.imwrite(save_file.as_posix(), cv2.cvtColor(augmented_image, cv2.COLOR_RGB2BGR))
                 num_aug += 1
         data.append((num_aug, crop_path, save_path))
     return data
@@ -268,11 +243,14 @@ def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: st
     else:
         processed_data = processed_dir
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
+    # Find the file stats.txt in base_path read it as a json file
+    stats_file = None
+    for f in Path(base_path).rglob("*stats.json"):
+        logger.info(f"Found stats file {f}")
+        stats_file = f
 
-    # Find the file stats.txt and read it as a json file
-    stats_file = Path(f"{base_path}/crops/stats.json")
-    if not stats_file.exists():
-        logger.error(f"Cannot find {stats_file}. Did voc-cropper run successfully?")
+    if stats_file is None:
+        logger.error(f"Cannot find stats file in {base_path}?")
         return []
 
     data = []
@@ -290,8 +268,17 @@ def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: st
                 logger.info(f"Skipping label {label} not in {labels_filter}")
                 continue
             logger.info(f"Found {count} crops for label {label}")
+
             # Total number of crops, and paths to crops and cluster output respectively
-            data.append((count, f"{base_path}/crops/{label}", f"{base_path}/cluster/{label}"))
+            if Path(f"{base_path}/crops/{label}").exists():
+                crop_path = f"{base_path}/crops/{label}"
+            elif Path(f"{base_path}/{label}").exists():
+                crop_path = f"{base_path}/{label}"
+            else:
+                logger.error(f"Cannot find crops for {label} in {base_path}")
+                continue
+
+            data.append((count, crop_path, f"{base_path}/cluster/{label}"))
         logger.debug(data)
     return data
 
@@ -461,7 +448,7 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
         score, pred = element
         score = [float(x) for x in score]
         logger.info(f"Prediction: {pred} with score {score} for image {file_paths[i]}")
-        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=-1)
+        best_pred, best_score = top_majority(pred, score, threshold=vss_threshold, majority_count=1)
         best_predictions.append(best_pred)
         best_scores.append(best_score)
         logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")
