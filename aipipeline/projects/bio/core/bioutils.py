@@ -209,12 +209,7 @@ def crop_and_detect_blur(preds: List[Dict],
         # Crop the image
         crop_square_image(image, loc, 224)
 
-        # Check for blurriness
-        if detect_blur(crop_file_path, 2.0):
-            logger.info(f"Detected blur in {crop_file_path}")
-            os.remove(crop_file_path)
-        else:
-            locs.append(loc)
+        locs.append(loc)
     return locs
 
 def filter_blur_pred(images: torch.Tensor,
