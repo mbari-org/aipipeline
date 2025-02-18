@@ -15,7 +15,7 @@ from pandas import read_csv
 from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import init_api_project
 from aipipeline.projects.bio.core.args import parse_args
-from aipipeline.projects.bio.core.callback import AncillaryCallback, ExportCallback
+from aipipeline.projects.bio.core.callback import AncillaryCallback, ExportCallback, VideoExportCallback
 from aipipeline.db_utils import get_version_id
 
 from aipipeline.projects.bio.core.predict import Predictor
@@ -114,68 +114,23 @@ if __name__ == "__main__":
  
     source = VideoSource(**args_dict)
 
-    # Create a tracker and predictor
+    # Create a tracker
     tracker = BioTracker(source.width, source.height, **args_dict)
-    if args.skip_load:
-        callbacks = [ExportCallback]
-        predictor = Predictor(model, source, tracker, config_dict, redis_queue=None, callbacks=callbacks, version_id=1,
-                              **args_dict)
-    else:
-        callbacks = [AncillaryCallback(), ExportCallback()]
-        predictor = Predictor(model, source, tracker, config_dict, redis_queue=redis_queue, callbacks=callbacks, version_id=version_id, **args_dict)
 
-    # Run the predictor
-    predictor.predict(args.skip_load)
+    # Create the callbacks for capturing ancillary data and exporting the results
+    callbacks = [ExportCallback]
 
-    # Create video with tracks if requested
     if args.create_video:
-        if not predictor.best_pred_path.exists():
-            logger.error(f"No best tracks found in {predictor.best_pred_path}")
-            exit(1)
-        # Load the best tracks, remove any duplicates by track_id and sort by frame
-        tracks_best_csv = read_csv(predictor.best_pred_path)
-        tracks_best_csv.drop_duplicates(subset=["track_id"], keep="first", inplace=True)
-        tracks_best_csv.sort_values(by=["frame"], inplace=True)
-        columns_best = tracks_best_csv.columns
+        callbacks.append(VideoExportCallback)
 
-        if tracks_best_csv.empty:
-            logger.error(f"No tracks found in {tracks_best_csv}")
-            exit(1)
+    if args.skip_load:
+        redis_queue = None
+        version_id = 1
+    else:
+        callbacks.append(AncillaryCallback)
+        redis_queue = redis_queue
+        version_id = version_id
 
-        # Create the video with the best track annotations
-        out_video_path = predictor.output_path / "tracks.mp4"
-        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-        out_video = cv2.VideoWriter(out_video_path.as_posix(), fourcc, source.fps, source.size)
-        logger.info(f"Creating video {out_video_path} with {len(tracks_best_csv)} tracks")
-        max_frame = int(tracks_best_csv["frame"].max() + 10) # Add 10 frames to the end to ensure all tracks are included
-        by_frame = tracks_best_csv.groupby("frame") # Group by frame
-        frame_num = 0
-        source.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-        while True:
-            # Read the frame and create the annotations if the frame is in the best tracks
-            ret, frame = source.cap.read()
-            if not ret or frame_num > max_frame:
-                break
-            if frame_num not in by_frame.groups:
-                out_video.write(frame)
-                frame_num += 1
-                continue
-            in_frame = by_frame.get_group(frame_num)
-            for row in in_frame.itertuples():
-                track_id = row.track_id
-                label = row.label
-                x1 = int(row.x1)
-                y1 = int(row.y1)
-                x2 = int(row.x2)
-                y2 = int(row.y2)
-                # Color the rectangle based on a hash of the first 3 characters of the label to get a unique color for each label
-                color = int(hash(label[:3]) % 256)
-                # Adjust the position of the label if it is too close to the edge
-                if x1 < 50:
-                    x1 = 50
-                if y1 < 50:
-                    y1 = 50
-                cv2.putText(frame, f"{track_id}: {label}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-            out_video.write(frame)
-            frame_num += 1
+    # Create the predictor and run
+    predictor = Predictor(model, source, tracker, config_dict, redis_queue=redis_queue, callbacks=callbacks, version_id=version_id, **args_dict)
+    predictor.predict(args.skip_load)

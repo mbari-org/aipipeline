@@ -62,18 +62,19 @@ class Predictor:
         if self.version_id < 0 and not self.skip_load:
             raise ValueError("Need to set the database version, e.g. --version Baseline if loading to the database")
 
-    def run_callbacks(self, method_name, *args):
+    def run_callbacks(self, method_name:str, *args: Any) -> None:
         for callback in self.callbacks:
             method = getattr(callback, method_name, None)
             if callable(method):
-                method(*args)
+                bound_method = method.__get__(callback)  # Ensure correct binding
+                bound_method(*args)
 
     @property
     def best_pred_path(self):
         return self.best_csv_path
 
     def predict(self, skip_load:bool=False):
-        self.run_callbacks("on_predict_start", self, self)
+        self.run_callbacks("on_predict_start", self)
 
         if not skip_load:
             if self.md is None or 'dive' not in self.md:
@@ -83,16 +84,15 @@ class Predictor:
             date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
             if date_start is None or "depthMeters" not in date_start:
                 logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
-                return
+                input("All ancillary data will be missing for this dive. Press any key to continue")
+            else:
+                depth = date_start["depthMeters"]
 
-            depth = date_start["depthMeters"]
-
-            if depth < self.min_depth:
-                logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
-                return
+                if depth < self.min_depth:
+                    logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
+                    return
 
         true_frame_num = 0
-        batch_pred = []
 
         for batch_num, self.batch in enumerate(self.source):
 
@@ -108,7 +108,6 @@ class Predictor:
 
             logger.info(f"Filtering blurry detections")
             filtered_pred = filter_blur_pred(batch_s, predictions, self.crop_path, self.source.width, self.source.height)
-            batch_pred.extend(filtered_pred)
 
             # Convert the x, y to the image coordinates and adjust the frame number to reflect the stride
             det_n = []
@@ -125,7 +124,6 @@ class Predictor:
                 det_n.append(t_d)
                 logger.info(f"Detection {i} {t_d}")
             logger.info(f"Tracking {len(det_n)} detections from frame {true_frame_range[0]} to {true_frame_range[-1]}")
-            batch_pred = []
 
             image_stack_t = torch.nn.functional.interpolate(batch_t, size=(self.tracker.model_height, self.tracker.model_width), mode='bilinear', align_corners=False)
             image_stack = (image_stack_t * 255.0).byte()  # Denormalize and convert to uint8
@@ -135,14 +133,16 @@ class Predictor:
             tracks = self.tracker.update_batch(true_frame_range[0],
                                           image_stack.copy(),
                                           detections=det_n,
-                                          max_empty_frames=self.source.stride*3,
+                                          max_empty_frames=self.source.stride*5,
                                           max_frames=self.max_frames_tracked,
                                           max_cost=0.03,
                                           imshow=self.imshow)
 
             # Display the predictions
             if self.imshow:
-                show_boxes(image_stack_p, det_n)
+                image_stack_s = torch.nn.functional.interpolate(batch_t, size=(1280, 1280), mode='bilinear',
+                                                                align_corners=False)  # Resize for detection
+                show_boxes(image_stack_s, det_n)
 
             # Report how many tracks are greater than the minimum frames
             good_tracks = [t for t in tracks if t.num_frames > self.min_frames]
@@ -152,14 +152,15 @@ class Predictor:
             for t in good_tracks:
                 t.dump()
 
-            closed_tracks = [t for t in tracks if t.is_closed()]
-            self.run_callbacks("on_predict_batch_end", self, (self, closed_tracks))
-
+            predictor = self
             if self.max_seconds and current_time_secs > self.max_seconds:
                 logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
                 self.tracker.close_all_tracks()
-                self.run_callbacks("on_predict_batch_end", self, (self, tracks))
-                break
+                self.run_callbacks("on_predict_batch_end", predictor, tracks)
+                self.tracker.purge_closed_tracks(true_frame_num)
+                self.run_callbacks("on_end", predictor)
+                return
 
-            self.tracker.purge_closed_tracks()
+            self.run_callbacks("on_predict_batch_end", predictor, tracks)
+            self.tracker.purge_closed_tracks(true_frame_num)
             true_frame_num += len(batch_t)
