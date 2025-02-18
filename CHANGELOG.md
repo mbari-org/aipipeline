@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.53.0 (2025-02-18)
+
+### Bug Fixes
+
+- **bio**: Correct no load execution, callback arguments, and moved video creation to a callback
+  which is cleaner
+  ([`3c8a954`](https://github.com/mbari-org/aipipeline/commit/3c8a9541d83590d02d57d33af7e515a5ba5cb0c5))
+
+### Features
+
+- Allow override of version in load pipeline
+  ([`016e50c`](https://github.com/mbari-org/aipipeline/commit/016e50c4877baa0b87e4d6981b45e31e4a29c2a1))
+
+### Performance Improvements
+
+- Improved augmentations and skip over empty crops
+  ([`2290380`](https://github.com/mbari-org/aipipeline/commit/229038012576fc39f7303043c66f0e07e362ba04))
+
+
 ## v0.52.2 (2025-02-13)
 
 ### Bug Fixes
