@@ -18,15 +18,18 @@ if media_count == 0:
 batch_size = min(5000, media_count)
 kwargs = {}
 kwargs["attribute"] = ["depth::300"]
+medias = []
 print(f"Searching through {media_count} medias with {kwargs}")
 for i in range(0, media_count, batch_size):
     media = api.get_media_list(project=project_id, start=i, stop=i + batch_size, **kwargs)
     print(f"Found {len(media)} media with depth 300")
     if len(media) == 0:
         break
-    media_ids.extend([m.id for m in media])
+    medias.extend(media)
 
-print(f"Found {len(media_ids)} media with depth 300")
+# Get all the unique media names and drop the duplicates
+media_ = list(set([media.names for media in medias]))
+
 
 # Delete localizations in batches of 100
 batch_size = 500
