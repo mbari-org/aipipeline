@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.53.1 (2025-02-19)
+
+### Performance Improvements
+
+- **bio**: Allow for short tracks with high confidence and mov
+  ([`41f44e9`](https://github.com/mbari-org/aipipeline/commit/41f44e9cce8514d1b494e8d94ba027d65637fe38))
+
+
 ## v0.53.0 (2025-02-18)
 
 ### Bug Fixes
