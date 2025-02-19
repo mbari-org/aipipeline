@@ -1,6 +1,30 @@
 # CHANGELOG
 
 
+## v0.54.0 (2025-02-19)
+
+### Bug Fixes
+
+- Correct filtering of low confidence detections and GPU device num
+  ([`871d4ec`](https://github.com/mbari-org/aipipeline/commit/871d4ecd96defed3f287b36c94bc2ca3fbc489ef))
+
+### Documentation
+
+- **bio**: Updated readme to video process
+  ([`512937c`](https://github.com/mbari-org/aipipeline/commit/512937c9d9ef6897d247daceefa1a4897b3ed712))
+
+### Features
+
+- **i2map**: Add override of model, batch size, version, allowed classes
+  ([`a2f49d6`](https://github.com/mbari-org/aipipeline/commit/a2f49d60e8ccd6855855ee659899e45a1406234b))
+
+### Performance Improvements
+
+- **i2map**: Update with latest best performing model and generic download and remove cleanvision
+  dark filter which removes too many labels
+  ([`2e787ff`](https://github.com/mbari-org/aipipeline/commit/2e787ff9a2de1f782b3a01126c809516d02b39e9))
+
+
 ## v0.53.1 (2025-02-19)
 
 ### Performance Improvements
