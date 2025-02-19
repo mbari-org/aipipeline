@@ -97,14 +97,6 @@ class ExportCallback(Callback):
         if best_pred_path.exists():
             best_pred_path.unlink()
 
-    def on_end(self, predictor: Predictor):
-        if predictor.best_pred_path.exists():
-            logger.info(f"Saved best tracks to {predictor.best_pred_path}")
-        else:
-            logger.error(f"No best tracks found in {predictor.best_pred_path}")
-        for output_path in predictor.output_path.rglob("*.json"):
-            output_path.unlink()
-
     def on_predict_batch_end(self, predictor: Predictor, tracks: list[Track]):
         """ Queue track localizations in REDIS and export to CSV """
         closed_tracks = [t for t in tracks if t.is_closed()] # Only consider closed tracks
@@ -126,8 +118,10 @@ class ExportCallback(Callback):
             box_str = ", ".join([f"{box:.4f}" for box in best_box])
             score_str = ", ".join([f"{score:.2f}" for score in best_score])
             logger.info(f"Best track {track.id} is {box_str},{best_label},{score_str} in frame {best_frame}")
-
-            if track.num_frames < min_frames or best_score[0] < min_score_track:
+            
+            if track.num_frames > 3 and best_score[0] > 0.9:
+                logger.info(f"Track {track.id} is high scoring but short {track.num_frames}. Override defaults")
+            elif track.num_frames < min_frames or best_score[0] < min_score_track:
                 logger.info(
                     f"Track {track.id} is too short num frames {track.num_frames} or "
                     f"best score {best_score[0]:.2f} is < {min_score_track}, skipping")
