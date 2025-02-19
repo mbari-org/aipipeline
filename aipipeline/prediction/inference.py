@@ -53,7 +53,6 @@ class YV5:
         self.model.shape = (1280, 1280)
         self.model.conf = 0.01 # confidence threshold (0-1)
         self.model.max_det = 500  # maximum number of detections per image
-        self.last_frame = 0
         self.has_gpu = torch.cuda.is_available()
         self.device_id = device_num
 
@@ -85,14 +84,14 @@ class YV5:
         raw_detections = self.model(images, size=self.model_shape[0])
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
-        threshold = 0.01  # 1% threshold
+        threshold = 0.05 # 5% threshold
         iou_threshold = 0.5
-        batch_size = raw_detections.shape[0]
+        batch_size = len(images)
 
         all_detections = []
         logger.info(f"Running NMS on {batch_size} batches")
-        for batch_idx in range(batch_size):
-            predictions = raw_detections[batch_idx]
+        for i in range(batch_size):
+            predictions = raw_detections[i]
             scores = predictions[:, 4]
             labels = predictions[:, 5]
             detections = predictions[scores > min_score_det]
@@ -120,15 +119,16 @@ class YV5:
                 xy = y1 + h
                 x = x1
                 y = y1
-                class_name = "marine organism" #label
+                class_name = "marine organism"
                 score = score.item()
-                # Remove any detections in the corner of the frame or not in the allowed class names or below the confidence threshold
+                # Normalize the coordinates
                 x = x / self.model_shape[0]
                 y = y / self.model_shape[1]
                 xx = xx / self.model_shape[0]
                 xy = xy / self.model_shape[1]
                 w = w / self.model_shape[0]
                 h = h / self.model_shape[1]
+                # Remove corner detections
                 if (
                         (0 <= x <= threshold or 1 - threshold <= x <= 1) or
                         (0 <= y <= threshold or 1 - threshold <= y <= 1) or
@@ -137,23 +137,21 @@ class YV5:
                 ):
                     continue
                 all_detections.append({
-                    "frame": self.last_frame,
-                    "batch_idx": self.last_frame % batch_size,
                     "x": x,
                     "y": y,
                     "w": w,
                     "h": h,
+                    "frame": i,
                     "class_name": class_name,
                     "confidence": score
                 })
-            self.last_frame += 1
 
         logger.info(f"Finished NMS on {batch_size} batches")
 
         return all_detections
 
 class YV10:
-    def __init__(self, model_dir: str):
+    def __init__(self, model_dir: str, device_num:int = 0):
         """
         Model class for YOLOv10
         :param model_dir: Directory containing the vits_model files
@@ -165,30 +163,53 @@ class YV10:
             logger.error(f"No .pt file found in {model_dir}")
             raise FileNotFoundError(f"No .pt file found in {model_dir}")
         model_file = files[0]
-        # Load the YOLOv10 vits_model
-        self.model = YOLO(model_file)  # Replace with the path to your YOLOv10 vits_model
 
-    def predict_image(self, image) -> List[List[dict]]:
-        data = self.model.predict(image)
+        self.model = YOLO(model_file)
+
+    def predict_images(self, images: Tensor, min_score_det:float = 0.1) -> list[dict[str, int | float | str | Any]]:
+        """
+        Predicts on a batch of images.
+        :param min_score_det:  Minimum score for a detection to be considered
+        :param images: List of images
+        :return: A list of detections for each image, where each detection is a list of dictionaries.
+        """
+        time_start = time.time()
+        logger.info(f"Predicting on {len(images)} images")
+        raw_detections = self.model.predict(images, max_det=500, iou=0.5, conf=min_score_det)
+        logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         all_detections = []
-        for loc in data:
-            for bbox in loc.boxes:
-                # Move the bounding box to the CPU and convert to numpy
-                bbox = bbox.cpu()
-                x, y, w, h = bbox.xywh.numpy().flatten()
-                class_id = int(bbox.cls)
-                class_name = loc.names[class_id]
-                confidence = float(bbox.conf)
-                all_detections.append({
-                    "x": x,
-                    "y": y,
-                    "w": w,
-                    "h": h,
-                    "class_name": class_name,
-                    "confidence": confidence
-                })
+        threshold = 0.01  # 1% threshold
+
+        for data in raw_detections:
+            for loc in data:
+                for bbox in loc.boxes:
+                    # Move the bounding box to the CPU and convert to numpy
+                    bbox = bbox.cpu()
+                    x, y, w, h = bbox.xywhn.numpy().flatten()
+                    xx = x + w
+                    xy = y + h
+                    class_id = int(bbox.cls)
+                    confidence = float(bbox.conf)
+                    # Remove corner detections
+                    if (
+                            (0 <= x <= threshold or 1 - threshold <= x <= 1) or
+                            (0 <= y <= threshold or 1 - threshold <= y <= 1) or
+                            (0 <= xx <= threshold or 1 - threshold <= xx <= 1) or
+                            (0 <= xy <= threshold or 1 - threshold <= xy <= 1)
+                    ):
+                        continue
+                    all_detections.append({
+                        "x": x,
+                        "y": y,
+                        "w": w,
+                        "h": h,
+                        "class_name": "marine organism", #loc.names[class_id],
+                        "confidence": confidence
+                    })
+            self.last_frame += 1
         return all_detections
+
 
 class FastAPIYV5:
 
@@ -207,7 +228,6 @@ class FastAPIYV5:
 
     def predict_images(self, images: List[np.array], confidence_threshold:float = .01) -> list[dict[str, float | Any]]:
         all_detections = []
-        batch_size = len(images)
         # TODO: get image width and height from the images tensor
         image_height, image_width = 1280, 1280
         for image in images:
@@ -229,9 +249,9 @@ class FastAPIYV5:
                         data = response.json()
                         logger.debug(data)
                         for loc in data:
+                            if confidence_threshold < loc["confidence"]:
+                                continue
                             all_detections.append({
-                                "frame": self.last_frame,
-                                "batch_idx": self.last_frame % batch_size,
                                 "x": loc["y"] / image_width,
                                 "y": loc["x"] / image_height,
                                 "w": loc["height"] / image_width,
