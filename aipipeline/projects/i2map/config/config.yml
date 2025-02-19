@@ -29,9 +29,9 @@ sdcat:
   ini: "sdcat.ini"
 
 vss:
-  project: "901103-biodiversity"
+  project: "i2map"
   threshold: 0.1
-  model: "google/vit-base-patch16-224"
+  model: "/mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216"
 
 tator:
   project: "901103-biodiversity"
