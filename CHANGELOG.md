@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.56.0 (2025-02-20)
+
+### Features
+
+- **ptvr**: Add both high and low res datasets to pad+rescale
+  ([`398eef9`](https://github.com/mbari-org/aipipeline/commit/398eef993e6bd8f53fae920298a8f1b189d9c612))
+
+
 ## v0.55.0 (2025-02-20)
 
 ### Documentation
