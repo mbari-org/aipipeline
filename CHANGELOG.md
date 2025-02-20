@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.55.0 (2025-02-20)
+
+### Documentation
+
+- Updated README with current status, roadmap, and update date.
+  ([`3445878`](https://github.com/mbari-org/aipipeline/commit/344587816d11b2c02fb3c71eebf3c47dec0ecd24))
+
+### Features
+
+- **ptvr**: Utility to create optimized ROIS for clustering
+  ([`e1765c4`](https://github.com/mbari-org/aipipeline/commit/e1765c440123138f0257e602467c55a6a4b2d547))
+
+
 ## v0.54.2 (2025-02-20)
 
 ### Bug Fixes
