@@ -20,7 +20,7 @@ from aipipeline.db_utils import get_version_id
 
 from aipipeline.projects.bio.core.predict import Predictor
 from aipipeline.projects.bio.core.video import VideoSource
-from aipipeline.prediction.inference import FastAPIYV5, YV5, YV10
+from aipipeline.prediction.inference import FastAPIYV5, YV5, YV8_10
 
 # Global variables
 idv = 1  # video index
@@ -105,10 +105,10 @@ if __name__ == "__main__":
         if 'yolov5' in args.det_model:
             model = YV5(args.det_model, device_num=args.gpu_id)
         elif 'yolov10' in args.det_model:
-            model = YV10(args.det_model)
+            model = YV8_10(args.det_model)
         else:
-            # Assume YOLOv5 if no model is specified
-            model = YV5(args.det_model, device_num=args.gpu_id)
+            # Assume YV8 or 10 if no model is specified
+            model = YV8_10(args.det_model, device_num=args.gpu_id)
 
         batch_size = args.batch_size
  
