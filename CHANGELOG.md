@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.54.2 (2025-02-20)
+
+### Bug Fixes
+
+- Yv8_10 correct models centered box to upper left
+  ([`159c85d`](https://github.com/mbari-org/aipipeline/commit/159c85d7e294522d720aaeaaaf6b601007481337))
+
+
 ## v0.54.1 (2025-02-20)
 
 ### Bug Fixes
