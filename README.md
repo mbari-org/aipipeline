@@ -4,7 +4,9 @@
 *aipipeline* is a library for running ai pipelines and monitoring the performance of the pipelines,
 e.g. accuracy, precision, recall, F1 score. This may include object detection, 
 clustering, classification, and vector search algorithms. It is designed to be used for a number of projects at MBARI 
-that require advanced workflows to process large amounts of images or video.
+that require advanced workflows to process large amounts of images or video.  After workflows are developed,
+they may be moved to the project repositories for production use.  The roadmap includes adding the core functionality
+of some of the processing components to more broad use in the MBARI AI ecosystem.
 
 ### See the [MBARI AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and services used in the pipelines.
 
@@ -135,4 +137,4 @@ just list
 - [fastapi-vss](https://github.com/mbari-org/fastapi-vss) - A RESTful API for vector similarity search using foundational models.
 - [fastapi-tator](https://github.com/mbari-org/fastapi-tator) - A RESTful API server for bulk operations on a Tator annotation database.
 
-**updated: 2025-01-13**
+**updated: 2025-02-20**
