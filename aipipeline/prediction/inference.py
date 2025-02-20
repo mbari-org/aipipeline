@@ -150,13 +150,13 @@ class YV5:
 
         return all_detections
 
-class YV10:
+class YV8_10:
     def __init__(self, model_dir: str, device_num:int = 0):
         """
-        Model class for YOLOv10
+        Model class for YOLOv10 or YOLOv8
         :param model_dir: Directory containing the vits_model files
         """
-        logger.info(f'Initializing YV10 with model_dir: {model_dir}')
+        logger.info(f'Initializing YV8_10 with model_dir: {model_dir}')
         # Get the .pt file from the vits_model directory
         files = glob.glob(f"{model_dir}/*.pt")
         if len(files) == 0:
@@ -181,7 +181,7 @@ class YV10:
         all_detections = []
         threshold = 0.01  # 1% threshold
 
-        for data in raw_detections:
+        for i, data in enumerate(raw_detections):
             for loc in data:
                 for bbox in loc.boxes:
                     # Move the bounding box to the CPU and convert to numpy
@@ -189,7 +189,7 @@ class YV10:
                     x, y, w, h = bbox.xywhn.numpy().flatten()
                     xx = x + w
                     xy = y + h
-                    class_id = int(bbox.cls)
+                    # class_id = int(bbox.cls)
                     confidence = float(bbox.conf)
                     # Remove corner detections
                     if (
@@ -204,10 +204,10 @@ class YV10:
                         "y": y,
                         "w": w,
                         "h": h,
+                        "frame": i,
                         "class_name": "marine organism", #loc.names[class_id],
                         "confidence": confidence
                     })
-            self.last_frame += 1
         return all_detections
 
 
