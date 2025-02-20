@@ -186,7 +186,9 @@ class YV8_10:
                 for bbox in loc.boxes:
                     # Move the bounding box to the CPU and convert to numpy
                     bbox = bbox.cpu()
-                    x, y, w, h = bbox.xywhn.numpy().flatten()
+                    xc, yc, w, h = bbox.xywhn.numpy().flatten()
+                    x = xc - w / 2
+                    y = yc - h / 2
                     xx = x + w
                     xy = y + h
                     # class_id = int(bbox.cls)
@@ -299,7 +301,7 @@ class FastAPIVSS:
 
         def predict(self, image_batch: List[tuple[np.array, str]], top_k: int = 3):
             """
-            Run vector similarity
+            Run vector similarity to find the best match for the image
             :param image_batch: batch of images path/binary tuples to process, maximum of 3 as supported by the inference
             :return:
             """
