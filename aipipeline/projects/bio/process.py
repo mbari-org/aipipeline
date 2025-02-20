@@ -101,7 +101,7 @@ if __name__ == "__main__":
     if args.endpoint_url: # Initialize the YOLOv5 detector instance if we have an endpoint
         model = FastAPIYV5(args.endpoint_url)
         batch_size = 1
-    else: # Load the YOLOv5 model from a local file
+    else: # Load models from a local file
         if 'yolov5' in args.det_model:
             model = YV5(args.det_model, device_num=args.gpu_id)
         elif 'yolov10' in args.det_model:
