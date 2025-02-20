@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.54.1 (2025-02-20)
+
+### Bug Fixes
+
+- Fix frame index on YV8 or 10 models output
+  ([`11a712b`](https://github.com/mbari-org/aipipeline/commit/11a712b5254b867d2900871db66e1be0b10fe5c5))
+
+
 ## v0.54.0 (2025-02-19)
 
 ### Bug Fixes
