@@ -35,6 +35,7 @@ cp-core:
 
 # Copy planktivore dev code to the project on doris
 cp-dev-ptvr:
+    cp ./aipipeline/projects/planktivore/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
     cp ./aipipeline/projects/planktivore/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/config/
 
 # Copy uav dev code to the project on doris
@@ -144,6 +145,11 @@ load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/planktivore
     time aidata load clusters --config $PROJECT_DIR/config/config.yml --input {{clusters}} --token $TATOR_TOKEN {{more_args}}
+# Rescale planktivore ROI images
+rescale-ptvr-images:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/planktivore
+    time python $PROJECT_DIR/adjust_roi.py
 # Cluster mission in aipipeline/projects/uav/data/missions-to-process.txt
 cluster-uav *more_args="":
     #!/usr/bin/env bash
