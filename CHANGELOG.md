@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.57.0 (2025-02-21)
+
+### Features
+
+- Add display of complete track to compare to ultralytics or die output
+  ([`f625050`](https://github.com/mbari-org/aipipeline/commit/f6250502d7cf087735f833c7dbaed044c8415293))
+
+
 ## v0.56.0 (2025-02-20)
 
 ### Features
