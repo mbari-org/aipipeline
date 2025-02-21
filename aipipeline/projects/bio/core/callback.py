@@ -99,7 +99,7 @@ class ExportCallback(Callback):
 
     def on_predict_batch_end(self, predictor: Predictor, tracks: list[Track]):
         """ Queue track localizations in REDIS and export to CSV """
-        closed_tracks = [t for t in tracks if t.is_closed()] # Only consider closed tracks
+        closed_tracks = [t for t in tracks if t.is_closed()]
         min_frames = predictor.min_frames
         min_score_track = predictor.min_score_track
         version_id = predictor.version_id
@@ -111,21 +111,13 @@ class ExportCallback(Callback):
 
         config_dict = predictor.config
 
-        for track in closed_tracks:
+        for track in tracks:
             best_frame, best_label, best_box, best_score = track.get_best(False)
             best_frame += 1 # Convert to 1-based frame number
             best_time_secs = float(best_frame / predictor.source.frame_rate)
             box_str = ", ".join([f"{box:.4f}" for box in best_box])
             score_str = ", ".join([f"{score:.2f}" for score in best_score])
             logger.info(f"Best track {track.id} is {box_str},{best_label},{score_str} in frame {best_frame}")
-            
-            if track.num_frames > 3 and best_score[0] > 0.9:
-                logger.info(f"Track {track.id} is high scoring but short {track.num_frames}. Override defaults")
-            elif track.num_frames < min_frames or best_score[0] < min_score_track:
-                logger.info(
-                    f"Track {track.id} is too short num frames {track.num_frames} or "
-                    f"best score {best_score[0]:.2f} is < {min_score_track}, skipping")
-                continue
 
             new_loc = {
                 "x1": max(float(best_box[0]*predictor.source.width), 0.),
@@ -145,47 +137,61 @@ class ExportCallback(Callback):
             if skip_load:
                 logger.warning("======>Skipping load through REDIS queue<======")
             else:
-                start_datetime = datetime.fromisoformat(predictor.md["start_timestamp"])
-                loc_datetime = start_datetime + timedelta(seconds=best_time_secs)
-                ancillary_data = get_ancillary_data(predictor.md['dive'], config_dict, loc_datetime)
+                is_valid = False
+                if track.is_closed():
+                    logger.info(f"Track {track.id} is closed")
+                if track.num_frames > 3 and best_score[0] > 0.9:
+                    logger.info(f"Track {track.id} is high scoring but short {track.num_frames}. Override defaults")
+                    is_valid = True
+                elif track.num_frames < min_frames or best_score[0] < min_score_track:
+                    logger.info(
+                        f"Track {track.id} is too short num frames {track.num_frames} or "
+                        f"best score {best_score[0]:.2f} is < {min_score_track}, skipping")
 
-                if ancillary_data is None or "depthMeters" not in ancillary_data:
-                    logger.error(f"Failed to get ancillary data for {predictor.md['dive']} {start_datetime}")
-                    new_loc["dive"] = predictor.source.video_name
-                    new_loc["depth"] = "-1"
-                    new_loc["iso_datetime"] = loc_datetime.strftime("%Y-%m-%dT%H:%M:%S")
-                    new_loc["latitude"] = "-1"
-                    new_loc["longitude"] = "-1"
-                    new_loc["temperature"] = "-1"
-                    new_loc["oxygen"] = "-1"
-                else:
-                    # Add in the ancillary data
-                    new_loc["dive"] = predictor.md["dive"]
-                    new_loc["depth"] = ancillary_data["depthMeters"]
-                    new_loc["iso_datetime"] = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                    new_loc["latitude"] = ancillary_data["latitude"]
-                    new_loc["longitude"] = ancillary_data["longitude"]
-                    new_loc["temperature"] = ancillary_data["temperature"]
-                    new_loc["oxygen"] = ancillary_data["oxygen"]
+                if is_valid:
+                    start_datetime = datetime.fromisoformat(predictor.md["start_timestamp"])
+                    loc_datetime = start_datetime + timedelta(seconds=best_time_secs)
+                    ancillary_data = get_ancillary_data(predictor.md['dive'], config_dict, loc_datetime)
 
-                new_loc = {k: int(v) if isinstance(v, np.integer) else float(v) if isinstance(v, np.floating) else v for
-                           k, v in new_loc.items()} # Convert numpy types to python types
-                logger.info(f"queuing loc: {new_loc} {predictor.md['dive']} {loc_datetime}")
-                redis_queue.hset(f"locs:{predictor.md['video_reference_uuid']}", str(self.num_loaded), json.dumps(new_loc))
-                logger.info(f"{predictor.source.video_name} found total possible {self.num_loaded} localizations")
-                self.num_loaded += 1
+                    if ancillary_data is None or "depthMeters" not in ancillary_data:
+                        logger.error(f"Failed to get ancillary data for {predictor.md['dive']} {start_datetime}")
+                        new_loc["dive"] = predictor.source.video_name
+                        new_loc["depth"] = "-1"
+                        new_loc["iso_datetime"] = loc_datetime.strftime("%Y-%m-%dT%H:%M:%S")
+                        new_loc["latitude"] = "-1"
+                        new_loc["longitude"] = "-1"
+                        new_loc["temperature"] = "-1"
+                        new_loc["oxygen"] = "-1"
+                    else:
+                        # Add in the ancillary data
+                        new_loc["dive"] = predictor.md["dive"]
+                        new_loc["depth"] = ancillary_data["depthMeters"]
+                        new_loc["iso_datetime"] = loc_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+                        new_loc["latitude"] = ancillary_data["latitude"]
+                        new_loc["longitude"] = ancillary_data["longitude"]
+                        new_loc["temperature"] = ancillary_data["temperature"]
+                        new_loc["oxygen"] = ancillary_data["oxygen"]
 
-            # Add in the track_id to the new_loc - this is used for displaying an ID with the tracks post-processing
-            new_loc["track_id"] = track.id
-            if not predictor.best_pred_path.exists():
-                with predictor.best_pred_path.open("w") as f:
+                    new_loc = {k: int(v) if isinstance(v, np.integer) else float(v) if isinstance(v, np.floating) else v for
+                               k, v in new_loc.items()} # Convert numpy types to python types
+                    logger.info(f"queuing loc: {new_loc} {predictor.md['dive']} {loc_datetime}")
+                    redis_queue.hset(f"locs:{predictor.md['video_reference_uuid']}", str(self.num_loaded), json.dumps(new_loc))
+                    logger.info(f"{predictor.source.video_name} found total possible {self.num_loaded} localizations")
+                    self.num_loaded += 1
+
+                # Add in the track_id to the new_loc - this is used for displaying an ID with the tracks post-processing
+                new_loc["track_id"] = track.id
+                new_loc["is_valid"] = is_valid
+                if not predictor.best_pred_path.exists():
+                    with predictor.best_pred_path.open("w") as f:
+                        writer = csv.DictWriter(f, fieldnames=list(new_loc.keys()))
+                        writer.writeheader()
+
+                with predictor.best_pred_path.open("a") as f:
                     writer = csv.DictWriter(f, fieldnames=list(new_loc.keys()))
-                    writer.writeheader()
+                    writer.writerow(new_loc)
+                logger.info(f"Saved track {track.id} to {predictor.best_pred_path}")
 
-            with predictor.best_pred_path.open("a") as f:
-                writer = csv.DictWriter(f, fieldnames=list(new_loc.keys()))
-                writer.writerow(new_loc)
-            logger.info(f"Saved track {track.id} to {predictor.best_pred_path}")
 
 class VideoExportCallback(Callback):
     def on_predict_start(self, predictor: Predictor):
@@ -200,10 +206,11 @@ class VideoExportCallback(Callback):
             return
         # Load the best tracks, remove any duplicates by track_id and sort by frame
         tracks_best_csv = read_csv(predictor.best_pred_path)
-        tracks_best_csv.drop_duplicates(subset=["track_id"], keep="first", inplace=True)
+        # A duplicate has the same x, y, width, height, frame, score, label
+        tracks_best_csv.drop_duplicates(subset=["x1", "y1", "x2", "y2", "frame", "score", "label"], keep="first", inplace=True)
 
         # Rename the track_id in increasing order from 1
-        tracks_best_csv["track_id"] = range(1, len(tracks_best_csv) + 1)
+        #tracks_best_csv["track_id"] = range(1, len(tracks_best_csv) + 1)
         tracks_best_csv.sort_values(by=["frame"], inplace=True)
 
         if tracks_best_csv.empty:
@@ -233,6 +240,9 @@ class VideoExportCallback(Callback):
                 track_id = row.track_id
                 label = row.label
                 label_s = row.label_s
+                score = row.score
+                score_s = row.score_s
+                is_valid = row.is_valid
                 x1 = int(row.x1)
                 y1 = int(row.y1)
                 x2 = int(row.x2)
@@ -244,13 +254,14 @@ class VideoExportCallback(Callback):
                     x1 = 50
                 if y1 < 50:
                     y1 = 50
-                if row.score < 0.5: # Display the top two labels if the score is low
-                    label_str = f"{label} {label_s}"
+                label_str = f"{label}:{score:.2f},{label_s}:{score_s:.2f}"
+                if is_valid.is_valid:
+                    cv2.putText(frame, f"{track_id}: {label_str}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (255, 255, 255), 1)
                 else:
-                    label_str = label
-                cv2.putText(frame, f"{track_id}: {label_str}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1,
-                            (255, 255, 255), 2)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                    cv2.putText(frame, f"{track_id}: {label_str}", (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                                (0, 0, 0), 0.5)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 1)
             out_video.write(frame)
             frame_num += 1
 
