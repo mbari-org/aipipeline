@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.57.1 (2025-02-24)
+
+### Performance Improvements
+
+- Remove outer 5% of window for inference where blurry
+  ([`ffde534`](https://github.com/mbari-org/aipipeline/commit/ffde5347aa17381ad348448b21373c827172e6dd))
+
+- **bio**: Annotate tracks when valid only and some refactoring for clarity
+  ([`d221d92`](https://github.com/mbari-org/aipipeline/commit/d221d923fd039ba943202576da8dac381f001553))
+
+- **ptvr**: Better settings for planktivore clustering with softcluster branch sdcat
+  ([`e7b2373`](https://github.com/mbari-org/aipipeline/commit/e7b23736755708becfc265565d8cabc7865e800b))
+
+
 ## v0.57.0 (2025-02-21)
 
 ### Features
