@@ -179,7 +179,7 @@ class YV8_10:
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         all_detections = []
-        threshold = 0.01  # 1% threshold
+        threshold = 0.05  # 1% threshold
 
         for i, data in enumerate(raw_detections):
             for loc in data:
