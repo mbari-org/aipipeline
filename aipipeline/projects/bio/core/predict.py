@@ -118,7 +118,7 @@ class Predictor:
                         "xy": (d["y"] + d["h"]),
                         "w": d["w"],
                         "h": d["h"],
-                        "frame": max(0, d["frame"] * self.source.stride - 1),
+                        "frame":d["frame"] * self.source.stride,
                         "score": d["confidence"],
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
@@ -135,7 +135,7 @@ class Predictor:
                                           detections=det_n,
                                           max_empty_frames=self.source.stride*5,
                                           max_frames=self.max_frames_tracked,
-                                          max_cost=0.03,
+                                          save_cotrack_video=True,
                                           imshow=self.imshow)
 
             # Display the predictions
