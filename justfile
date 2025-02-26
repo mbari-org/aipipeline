@@ -49,6 +49,7 @@ cp-dev-bio:
     cp ./aipipeline/projects/bio/core/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/core
     cp ./aipipeline/projects/bio/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/config/
     cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
+    cp ./deps/biotrack/biotrack/*.py /Volumes/dcline/code/aipipeline/deps/biotrack/biotrack/
 
 # Copy i2map dev code to the project on doris
 cp-dev-i2map:
@@ -139,7 +140,7 @@ load-ptvr-images images='tmp/roi' *more_args="":
 cluster-ptvr-images images='tmp/roi' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/planktivore
-    time sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini --roi-dir {{images}} {{more_args}}
+    time sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini --device cuda:1 --roi-dir {{images}} {{more_args}}
 # Load planktivore ROI clusters
 load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
     #!/usr/bin/env bash
@@ -252,7 +253,7 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
 run-ctenoA-test:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/vss_init.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
     --endpoint-url "http://localhost:8001/predict" \
@@ -262,7 +263,7 @@ run-ctenoA-test:
 run-ctenoA-prod:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/vss_init.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/cluster.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
     --endpoint-url "http://fastap-fasta-0riu3xafmhua-337062127.us-west-2.elb.amazonaws.com/predict" \
@@ -272,7 +273,7 @@ run-ctenoA-prod:
 run-mega-inference:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/vss_init.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/cluster.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "animal" \
     --class-remap "{\"animal\":\"marine organism\"}" \
@@ -293,8 +294,8 @@ run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_202
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
        --config ./aipipeline/projects/bio/config/config.yml \
        --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 10 --version delme \
-       --vits-model /Volumes/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-16ntnr-20250130/ \
-       --det-model /Volumes/DeepSea-AI/models/megadet --skip-load \
+       --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-16ntnr-20250130/ \
+       --det-model /mnt/DeepSea-AI/models/megadet --skip-load \
        --stride 1 --video {{video}} --max-seconds 10 --flush --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds
@@ -336,16 +337,17 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
     find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 1 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video for the i2map project
+#     --det-model /mnt/DeepSea-AI/models/FathomNet/megalodon/ \
 #run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov' gpu_id='0':
 run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20241119T165914Z_200m_F031_4.mov' gpu_id='0':
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
     time python3 aipipeline/projects/bio/process.py \
+     --det-model /mnt/DeepSea-AI/models/megadetrg-yolov5 \
      --config ./aipipeline/projects/i2map/config/config.yml \
-     --det-model /mnt/DeepSea-AI/models/FathomNet/megalodon/ \
      --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216\
      --max-frames-tracked 200 --min-score-det 0.02 --min-score-track 0.1 --min-frames 8 --version metadetrt-vits-track-ft \
-     --stride 1 --skip-load --batch-size 16 --create-video \
+     --stride 1 --skip-load --batch-size 16 --create-video --max-seconds 1 \
      --video {{video}} --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on a single video to test the pipeline
@@ -354,8 +356,8 @@ run-mega-track-test-1min:
     export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
     time python3 aipipeline/projects/bio/predict.py \
      --config ./aipipeline/projects/bio/config/config.yml \
-     --det-model /Volumes/DeepSea-AI/models/megadet \
-     --vits-model /Volumes/DeepSea-AI/models/m3midwater-vit-b-16 \
+     --det-model /mnt/DeepSea-AI/models/megadet \
+     --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
      --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
      --stride 8 --max-seconds 60 --imshow --skip-load  \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
@@ -366,7 +368,7 @@ run-mega-track-test-fastapiyv5:
     export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
     time python3 aipipeline/projects/bio/predict.py \
      --config ./aipipeline/projects/bio/config/config.yml \
-     --vits-model /Volumes/DeepSea-AI/models/m3midwater-vit-b-16 \
+     --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
      --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
      --stride 15 --max-seconds 60 --imshow --skip-load  \
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
@@ -377,19 +379,19 @@ cluster-i2mapbulk:
     #!/usr/bin/env bash
     export PYTHONPATH=.
     export MPLCONFIGDIR=/tmp
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2mapbulk/vss_init.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
     --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
-# Init VSS with combined i2MAP training data. Run with just init-i2map-vss
-init-i2map-vss:
+# Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/DeepSea-AI/data/Planktivore/cluster/aidata-export-03-low-mag-square
+cluster-ptvt-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/DeepSea-AI/data/Planktivore/cluster/aidata-export-03-low-mag-square':
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    export MPLCONFIGDIR=/tmp
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/i2map/vss_init.py \
-    --config ./aipipeline/projects/i2map/config/config.yml \
-    --processed-path /mnt/ML_SCRATCH/i2map/Combined/
-
+    for alpha in 0.8 0.9 1.0; do
+      for epsilon in 0.01 0.05 0.1 0.5; do
+      just --justfile {{justfile()}} cluster-ptvr-images {{roi_dir}} --save-dir {{save_dir}} --alpha $alpha --cluster-selection-epsilon $epsilon
+      done
+    done
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
     #!/usr/bin/env bash
