@@ -1,7 +1,7 @@
 import os
 import tator
 
-project_id = 12  # planktivore project in the database
+project_id = 10  # cfe project in the database
 
 # Connect to Tator
 api = tator.get_api(host='http://mantis.shore.mbari.org', token=os.environ['TATOR_TOKEN'])
