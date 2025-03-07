@@ -383,13 +383,13 @@ cluster-i2mapbulk:
     --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
-# Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/DeepSea-AI/data/Planktivore/cluster/aidata-export-03-low-mag-square
-cluster-ptvt-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/DeepSea-AI/data/Planktivore/cluster/aidata-export-03-low-mag-square':
+# Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square cuda:0
+cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     for alpha in 0.8 0.9 1.0; do
       for epsilon in 0.01 0.05 0.1 0.5; do
-      just --justfile {{justfile()}} cluster-ptvr-images {{roi_dir}} --save-dir {{save_dir}} --alpha $alpha --cluster-selection-epsilon $epsilon
+        just --justfile {{justfile()}} cluster-ptvr-images {{roi_dir}} --save-dir {{save_dir}} --alpha $alpha --cluster-selection-epsilon $epsilon --device {{device}}
       done
     done
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
