@@ -24,7 +24,7 @@ def pad_and_rescale(input_path:Path, output_path:Path):
 
 
 if __name__ == "__main__":
-    dataset = ["aidata-export-02", "aidata-export-03-low-mag"]
+    dataset = ["aidata-export-02-high-mag", "aidata-export-03-low-mag"]
     for d in dataset:
         input_dir = Path(f"/mnt/DeepSea-AI/data/Planktivore/raw/{d}")
         output_dir = Path(f"/mnt/ML_SCRATCH/Planktivore/{d}-square")
