@@ -133,24 +133,32 @@ load-cfe-isiis-videos *more_args="":
     {{more_args}}
 # Load planktivore ROI images
 load-ptvr-images images='tmp/roi' *more_args="":
-    #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/planktivore
-    time aidata load images --config $PROJECT_DIR/config/config.yml --input {{images}} --token $TATOR_TOKEN --dry-run {{more_args}}
+    time aidata load images \
+    --config ./aipipeline/projects/planktivore/config/config.yml \
+    --input {{images}} \
+    --token $TATOR_TOKEN \
+    --dry-run {{more_args}}
 # Cluster planktivore ROI images
-cluster-ptvr-images images='tmp/roi' *more_args="":
-    #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/planktivore
-    time sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini --device cuda:1 --roi-dir {{images}} {{more_args}}
-# Load planktivore ROI clusters
-load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
-    #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/planktivore
-    time aidata load clusters --config $PROJECT_DIR/config/config.yml --input {{clusters}} --token $TATOR_TOKEN {{more_args}}
-# Rescale planktivore ROI images
-rescale-ptvr-images:
-    #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/planktivore
-    time python $PROJECT_DIR/adjust_roi.py
+cluster-ptvr-images *more_args="":
+    time conda run -n aipipeline --no-capture-output sdcat cluster roi \
+    --config-ini ./aipipeline/projects/planktivore/config/sdcat.ini \
+    --device cuda:1 {{more_args}}
+# Load planktivore ROI clusters, e.g. just load-ptvr-clusters aidata-export-03-low-mag tmp/roi/cluster.csv
+load-ptvr-clusters collection="aidata-export-03-low-mag" clusters='tmp/roi/cluster.csv' *more_args="":
+    time conda run -n aipipeline --no-capture-output aidata load clusters \
+        --config ./aipipeline/projects/planktivoreconfig/config.yml \
+        --input {{clusters}} \
+        --token $TATOR_TOKEN {{more_args}}
+# Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
+rescale-ptvr-images collection="aidata-export-03-low-mag":
+    time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore/adjust_roi.py \
+    --input_dir /mnt/DeepSea-AI/data/Planktivore/raw/{{collection}} \
+    --output_dir /mnt/DeepSea-AI/data/Planktivore/raw/{{collection}}-square
+# Download and rescale planktivore ROI images, e.g. just download-rescale-ptvr-images aidata-export-03-low-mag
+download-rescale-ptvr-images collection="aidata-export-03-low-mag":
+    time conda run -n aipipeline --no-capture-output python aipipeline/prediction/download_pipeline.py \
+        --config ./aipipeline/projects/planktivore/config/{{collection}}.yml
+    just --justfile {{justfile()}} rescale-ptvr-images {{collection}}
 # Cluster mission in aipipeline/projects/uav/data/missions-to-process.txt
 cluster-uav *more_args="":
     #!/usr/bin/env bash
@@ -383,15 +391,6 @@ cluster-i2mapbulk:
     --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
-# Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square cuda:0
-cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
-    #!/usr/bin/env bash
-    export PYTHONPATH=.
-    for alpha in 0.8 0.9 1.0; do
-      for epsilon in 0.01 0.05 0.1 0.5; do
-        just --justfile {{justfile()}} cluster-ptvr-images {{roi_dir}} --save-dir {{save_dir}} --alpha $alpha --cluster-selection-epsilon $epsilon --device {{device}}
-      done
-    done
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
     #!/usr/bin/env bash

@@ -13,10 +13,10 @@ docker:
 
 data:
   raw_data_path: "/mnt/DeepSea-AI/data/Planktivore/raw"
-  processed_path: "/mnt/DeepSea-AI/data/Planktivore/processed"
-  version: "Baseline"
+  processed_path: "/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag"
+  version: "google-vit-base-patch16-224"
   labels: ""
-  download_args: ["--verified"]
+  download_args: ["--verified", "--section", "aidata-export-03-low-mag"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
