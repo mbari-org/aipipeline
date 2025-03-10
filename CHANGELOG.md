@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.59.0 (2025-03-10)
+
+### Features
+
+- **ptvr**: Added sweep for planktivore
+  ([`aca3442`](https://github.com/mbari-org/aipipeline/commit/aca3442454d4da3e3d009b6d33e039f6117da48b))
+
+
 ## v0.58.0 (2025-03-10)
 
 ### Features
