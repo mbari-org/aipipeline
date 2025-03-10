@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.58.0 (2025-03-10)
+
+### Features
+
+- Added support for taxonomy tree per project which can subsequently be used with autocomplete when
+  annotators are labeling.
+  ([`a1f8633`](https://github.com/mbari-org/aipipeline/commit/a1f8633318f06e985f1563e2005d654573234e5a))
+
+
 ## v0.57.1 (2025-02-24)
 
 ### Performance Improvements
