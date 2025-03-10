@@ -1,0 +1,33 @@
+name: labels
+children:
+- name: Pinniped
+- name: Sea_Lion
+- name: Secci_Disc
+- name: Wave
+- name: Reflectance
+- name: Mooring_Buoy
+- name: Otter
+- name: Bird
+- name: Person
+- name: Poop
+- name: Boat
+- name: Kelp
+- name: Foam
+- name: Whale
+- name: Egregia
+- name: Wood
+- name: Jelly
+- name: Unknown
+- name: Mola
+- name: Surfboard
+- name: Shark
+- name: Cement_Ship
+- name: Buoy
+- name: Batray
+- name: Kayak
+- name: Trash
+- name: Fish
+- name: Trinity
+- name: Car
+- name: RIB
+- name: Velella_velella

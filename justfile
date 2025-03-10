@@ -62,6 +62,14 @@ cp-dev-i2map:
     cp ./aipipeline/projects/i2mapbulk/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
     cp ./aipipeline/projects/i2map/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
 
+# Initialize labels for quick lookup, e.g. just init-labels uav 19
+init-labels project='uav' leaf_type_id='19':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    conda run -n aipipeline python3 aipipeline/prediction/leaf_init.py \
+    --config $PROJECT_DIR/config/config.yml \
+    --labels $PROJECT_DIR/config/labels.yml  \
+    --type-id {{leaf_type_id}}
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
     #!/usr/bin/env bash

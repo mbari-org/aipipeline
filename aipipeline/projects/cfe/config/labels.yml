@@ -1,0 +1,20 @@
+name: labels
+children:
+- name: aggregate
+- name: artifact
+- name: bloom
+- name: bubble
+- name: centric_diatom
+- name: chaetognath
+- name: copepod
+- name: crustacean
+- name: diatom_chain
+- name: fecal_pellet
+- name: football
+- name: gelatinous
+- name: larvacean
+- name: long_particle_blur
+- name: noise
+- name: particle_blur
+- name: phaeocystis
+- name: rhizaria
