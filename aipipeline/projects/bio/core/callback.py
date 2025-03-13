@@ -206,7 +206,7 @@ class VideoExportCallback(Callback):
         tracks_best_csv.drop_duplicates(subset=["x1", "y1", "x2", "y2", "frame", "score", "label"], keep="first", inplace=True)
 
         # Rename the track_id in increasing order from 1
-        #tracks_best_csv["track_id"] = range(1, len(tracks_best_csv) + 1)
+        tracks_best_csv["track_id"] = range(1, len(tracks_best_csv) + 1)
         tracks_best_csv.sort_values(by=["frame"], inplace=True)
 
         if tracks_best_csv.empty:
