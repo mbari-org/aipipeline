@@ -10,7 +10,6 @@ import os
 import redis
 
 from biotrack.tracker import BioTracker
-from pandas import read_csv
 
 from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import init_api_project
