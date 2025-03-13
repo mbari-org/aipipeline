@@ -85,7 +85,7 @@ class YV5:
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         threshold = 0.05 # 5% threshold
-        iou_threshold = 0.5
+        iou_threshold = 0.25
         batch_size = len(images)
 
         all_detections = []
@@ -175,7 +175,7 @@ class YV8_10:
         """
         time_start = time.time()
         logger.info(f"Predicting on {len(images)} images")
-        raw_detections = self.model.predict(images, max_det=500, iou=0.5, conf=min_score_det)
+        raw_detections = self.model.predict(images, max_det=500, iou=0.25, conf=min_score_det)
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         all_detections = []
