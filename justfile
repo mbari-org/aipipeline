@@ -33,6 +33,10 @@ cp-core:
     cp ./aipipeline/prediction/*.py /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     cp ./aipipeline/metrics/*.py /Volumes/dcline/code/aipipeline/aipipeline/metrics/
 
+# Copy cfe dev code to the project on doris
+cp-dev-cfe:
+    cp ./aipipeline/projects/cfe/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/
+    cp ./aipipeline/projects/cfe/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/config/
 # Copy planktivore dev code to the project on doris
 cp-dev-ptvr:
     cp ./aipipeline/projects/planktivore/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
@@ -157,6 +161,11 @@ load-ptvr-clusters collection="aidata-export-03-low-mag" clusters='tmp/roi/clust
         --config ./aipipeline/projects/planktivoreconfig/config.yml \
         --input {{clusters}} \
         --token $TATOR_TOKEN {{more_args}}
+# Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
+rescale-ifcb-images collection="2014":
+    time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/cfe/adjust_roi_ifcb.py \
+    --input_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}} \
+    --output_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}}-square
 # Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
 rescale-ptvr-images collection="aidata-export-03-low-mag":
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore/adjust_roi.py \
