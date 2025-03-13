@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.60.1 (2025-03-13)
+
+### Performance Improvements
+
+- **bio**: Add soft BiOU and reduce IOU from 0.5 to 0.25 to reduce duplicate tracks
+  ([`1f0df4d`](https://github.com/mbari-org/aipipeline/commit/1f0df4d93e7ac4af0360631b5d493f41202c629f))
+
+
 ## v0.60.0 (2025-03-13)
 
 ### Documentation
