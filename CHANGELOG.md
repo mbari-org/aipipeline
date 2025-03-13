@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.60.0 (2025-03-13)
+
+### Documentation
+
+- Typo fix and update recipe table
+  ([`c6e5f3f`](https://github.com/mbari-org/aipipeline/commit/c6e5f3f89452e6ff6f4cdddc68595715a3f72e24))
+
+### Features
+
+- Added label parse for label leaf
+  ([`a57154a`](https://github.com/mbari-org/aipipeline/commit/a57154a64427cf3f771424d236c8669231c6798c))
+
+
 ## v0.59.0 (2025-03-10)
 
 ### Features
