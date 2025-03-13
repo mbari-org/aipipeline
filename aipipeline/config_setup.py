@@ -40,6 +40,20 @@ def check_config(config_dict: Dict) -> bool:
             return False
     return True
 
+def parse_labels(labels: str) -> Dict:
+    config_path_yml = Path(labels)
+    if not config_path_yml.exists():
+        logger.error(f"Cannot find {config_path_yml}")
+        exit(1)
+
+    with config_path_yml.open("r") as file:
+        try:
+            config_dict = yaml.safe_load(file)
+        except yaml.YAMLError as e:
+            logger.error(f"Error reading YAML file: {e}")
+            raise e
+
+    return config_dict
 
 def setup_config(config_yml: str, silent=False) -> Tuple[Dict, Dict]:
     config_path_yml = Path(config_yml)
