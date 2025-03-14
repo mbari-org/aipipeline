@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.60.3 (2025-03-14)
+
+### Performance Improvements
+
+- **cfe**: Multiproc adjust_roi_ifcb.py for fast processing
+  ([`ec7bb9a`](https://github.com/mbari-org/aipipeline/commit/ec7bb9a42c2b07c60bf0ec42410e02f776e1d881))
+
+- **ptvr**: Multiproc adjust_roi.py for fast processing
+  ([`6b7065e`](https://github.com/mbari-org/aipipeline/commit/6b7065e3fb32c112a6e0a6d289c7c860df016b89))
+
+
 ## v0.60.2 (2025-03-14)
 
 ### Performance Improvements
