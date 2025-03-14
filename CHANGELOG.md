@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.60.2 (2025-03-14)
+
+### Performance Improvements
+
+- **cfe**: Added adjust_roi_ifcb.py to resize for optimum square image for training
+  ([`90789c3`](https://github.com/mbari-org/aipipeline/commit/90789c360452fcc16bcb0d3ae76c65953b278223))
+
+
 ## v0.60.1 (2025-03-13)
 
 ### Performance Improvements
