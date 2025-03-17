@@ -26,7 +26,7 @@ from biotrack.batch_utils import media_to_stack
 from aipipeline.prediction.utils import crop_square_image
 
 from biotrack.tracker import BioTracker
-from aipipeline.projects.bio.model.inference import FastAPIYV5, YV10, YV5
+from aipipeline.projects.prediction.inference import FastAPIYV5, YV10, YV5
 from aipipeline.projects.bio.bioutils import get_ancillary_data, get_video_metadata, resolve_video_path, video_to_frame, \
     seconds_to_timestamp
 
