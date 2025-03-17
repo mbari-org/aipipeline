@@ -370,9 +370,9 @@ run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
     time python3 aipipeline/projects/bio/process.py \
-     --det-model /mnt/DeepSea-AI/models/megadetrg-yolov5 \
+     --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
      --config ./aipipeline/projects/i2map/config/config.yml \
-     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216\
+     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
      --max-frames-tracked 200 --min-score-det 0.02 --min-score-track 0.1 --min-frames 8 --version metadetrt-vits-track-ft \
      --stride 1 --skip-load --batch-size 16 --create-video --max-seconds 1 \
      --video {{video}} --gpu-id {{gpu_id}}
