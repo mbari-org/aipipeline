@@ -166,6 +166,8 @@ rescale-ifcb-images collection="2014":
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/cfe/adjust_roi_ifcb.py \
     --input_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}} \
     --output_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}}-square/crops
+    time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/cfe/gen_ifcb_stats.py \
+    --input_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}}-square/crops
 # Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
 rescale-ptvr-images collection="aidata-export-03-low-mag":
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore/adjust_roi.py \
