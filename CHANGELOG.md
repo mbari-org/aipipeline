@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.60.4 (2025-03-17)
+
+### Bug Fixes
+
+- **cfe**: Put in directory storage expected for vits training
+  ([`cc9d36c`](https://github.com/mbari-org/aipipeline/commit/cc9d36cf98d38e7528bd64e860a0851af20d4be5))
+
+- **cfe**: Skip over mix, bad, and detritus and save as RGB
+  ([`1b60452`](https://github.com/mbari-org/aipipeline/commit/1b60452964b4e877bf79ac99c0f5d256f08eb77b))
+
+
 ## v0.60.3 (2025-03-14)
 
 ### Performance Improvements
