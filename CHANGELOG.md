@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.60.5 (2025-03-17)
+
+### Bug Fixes
+
+- **i2map**: Updated run-mega-track-i2map-video recipe with latest
+  ([`5877ad9`](https://github.com/mbari-org/aipipeline/commit/5877ad9028a27edab86c826a2767f586c0a4c053))
+
+
 ## v0.60.4 (2025-03-17)
 
 ### Bug Fixes
