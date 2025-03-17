@@ -7,6 +7,9 @@ import multiprocessing as mp
 import os
 
 def process_roi(roi_file, output_path):
+    if 'mix' in roi_file.parents[0].name or 'bad' in roi_file.parents[0].name or 'detritus' in roi_file.parents[0].name:
+        return
+
     roi = cv2.imread(str(roi_file), cv2.IMREAD_GRAYSCALE)
 
     if roi is None:
@@ -31,6 +34,9 @@ def process_roi(roi_file, output_path):
     # Pad the ROI, rescale, and save
     roi_padded = cv2.copyMakeBorder(roi, pad_h, pad_h, pad_w, pad_w, cv2.BORDER_CONSTANT, value=bg_color)
     roi_padded_rescaled = cv2.resize(roi_padded, (224, 224))
+
+    # Save as an RGB image since the model expects 3 channels
+    roi_padded_rescaled = cv2.cvtColor(roi_padded_rescaled, cv2.COLOR_GRAY2RGB)
     cv2.imwrite(str(output_path_roi / roi_file.name), roi_padded_rescaled)
 
 def pad_and_rescale(input_path: Path, output_path: Path):
