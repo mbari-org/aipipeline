@@ -106,9 +106,6 @@ class ExportCallback(Callback):
         skip_load = predictor.skip_load
         redis_queue = predictor.redis_queue
 
-        if len(closed_tracks) == 0:
-            return
-
         config_dict = predictor.config
 
         for track in tracks:
@@ -136,15 +133,16 @@ class ExportCallback(Callback):
             }
             if skip_load:
                 logger.warning("======>Skipping load through REDIS queue<======")
-            is_valid = False
+            is_valid = True
             if track.is_closed():
                 logger.info(f"Track {track.id} is closed")
-            elif track.num_frames < min_frames or best_score[0] < min_score_track:
+            if track.num_frames < min_frames or best_score[0] < min_score_track:
                 logger.info(
                     f"Track {track.id} is too short num frames {track.num_frames} or "
                     f"best score {best_score[0]:.2f} is < {min_score_track}, skipping")
+                is_valid = False
 
-            if not skip_load:
+            if not skip_load and track.is_closed() and is_valid:
                 start_datetime = datetime.fromisoformat(predictor.md["start_timestamp"])
                 loc_datetime = start_datetime + timedelta(seconds=best_time_secs)
                 ancillary_data = get_ancillary_data(predictor.md['dive'], config_dict, loc_datetime)
