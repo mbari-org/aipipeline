@@ -52,7 +52,6 @@ cp-dev-bio:
     cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
     cp ./aipipeline/projects/bio/core/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/core
     cp ./aipipeline/projects/bio/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/config/
-    cp ./aipipeline/projects/bio/model/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/model/
     cp ./deps/biotrack/biotrack/*.py /Volumes/dcline/code/aipipeline/deps/biotrack/biotrack/
 
 # Copy i2map dev code to the project on doris
