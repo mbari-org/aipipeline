@@ -414,22 +414,18 @@ cluster-i2mapbulk:
 cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    for alpha in 0.8 0.9 1.0; do
-      for epsilon in 0.01 0.05 0.1 0.5; do
-        for min_samples in 1 3 5; do
-            for min_cluster in 3 5 6 7; do
-              echo "Running alpha=$alpha epsilon=$epsilon min_samples=$min_samples min_cluster=$min_cluster"
-                just --justfile {{justfile()}} cluster-ptvr-images \
-                        --roi-dir {{roi_dir}} \
-                        --save-dir {{save_dir}} \
-                        --alpha $alpha \
-                        --cluster-selection-epsilon $epsilon \
-                        --min-sample-size $min_samples \
-                        --min-cluster-size $min_cluster \
-                        --device {{device}}
-                    done
-                done
-          done
+    for alpha in 1.0 1.1; do
+        for min_cluster in 2 10; do
+          echo "Running alpha=$alpha min_samples=$min_samples min_cluster=$min_cluster"
+            just --justfile {{justfile()}} cluster-ptvr-images \
+                    --roi-dir {{roi_dir}} \
+                    --save-dir {{save_dir}} \
+                    --alpha $alpha \
+                    --min-sample-size 1 \
+                    --min-cluster-size $min_cluster \
+                    --device {{device}} \
+                    --use-vits
+            done
     done
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
