@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.60.6 (2025-03-20)
+
+### Performance Improvements
+
+- **bio**: Adjusted track valid logic
+  ([`76423c0`](https://github.com/mbari-org/aipipeline/commit/76423c0995db4369378a9ccabd6db517b7a2612d))
+
+
 ## v0.60.5 (2025-03-17)
 
 ### Bug Fixes
