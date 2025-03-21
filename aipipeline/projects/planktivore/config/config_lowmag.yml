@@ -1,5 +1,5 @@
-# aipipeline/projects/planktivore/config.yml
-# Config file for Planktivore project production
+# aipipeline/projects/planktivore/config_lowmag.yml
+# Config file for Planktivore project log mag images
 
 redis:
   host: "doris.shore.mbari.org"
