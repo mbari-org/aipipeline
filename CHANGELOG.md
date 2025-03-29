@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.60.7 (2025-03-29)
+
+### Bug Fixes
+
+- **ptvr**: Updated recipe for loading to replace scratch path as needed for load checking
+  ([`011c997`](https://github.com/mbari-org/aipipeline/commit/011c997c9c022af213cc3395167aadc4c34b606d))
+
+### Performance Improvements
+
+- **bio**: Added category reduction json in prep for retraining ViTS model
+  ([`e5ec83d`](https://github.com/mbari-org/aipipeline/commit/e5ec83d6f54d70429b9ae037dda5fc7823054e76))
+
+
 ## v0.60.6 (2025-03-20)
 
 ### Performance Improvements
