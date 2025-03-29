@@ -155,10 +155,12 @@ cluster-ptvr-images *more_args="":
     --config-ini ./aipipeline/projects/planktivore/config/sdcat.ini \
     --device cuda:1 {{more_args}}
 # Load planktivore ROI clusters, e.g. just load-ptvr-clusters aidata-export-03-low-mag tmp/roi/cluster.csv
-load-ptvr-clusters collection="aidata-export-03-low-mag" clusters='tmp/roi/cluster.csv' *more_args="":
-    time conda run -n aipipeline --no-capture-output aidata load clusters \
-        --config ./aipipeline/projects/planktivoreconfig/config.yml \
-        --input {{clusters}} \
+load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
+  cp {{clusters}} test.csv
+  sed -i 's|/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square/|/mnt/DeepSea-AI/data/Planktivore/cluster/raw/aidata-export-03-low-mag/|g' test.csv
+  time conda run -n aipipeline --no-capture-output aidata load boxes \
+        --config ./aipipeline/projects/planktivore/config/config_lowmag.yml \
+        --input test.csv \
         --token $TATOR_TOKEN {{more_args}}
 # Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
 rescale-ifcb-images collection="2014":
@@ -319,10 +321,10 @@ run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_202
     export PYTHONPATH=deps:deps/biotrack:.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
        --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 10 --version delme \
-       --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-16ntnr-20250130/ \
-       --det-model /mnt/DeepSea-AI/models/megadet --skip-load \
-       --stride 1 --video {{video}} --max-seconds 10 --flush --gpu-id {{gpu_id}}
+       --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 60 --min-frames 1 --version delme \
+       --vits-model /mnt/DeepSea-AI/models/M3/mbari-m3-vits-b-8-20250202/ \
+       --det-model /mnt/DeepSea-AI/models/FathomNet/megaladon --skip-load \
+       --stride 1 --video {{video}} --max-seconds 1 --flush --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds
 run-m video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4' gpu_id='0':
@@ -372,8 +374,8 @@ run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20
      --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
      --config ./aipipeline/projects/i2map/config/config.yml \
      --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
-     --max-frames-tracked 200 --min-score-det 0.02 --min-score-track 0.1 --min-frames 8 --version metadetrt-vits-track-ft \
-     --stride 1 --skip-load --batch-size 16 --create-video --max-seconds 1 \
+     --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --min-frames 2 --version metadetrt-vits-track-ft \
+     --stride 1 --skip-load --batch-size 30 --create-video --max-seconds 1 \
      --video {{video}} --gpu-id {{gpu_id}}
 
 # Run the mega strided tracking pipeline on a single video to test the pipeline
