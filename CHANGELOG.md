@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.61.1 (2025-03-30)
+
+### Performance Improvements
+
+- **ptvr**: Final sdcat settings for clustering defaults.
+  ([`b9090a2`](https://github.com/mbari-org/aipipeline/commit/b9090a2ce06114cc16e15700ad6bbf26b8184e9a))
+
+
 ## v0.61.0 (2025-03-30)
 
 ### Features
