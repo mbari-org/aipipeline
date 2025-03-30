@@ -39,6 +39,11 @@ def process_roi(roi_file, output_path):
     roi_padded_rescaled = cv2.cvtColor(roi_padded_rescaled, cv2.COLOR_GRAY2RGB)
     cv2.imwrite(str(output_path_roi / roi_file.name), roi_padded_rescaled)
 
+    # Also save as grayscale for diagram
+    # Invert the image
+    # roi_padded = 255 - roi_padded
+    # cv2.imwrite(str(output_path_roi / f"{roi_file.stem}_gray.png"), roi_padded)
+
 def pad_and_rescale(input_path: Path, output_path: Path):
     if not output_path.exists():
         output_path.mkdir(parents=True, exist_ok=True)
