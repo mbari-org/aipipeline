@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.61.0 (2025-03-30)
+
+### Features
+
+- **bio**: Added standalone clean pipeline for running cleanvision quickly and recipe for
+  downloading all cteno examples tracked from Haddock dives
+  ([`6a3de45`](https://github.com/mbari-org/aipipeline/commit/6a3de4520540860a13b21c243dd3616efd811e4d))
+
+
 ## v0.60.7 (2025-03-29)
 
 ### Bug Fixes
