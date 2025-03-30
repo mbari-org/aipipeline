@@ -7,9 +7,10 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
-  version: "mega-vits-track-gcam"
-  labels: "all"
-  download_args: ["--verified --min-saliency 1000"]
+#  version: "mega-vits-track-gcam"
+  version: "" #Download from any version
+  labels: "Ctenophora sp. A"
+  download_args: ["--verified"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
