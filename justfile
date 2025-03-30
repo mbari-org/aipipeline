@@ -439,6 +439,16 @@ load-i2mapbulk data='data':
 download-i2mapbulk-unlabeled:
   just --justfile {{justfile()}} download-crop i2mapbulk --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml
 
+# Generate training data for the bio project
+gen-bio-data image_dir="":
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    just --justfile {{justfile()}} download-crop bio --skip-clean True
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
+        --config ./aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/901103-biodiversity/crops
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
+        --config ./aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/M3/crops
+
 # Generate training data for the CFE project
 gen-cfe-data:
   just --justfile {{justfile()}} download-crop cfe --skip-clean True
