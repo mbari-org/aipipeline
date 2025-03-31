@@ -1,3 +1,7 @@
+# Model files
+*.pt*
+*.mlmodel
+
 *.txt
 *.log
 *.env

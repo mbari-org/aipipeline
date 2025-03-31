@@ -99,7 +99,6 @@ class ExportCallback(Callback):
 
     def on_predict_batch_end(self, predictor: Predictor, tracks: list[Track]):
         """ Queue track localizations in REDIS and export to CSV """
-        closed_tracks = [t for t in tracks if t.is_closed()]
         min_frames = predictor.min_frames
         min_score_track = predictor.min_score_track
         version_id = predictor.version_id

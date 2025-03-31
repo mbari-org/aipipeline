@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument("--gpu-id", help="GPU ID to use for inference.", required=False, type=int, default=0)
     parser.add_argument("--vits-model", help="ViTS vits_model location", required=False, type=str, default="/mnt/DeepSea-AI/models/m3midwater-vit-b-16/")
     parser.add_argument("--skip-load", help="Skip loading the video reference into Tator.", action="store_true")
+    parser.add_argument("--skip-track", help="Skip tracking and only run inference.", action="store_true")
     parser.add_argument("--imshow", help="Display the video as images with track results", action="store_true")
     parser.add_argument("--stride", help="Frame stride, e.g. 10 run every 10th frame", default=3, type=int)
     parser.add_argument("--class_name", help="Class name to target inference.", default="Ctenophora sp. A", type=str)
