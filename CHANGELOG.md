@@ -1,6 +1,16 @@
 # CHANGELOG
 
 
+## v0.62.0 (2025-03-31)
+
+### Features
+
+- **bio**: Added support for running stride video processing in optimized tracking code for best
+  performance; replaces most run_strided_track.py code capability. To use, add --skip-track and
+  --min-frames 0
+  ([`8c32abc`](https://github.com/mbari-org/aipipeline/commit/8c32abc81b3b94795323d77b28b314e09824002b))
+
+
 ## v0.61.1 (2025-03-30)
 
 ### Performance Improvements
