@@ -113,8 +113,11 @@ if __name__ == "__main__":
  
     source = VideoSource(**args_dict)
 
-    # Create a tracker
-    tracker = BioTracker(source.width, source.height, **args_dict)
+    if args.skip_track:
+        tracker = None
+    else:
+        # Create a tracker
+        tracker = BioTracker(source.width, source.height, **args_dict)
 
     # Create the callbacks for capturing ancillary data and exporting the results
     callbacks = [ExportCallback]

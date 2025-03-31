@@ -8,6 +8,8 @@ from typing import Any
 
 import numpy as np
 from aipipeline.projects.bio.core.bioutils import show_boxes, filter_blur_pred, get_ancillary_data
+from biotrack.embedding import ViTWrapper
+from biotrack.track import Track
 from biotrack.tracker import BioTracker
 import torch
 
@@ -35,6 +37,7 @@ class Predictor:
         self.config = config_dict
         self.min_depth = kwargs.get("min_depth", -1)
         self.detection_model = detection_model
+        self.fake_track_id = 0 # only used if no tracker is available
         self.source = source
         self.device_id = kwargs.get("device_id", 0)
         self.has_gpu = torch.cuda.is_available()
@@ -45,6 +48,11 @@ class Predictor:
         self.crop_path.mkdir(parents=True, exist_ok=True)
         self.device = torch.device(f"cuda:{self.device_id}" if torch.cuda.is_available() else "cpu")
         self.tracker = tracker
+        if self.tracker is None:
+            model_name = kwargs.get("vits_model")
+            if model_name is None:
+                raise ValueError("Need to set the model name for the Vision Transformer if no tracker is provided")
+            self.vit_wrapper = ViTWrapper(device_id=self.device_id, model_name=model_name)
         self.duration_secs = source.duration_secs
         self.fps = source.frame_rate
         self.total_frames = int(self.duration_secs * self.fps)
@@ -123,44 +131,61 @@ class Predictor:
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
                 logger.info(f"Detection {i} {t_d}")
-            logger.info(f"Tracking {len(det_n)} detections from frame {true_frame_range[0]} to {true_frame_range[-1]}")
+            logger.info(f"Found {len(det_n)} detections from frame {true_frame_range[0]} to {true_frame_range[-1]}")
 
-            image_stack_t = torch.nn.functional.interpolate(batch_t, size=(self.tracker.model_height, self.tracker.model_width), mode='bilinear', align_corners=False)
-            image_stack = (image_stack_t * 255.0).byte()  # Denormalize and convert to uint8
-            image_stack = image_stack.cpu().numpy()  # Convert to NumPy array
-            image_stack = image_stack.transpose(0, 2, 3, 1)[..., ::-1]  # Reverse transpose and channel order (BGR to RGB)
+            if self.tracker:
+                image_stack_t = torch.nn.functional.interpolate(batch_t, size=(self.tracker.model_height, self.tracker.model_width), mode='bilinear', align_corners=False)
+                image_stack = (image_stack_t * 255.0).byte()  # Denormalize and convert to uint8
+                image_stack = image_stack.cpu().numpy()  # Convert to NumPy array
+                image_stack = image_stack.transpose(0, 2, 3, 1)[..., ::-1]  # Reverse transpose and channel order (BGR to RGB)
+                tracks = self.tracker.update_batch(true_frame_range[0],
+                                              image_stack.copy(),
+                                              detections=det_n,
+                                              max_empty_frames=self.source.stride*5,
+                                              max_frames=self.max_frames_tracked,
+                                              save_cotrack_video=True,
+                                              imshow=self.imshow)
 
-            tracks = self.tracker.update_batch(true_frame_range[0],
-                                          image_stack.copy(),
-                                          detections=det_n,
-                                          max_empty_frames=self.source.stride*5,
-                                          max_frames=self.max_frames_tracked,
-                                          save_cotrack_video=True,
-                                          imshow=self.imshow)
+                # Display the predictions
+                if self.imshow:
+                    image_stack_s = torch.nn.functional.interpolate(batch_t, size=(1280, 1280), mode='bilinear',
+                                                                    align_corners=False)  # Resize for detection
+                    show_boxes(image_stack_s, det_n)
 
-            # Display the predictions
-            if self.imshow:
-                image_stack_s = torch.nn.functional.interpolate(batch_t, size=(1280, 1280), mode='bilinear',
-                                                                align_corners=False)  # Resize for detection
-                show_boxes(image_stack_s, det_n)
+                # Report how many tracks are greater than the minimum frames
+                good_tracks = [t for t in tracks if t.num_frames > self.min_frames]
+                logger.info("===============================================")
+                logger.info(f"Number of tracks {len(tracks)}")
+                logger.info(f"Number of good tracks {len(good_tracks)}")
+                for t in good_tracks:
+                    t.dump()
 
-            # Report how many tracks are greater than the minimum frames
-            good_tracks = [t for t in tracks if t.num_frames > self.min_frames]
-            logger.info("===============================================")
-            logger.info(f"Number of tracks {len(tracks)}")
-            logger.info(f"Number of good tracks {len(good_tracks)}")
-            for t in good_tracks:
-                t.dump()
+                predictor = self
+                if self.max_seconds and current_time_secs > self.max_seconds:
+                    logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
+                    self.tracker.close_all_tracks()
+                    self.run_callbacks("on_predict_batch_end", predictor, tracks)
+                    self.tracker.purge_closed_tracks(true_frame_num)
+                    self.run_callbacks("on_end", predictor)
+                    return
 
-            predictor = self
-            if self.max_seconds and current_time_secs > self.max_seconds:
-                logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
-                self.tracker.close_all_tracks()
                 self.run_callbacks("on_predict_batch_end", predictor, tracks)
                 self.tracker.purge_closed_tracks(true_frame_num)
-                self.run_callbacks("on_end", predictor)
-                return
+            else:
+                logger.info("No tracker found")
+                tracks = []
+                unique_frames = np.unique([d["frame"] for d in det_n])
+                for k, i in enumerate(unique_frames):
+                    boxes = [[d['x'], d['y'], d['xx'], d['xy']] for d in det_n if d["frame"] == i]
+                    images = [d['crop_path'] for d in det_n if d["frame"] == i]
+                    embeddings, predicted_classes, predicted_scores, _, _ = self.vit_wrapper.process_images(images, boxes)
+                    for img_path, emb, box, scores, labels in zip(images, embeddings, boxes, predicted_scores, predicted_classes):
+                        t = Track(self.fake_track_id, self.source.width, self.source.height)
+                        t.update_box(frame_num=d["frame"], box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
+                        # Force close the track since loading does not happen on open tracks
+                        t.close_track()
+                        self.fake_track_id += 1
+                        tracks.append(t)
 
-            self.run_callbacks("on_predict_batch_end", predictor, tracks)
-            self.tracker.purge_closed_tracks(true_frame_num)
+                self.run_callbacks("on_predict_batch_end", self, tracks)
             true_frame_num += len(batch_t)
