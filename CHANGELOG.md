@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.63.0 (2025-04-03)
+
+### Features
+
+- **bio**: Added max depth and recipe for running strided inference pipeline
+  ([`7763d1e`](https://github.com/mbari-org/aipipeline/commit/7763d1e4427caea2aa3713b0d058659db6e0ed27))
+
+
 ## v0.62.0 (2025-03-31)
 
 ### Features
