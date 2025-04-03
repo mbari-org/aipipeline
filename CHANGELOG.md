@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.64.0 (2025-04-03)
+
+### Features
+
+- **bio**: Load single class with e.g. --class-name 'Ctenophora sp. A'; supported with both tracking
+  and no tracking
+  ([`c190319`](https://github.com/mbari-org/aipipeline/commit/c190319aef2e0dea423607e8494c49b95168afa0))
+
+
 ## v0.63.0 (2025-04-03)
 
 ### Features
