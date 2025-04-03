@@ -36,6 +36,7 @@ class Predictor:
         self.callbacks = callbacks or []
         self.config = config_dict
         self.min_depth = kwargs.get("min_depth", -1)
+        self.max_depth = kwargs.get("max_depth", -1)
         self.detection_model = detection_model
         self.fake_track_id = 0 # only used if no tracker is available
         self.source = source
@@ -96,8 +97,12 @@ class Predictor:
             else:
                 depth = date_start["depthMeters"]
 
-                if depth < self.min_depth:
+                if self.min_depth > 0 and depth < self.min_depth:
                     logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
+                    return
+
+                if self.max_depth > 0 and depth > self.max_depth:
+                    logger.warning(f"Depth {depth} > {self.max_depth} skip processing {self.source.name}")
                     return
 
         true_frame_num = 0
