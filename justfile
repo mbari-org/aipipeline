@@ -281,7 +281,7 @@ predict-vss project='uav' image_dir='/tmp/download' *more_args="":
 run-ctenoA-test:
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_track.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/run_strided_infer.py \
     --config ./aipipeline/projects/bio/config/config.yml \
     --class_name "Ctenophora sp. A" \
     --endpoint-url "http://localhost:8001/predict" \
@@ -334,8 +334,27 @@ run-m video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.
        --config ./aipipeline/projects/bio/config/config.yml \
        --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 20 --version delme \
        --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-m3s-vits-b-8nt-20250216 \
-       --det-model /mnt/DeepSea-AI/models/megadetrt --skip-load --create-video --imshow \
+       --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 --skip-load --create-video --imshow \
        --stride 4 --video {{video}} --max-seconds 5 --flush --gpu-id {{gpu_id}}
+
+# Run the mega strided pipeline on a videos in a dive for the bio project
+run-mega-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0':
+    #!/usr/bin/env bash
+    export PYTHONPATH=deps:deps/biotrack:.
+    export MPLCONFIGDIR=/tmp
+    process_file() {
+     local video="$1"
+     echo "Processing $video"
+     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
+       --config ./aipipeline/projects/bio/config/config.yml \
+       --skip-track --min-score-det 0.1 --batch-size 30 --min-score-track 0.1 --min-frames 0 --min-depth 200 --max-depth 2000 --version megadet-vits \
+       --vits-model /mnt/DeepSea-AI/models/bio/mbari-m3ctnA-vits-b16-20250331 \
+       --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
+       --stride 30 --video $video --gpu-id {{gpu_id}}
+     }
+    export -f process_file
+    # Run 4 videos in parallel
+    find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 1 -n 4 -I {} bash -c 'process_file "{}"'
 
 #./models/mbari_452k_yolov10
 # Run the mega strided tracking pipeline on an entire dive for the bio project
@@ -357,7 +376,7 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
        --config ./aipipeline/projects/bio/config/config.yml \
        --max-frames-tracked 200 --min-score-det 0.1 --batch-size 34 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
-       --det-model /mnt/DeepSea-AI/models/megadet \
+       --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
        --stride 16 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file

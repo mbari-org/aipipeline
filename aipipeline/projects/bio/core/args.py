@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument("--det-model",help="Object detection model path.",required=False, type=str,)
     parser.add_argument("--batch-size", help="Batch size", default=1, type=int)
     parser.add_argument("--min-depth", help="Minimum depth for detections. Any video shallower than this at the beginning of the video will be skipped", default=0, type=int)
+    parser.add_argument("--max-depth", help="Maximum depth for detections. Any video deeper than this at the beginning of the video will be skipped", default=4000, type=int)
     parser.add_argument("--flush", help="Flush the REDIS database.", action="store_true")
     parser.add_argument('--allowed-classes',type=str,nargs='+',help='List of allowed classes.')
     parser.add_argument('--class-remap',type=str,help='Dictionary of class remapping, formatted as a string.')
