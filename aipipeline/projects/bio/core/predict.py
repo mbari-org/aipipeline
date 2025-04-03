@@ -37,6 +37,7 @@ class Predictor:
         self.config = config_dict
         self.min_depth = kwargs.get("min_depth", -1)
         self.max_depth = kwargs.get("max_depth", -1)
+        self.class_name = kwargs.get("class_name", None) # the class name to target for prediction, if None, all classes are used
         self.detection_model = detection_model
         self.fake_track_id = 0 # only used if no tracker is available
         self.source = source
@@ -157,8 +158,15 @@ class Predictor:
                                                                     align_corners=False)  # Resize for detection
                     show_boxes(image_stack_s, det_n)
 
-                # Report how many tracks are greater than the minimum frames
-                good_tracks = [t for t in tracks if t.num_frames > self.min_frames]
+                # Remove any tracks that do not match the target class if specified
+                if self.class_name:
+                    for t in tracks:
+                        if t.predicted_classes[0] != self.class_name and t.predicted_classes[1] != self.class_name:
+                            logger.info(f"Removing track {t.track_id} with class {t.predicted_classes} - not {self.class_name}")
+                            t.close_track()
+
+                # Report how many tracks are greater than the minimum frames and not closed
+                good_tracks = [t for t in tracks if t.num_frames > self.min_frames and not t.is_closed()]
                 logger.info("===============================================")
                 logger.info(f"Number of tracks {len(tracks)}")
                 logger.info(f"Number of good tracks {len(good_tracks)}")
@@ -185,8 +193,13 @@ class Predictor:
                     images = [d['crop_path'] for d in det_n if d["frame"] == i]
                     embeddings, predicted_classes, predicted_scores, _, _ = self.vit_wrapper.process_images(images, boxes)
                     for img_path, emb, box, scores, labels in zip(images, embeddings, boxes, predicted_scores, predicted_classes):
+                        if self.class_name and labels[0] != self.class_name:
+                            logger.info(f"Removing track {self.fake_track_id} with class {labels} - not {self.class_name}")
+                            t.close_track()
+                            continue
                         t = Track(self.fake_track_id, self.source.width, self.source.height)
-                        t.update_box(frame_num=d["frame"], box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
+                        true_frame = d["frame"]  + true_frame_range[0]
+                        t.update_box(frame_num=true_frame, box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
                         # Force close the track since loading does not happen on open tracks
                         t.close_track()
                         self.fake_track_id += 1
