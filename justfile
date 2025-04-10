@@ -489,3 +489,6 @@ gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline python3 aipipeline/prediction/gen_stats.py --data {{data}} --prefix {{project}}
+# Transcode i2MAP videos
+transcode-i2map:
+    aipipeline/projects/i2map/mov2mp4.sh
