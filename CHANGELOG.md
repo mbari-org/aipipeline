@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.65.0 (2025-04-10)
+
+### Features
+
+- **i2map**: Transcode .mov to .mp4 for better integration with mantis/tator to generate reports and
+  preview results
+  ([`3109f00`](https://github.com/mbari-org/aipipeline/commit/3109f00144af5182217eab7ec4ead751dfe3fe01))
+
+### Performance Improvements
+
+- **bio**: Only capture ancillary data when needed and updated recipe for strided processing
+  ([`5df4ff5`](https://github.com/mbari-org/aipipeline/commit/5df4ff5ecb0a47945f4f3d1566296d478401bf65))
+
+
 ## v0.64.0 (2025-04-03)
 
 ### Features
