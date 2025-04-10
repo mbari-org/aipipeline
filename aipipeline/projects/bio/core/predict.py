@@ -91,22 +91,8 @@ class Predictor:
                 logger.error("No dive metadata found")
                 return
 
-            date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
-            if date_start is None or "depthMeters" not in date_start:
-                logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
-                input("All ancillary data will be missing for this dive. Press any key to continue")
-            else:
-                depth = date_start["depthMeters"]
-
-                if self.min_depth > 0 and depth < self.min_depth:
-                    logger.warning(f"Depth {depth} < {self.min_depth} skip processing {self.source.name}")
-                    return
-
-                if self.max_depth > 0 and depth > self.max_depth:
-                    logger.warning(f"Depth {depth} > {self.max_depth} skip processing {self.source.name}")
-                    return
-
         true_frame_num = 0
+        last_depth = self.min_depth
 
         for batch_num, self.batch in enumerate(self.source):
 
@@ -195,8 +181,36 @@ class Predictor:
                     for img_path, emb, box, scores, labels in zip(images, embeddings, boxes, predicted_scores, predicted_classes):
                         if self.class_name and labels[0] != self.class_name:
                             logger.info(f"Removing track {self.fake_track_id} with class {labels} - not {self.class_name}")
-                            t.close_track()
                             continue
+
+                        date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
+                        if date_start is None or "depthMeters" not in date_start:
+                            logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
+                            input("All ancillary data will be missing for this dive. Press any key to continue")
+                        else:
+                            depth = date_start["depthMeters"]
+
+                            if self.min_depth > 0 and depth < self.min_depth:
+                                logger.warning(
+                                    f"Depth {depth} < {self.min_depth} skip processing {self.source.video_name}")
+                                # Stop if we are above the min depth and ascending
+                                if depth < last_depth:
+                                    logger.info(f"Reached min depth {self.min_depth} and ascending. Stopping at {depth} meters")
+                                    self.run_callbacks("on_predict_batch_end", self, tracks)
+                                    return
+                                continue
+
+                            if self.max_depth > 0 and depth > self.max_depth:
+                                logger.warning(
+                                    f"Depth {depth} > {self.max_depth} skip processing {self.source.video_name}")
+                                # Stop if we are beyond the max depth and descending
+                                if depth > last_depth:
+                                    logger.info(f"Reached max depth {self.max_depth} and descending. Stopping at {depth} meters")
+                                    self.run_callbacks("on_predict_batch_end", self, tracks)
+                                    return
+                                continue
+
+                            last_depth = depth
                         t = Track(self.fake_track_id, self.source.width, self.source.height)
                         true_frame = d["frame"]  + true_frame_range[0]
                         t.update_box(frame_num=true_frame, box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
