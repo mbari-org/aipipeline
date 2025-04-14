@@ -8,6 +8,7 @@ python-dotenv
 pyyaml
 scikit-learn
 matplotlib
+moviepy
 albumentations==1.4.23
 tator
 torch
