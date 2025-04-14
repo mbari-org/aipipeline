@@ -12,17 +12,17 @@ data:
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.5
-mounts:
-  - name: "video"
-    path: "/mnt/M3"
-    host: "m3.shore.mbari.org"
-    nginx_root: "/M3"
 
+mounts:
   - name: "image"
-    path: "/raid/bio"
-    host: "digits-dev-box-fish.shore.mbari.org"
-    nginx_root: "/bio"
-    port: 8081
+    path: "/mnt/DeepSea-AI"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/DeepSea-AI"
+
+  - name: "video"
+    path: "/mnt/DeepSea-AI"
+    host: "mantis.shore.mbari.org"
+    nginx_root: "/DeepSea-AI"
 
 sdcat:
   model: "hustvl/yolos-tiny"
@@ -35,7 +35,7 @@ vss:
 
 tator:
   project: "901103-biodiversity"
-  host: "mantis.shore.mbari.org"
+  host: "https://mantis.shore.mbari.org"
   url_load: "http://mantis.shore.mbari.org:8001/label/id"
   image:
     attributes:
@@ -43,6 +43,12 @@ tator:
         type: string
       time:
         type: string
+  video:
+    attributes:
+      video_reference_uuid:
+        type: string
+      iso_start_datetime:
+        type: datetime
   box:
     attributes:
       Label:

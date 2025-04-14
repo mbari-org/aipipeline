@@ -43,7 +43,7 @@ class VideoSource:
 
     @property
     def video_path(self):
-        return self.video
+        return Path(self.video)
 
     def preprocess(self, images):
         imgs = []

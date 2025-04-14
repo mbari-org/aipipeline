@@ -46,7 +46,7 @@ mounts:
 
 tator:
   project: "902004-Planktivore"
-  host: "mantis.shore.mbari.org"
+  host: "https://mantis.shore.mbari.org"
   url_load: "http://mantis.shore.mbari.org:8001/label/id"
   image:
     attributes:
