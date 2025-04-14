@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.66.0 (2025-04-14)
+
+### Features
+
+- Fetch video metadata from moviepy and VAM for best support
+  ([`a948686`](https://github.com/mbari-org/aipipeline/commit/a94868607567c1b55638abb50a6427309c0733f5))
+
+- Upgrade all config to https://mantis
+  ([`8d42df7`](https://github.com/mbari-org/aipipeline/commit/8d42df7e299668bf1ecb5727d27fa09f0e134a4f))
+
+
 ## v0.65.0 (2025-04-10)
 
 ### Features
