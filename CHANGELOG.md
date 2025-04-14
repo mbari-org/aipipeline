@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v0.67.0 (2025-04-14)
+
+### Features
+
+- Added missing requirements for moviepy
+  ([`17128da`](https://github.com/mbari-org/aipipeline/commit/17128da6de8076df29a70e232d406bebbc6a23ad))
+
+- **i2map**: Recipe for processing i2MAP strided video and updated paths to midwater detection
+  models
+  ([`0ebe664`](https://github.com/mbari-org/aipipeline/commit/0ebe664cc9821825f3317853884d0096bb18f7c8))
+
+
 ## v0.66.0 (2025-04-14)
 
 ### Features
