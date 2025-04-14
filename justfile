@@ -334,7 +334,7 @@ run-m video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.
        --config ./aipipeline/projects/bio/config/config.yml \
        --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 20 --version delme \
        --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-m3s-vits-b-8nt-20250216 \
-       --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 --skip-load --create-video --imshow \
+       --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 --skip-load --create-video --imshow \
        --stride 4 --video {{video}} --max-seconds 5 --flush --gpu-id {{gpu_id}}
 
 # Run the mega strided pipeline on a videos in a dive for the bio project
@@ -350,7 +350,7 @@ run-mega-bio-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_20231019T18
         --skip-track --min-score-det 0.1 --batch-size 60 --min-score-track 0.1 --min-frames 0 --min-depth 200 --max-depth 2000 --version ctenophora-sp-a-mega-vits \
         --vits-model /mnt/DeepSea-AI/models/bio/mbari-m3ctnA-vits-b16-20250331 \
         --class-name "Ctenophora sp. A" \
-        --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
+        --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
         --stride 60 --video $video --gpu-id {{gpu_id}}
         }
     export -f process_file
@@ -376,7 +376,7 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'
        --config ./aipipeline/projects/bio/config/config.yml \
        --max-frames-tracked 200 --min-score-det 0.1 --batch-size 34 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
-       --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
+       --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
        --stride 16 --video $video --gpu-id {{gpu_id}}
      } 
     export -f process_file
@@ -390,12 +390,30 @@ run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20
     #!/usr/bin/env bash
     export PYTHONPATH=.:deps/biotrack:.
     time python3 aipipeline/projects/bio/process.py \
-     --det-model /mnt/DeepSea-AI/models/megadetrt-yolov5 \
+     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
      --config ./aipipeline/projects/i2map/config/config.yml \
      --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
      --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --min-frames 2 --version metadetrt-vits-track-ft \
      --stride 1 --skip-load --batch-size 30 --create-video --max-seconds 1 \
      --video {{video}} --gpu-id {{gpu_id}}
+
+# Run the mega strided pipeline on a videos in a dive for the i2map project
+run-mega-stride-i2map-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/' gpu_id='0':
+    #!/usr/bin/env bash
+    export PYTHONPATH=deps:deps/biotrack:.
+    export MPLCONFIGDIR=/tmp
+    process_file() {
+        local video="$1"
+        echo "Processing $video"
+        time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process.py \
+        --config ./aipipeline/projects/i2map/config/config.yml \
+        --skip-track --min-score-det 0.1 --batch-size 60 --min-score-track 0.1 --min-frames 0 --version megadet-vits \
+        --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
+        --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
+        --stride 120 --video $video --gpu-id {{gpu_id}}
+        }
+    export -f process_file
+    find  "{{dive}}" -name '*.m*' ! -name "._*.m*" -type f | xargs -P 1 -n 1 -I {} bash -c 'process_file "{}"'
 
 # Run the mega strided tracking pipeline on a single video to test the pipeline
 run-mega-track-test-1min:
@@ -403,7 +421,7 @@ run-mega-track-test-1min:
     export PYTHONPATH=.:/Users/dcline/Dropbox/code/biotrack:.
     time python3 aipipeline/projects/bio/predict.py \
      --config ./aipipeline/projects/bio/config/config.yml \
-     --det-model /mnt/DeepSea-AI/models/megadet \
+     --det-model /mnt/DeepSea-AI/models/midwater/megadet \
      --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
      --max-frames-tracked 200 --min-score-det 0.0002 --min-score-track 0.5 --min-frames 5 --version mega-vits-track-gcam \
      --stride 8 --max-seconds 60 --imshow --skip-load  \
