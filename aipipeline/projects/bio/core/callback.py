@@ -51,10 +51,11 @@ class AncillaryCallback(Callback):
     """Custom callback to fetch ancillary data for bio projects."""
     def on_predict_start(self, predictor: Predictor):
         video_name = predictor.source.video_name
+        video_path = predictor.source.video_path
         redis_queue = predictor.redis_queue
         print(f"Getting metadata for video: {video_name}")
         try:
-            md = get_video_metadata(video_name)
+            md = get_video_metadata(video_path)
             if md is None:
                 logger.error(f"Failed to get video metadata for {video_name}")
             else:
@@ -65,7 +66,7 @@ class AncillaryCallback(Callback):
                 # http://mantis.shore.mbari.org/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4
                 # https://m3.shore.mbari.org/videos/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4
                 # Replace m3.shore.mbari.org/videos with mantis.shore.mbari.org/M3
-                video_url = video_url.replace("https://m3.shore.mbari.org/videos", "http://mantis.shore.mbari.org")
+                video_url = video_url.replace("https://m3.shore.mbari.org/videos", "https://mantis.shore.mbari.org")
                 logger.info(f"video_ref_uuid: {video_ref_uuid}")
                 redis_queue.hset(
                     f"video_refs_start:{video_ref_uuid}",
@@ -109,7 +110,7 @@ class ExportCallback(Callback):
 
         for track in tracks:
             best_frame, best_label, best_box, best_score = track.get_best(False)
-            best_frame += 1 # Convert to 1-based frame number
+            # best_frame -= 1 # Convert to 1-based frame number
             best_time_secs = float(best_frame / predictor.source.frame_rate)
             box_str = ", ".join([f"{box:.4f}" for box in best_box])
             score_str = ", ".join([f"{score:.2f}" for score in best_score])

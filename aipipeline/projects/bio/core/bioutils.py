@@ -2,7 +2,11 @@
 # Filename: projects/bio/core/bioutils.py
 # Description: General utility functions for bio projects
 import hashlib
+import mimetypes
+import re
+
 import cv2
+import pytz
 import torch
 import requests
 import io
@@ -15,6 +19,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
 
+from moviepy import VideoFileClip
+
 from aipipeline.docker.utils import run_docker
 from aipipeline.prediction.utils import crop_square_image
 
@@ -23,62 +29,88 @@ logger = logging.getLogger(__name__)
 
 def get_ancillary_data(dive: str, config_dict: dict, iso_datetime: any) -> dict:
     try:
-        # Create a random index for the container name
-        index = random.randint(0, 1000)
-        platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
-        platform = ''.join(platform)
-        if isinstance(iso_datetime, str):
-            iso_datetime = datetime.fromisoformat(iso_datetime)
+        # Handle i2MAP by extracting the depth from the filename
+        if 'i2MAP' in dive:
+            pattern_date_depth = re.compile(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z.*?(\d{3})m")  # 20161025T184500Z_300m
+            if pattern_date_depth.search(dive):
+                match = pattern_date_depth.search(dive)
+                if match is None:
+                    return {}
+                year, month, day, hour, minute, second, depth = map(int, match.groups())
+                dt = datetime(year, month, day, hour, minute, second, tzinfo=pytz.utc)
+                data = {"dive": dive, "depthMeters": depth, "iso_datetime": dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                        "latitude": 36.7253, "longitude": -121.7840, "temperature": -1, "oxygen": -1,
+                        "start_timestamp": dt.strftime("%Y%m%dT%H%M%SZ")}
+                return data
         else:
-            iso_datetime = iso_datetime
-        container = run_docker(
-            image=config_dict["docker"]["expd"],
-            name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}-{index}",
-            args_list=[platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
-            auto_remove=False,
-        )
-        if container:
-            container.wait()
-            # get the output string and convert to a dictionary
-            output = container.logs().decode("utf-8")
-            data = json.loads(output)
-            container.remove()
-            return data
-        else:
-            container.remove()
-            logger.error(f"Failed to capture expd data....")
+            # Create a random index for the container name
+            index = random.randint(0, 1000)
+            platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
+            platform = ''.join(platform)
+            if isinstance(iso_datetime, str):
+                iso_datetime = datetime.fromisoformat(iso_datetime)
+            else:
+                iso_datetime = iso_datetime
+            container = run_docker(
+                image=config_dict["docker"]["expd"],
+                name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}-{index}",
+                args_list=[platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
+                auto_remove=False,
+            )
+            if container:
+                container.wait()
+                # get the output string and convert to a dictionary
+                output = container.logs().decode("utf-8")
+                data = json.loads(output)
+                container.remove()
+                return data
+            else:
+                container.remove()
+                logger.error(f"Failed to capture expd data....")
     except Exception as e:
         logger.error(f"Failed to capture expd data....{e}")
 
 
-def get_video_metadata(video_name):
+def get_video_metadata(video_path: Path):
     """
-    Get video metadata from the VAM rest API
+    Get video metadata directly from a video file and further metadata if registered in  VAM
     """
     try:
         # Check if the metadata is cached
-        cache_file = f"/tmp/{video_name}.json"
+        cache_file = f"/tmp/{video_path.name}.json"
         if os.path.exists(cache_file):
             with open(cache_file, "r") as f:
                 return json.load(f)
-        query = f"http://m3.shore.mbari.org/vam/v1/media/videoreference/filename/{video_name}"
+
+        # If the video exists, get the metadata directly
+        video_clip = VideoFileClip(video_path.as_posix())
+        reader_metadata = video_clip.reader.infos.get('metadata')
+        metadata = {
+            "codec": reader_metadata["encoder"],
+            "mime": mimetypes.guess_type(video_path.as_posix())[0],
+            "resolution": video_clip.reader.size,
+            "size": os.stat(video_path.as_posix()).st_size,
+            "num_frames": video_clip.reader.n_frames,
+            "frame_rate": video_clip.reader.fps,
+            "uri": "",
+            "video_reference_uuid": video_path.name,
+            "start_timestamp": 0,
+        }
+        video_clip.close()
+
+        # Add in any M3 metadata if it exists
+        query = f"https:///{video_path.name}"
         logger.info(f"query: {query}")
         # Get the video reference uuid from the rest query JSON response
         response = requests.get(query)
         logger.info(f"response: {response}")
-        data = json.loads(response.text)[0]
-        logger.info(f"data: {data}")
-        metadata = {
-            "uri": data["uri"],
-            "video_reference_uuid": data["video_reference_uuid"],
-            "start_timestamp": data["start_timestamp"],
-            "mime": data["container"],
-            "resolution": (data["width"], data["height"]),
-            "size": data["size_bytes"],
-            "num_frames": int(data["frame_rate"] * data["duration_millis"] / 1000),
-            "frame_rate": data["frame_rate"],
-            "dive": data["video_sequence_name"],
-        }
+        if response.status_code != 200:
+            data = json.loads(response.text)[0]
+            logger.info(f"data: {data}")
+            metadata['video_reference_uuid'] = data["video_reference_uuid"]
+            metadata['dive'] = data["video_sequence_name"]
+            metadata['start_timestamp'] = data["start_timestamp"]
+
         # Cache the metadata to /tmp
         with open(cache_file, "w") as f:
             json.dump(metadata, f)
