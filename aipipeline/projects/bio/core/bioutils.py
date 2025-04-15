@@ -95,11 +95,12 @@ def get_video_metadata(video_path: Path):
             "uri": "",
             "video_reference_uuid": video_path.name,
             "start_timestamp": 0,
+            "dive": video_path.name,
         }
         video_clip.close()
 
         # Add in any M3 metadata if it exists
-        query = f"https:///{video_path.name}"
+        query = f"https://m3.shore.mbari.org/vam/v1/media/videoreference/filename/{video_path.name}"
         logger.info(f"query: {query}")
         # Get the video reference uuid from the rest query JSON response
         response = requests.get(query)
