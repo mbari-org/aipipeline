@@ -30,40 +30,30 @@ update-env:
 # Copy core dev code to the project on doris
 cp-core:
     cp justfile /Volumes/dcline/code/aipipeline/justfile
-    cp ./aipipeline/prediction/*.py /Volumes/dcline/code/aipipeline/aipipeline/prediction/
-    cp ./aipipeline/metrics/*.py /Volumes/dcline/code/aipipeline/aipipeline/metrics/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
 
 # Copy cfe dev code to the project on doris
 cp-dev-cfe:
-    cp ./aipipeline/projects/cfe/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/
-    cp ./aipipeline/projects/cfe/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/config/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.png' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/cfe/ /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/
+
 # Copy planktivore dev code to the project on doris
 cp-dev-ptvr:
-    cp ./aipipeline/projects/planktivore/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
-    cp ./aipipeline/projects/planktivore/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/config/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/planktivore/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
 
 # Copy uav dev code to the project on doris
 cp-dev-uav:
-    cp ./aipipeline/projects/uav/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/uav/
-    cp ./aipipeline/projects/uav/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/uav/config/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/uav/ /Volumes/dcline/code/aipipeline/aipipeline/projects/uav/
 
 # Copy bio dev code to the project on doris
 cp-dev-bio:
-    cp ./aipipeline/projects/bio/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
-    cp ./aipipeline/projects/bio/core/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/core
-    cp ./aipipeline/projects/bio/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/config/
-    cp ./deps/biotrack/biotrack/*.py /Volumes/dcline/code/aipipeline/deps/biotrack/biotrack/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/bio/ /Volumes/dcline/code/aipipeline/aipipeline/projects/bio/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./deps/biotrack/biotrack/ /Volumes/dcline/code/aipipeline/deps/biotrack/biotrack/
 
 # Copy i2map dev code to the project on doris
 cp-dev-i2map:
-    cp ./aipipeline/projects/i2map/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/
-    cp ./aipipeline/projects/i2mapbulk/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
-    cp ./aipipeline/projects/i2mapbulk/*.py /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/
-    cp ./aipipeline/projects/i2map/data/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/data/
-    cp ./aipipeline/projects/i2map/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
-    cp ./aipipeline/projects/i2mapbulk/data/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/data/
-    cp ./aipipeline/projects/i2mapbulk/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
-    cp ./aipipeline/projects/i2map/config/* /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/i2map/ /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/i2mapbulk/ /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/
 
 # Initialize labels for quick lookup, e.g. just init-labels uav 19
 init-labels project='uav' leaf_type_id='19':
