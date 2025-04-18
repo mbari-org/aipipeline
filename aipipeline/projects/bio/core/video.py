@@ -29,6 +29,7 @@ class VideoSource:
         self.device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
         self.current_frame = 0
         self.frame_count = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        self.video_mount = kwargs.get("video_mount", None)
 
     def __del__(self):
         self.close()
@@ -44,6 +45,16 @@ class VideoSource:
     @property
     def video_path(self):
         return Path(self.video)
+
+    @property
+    def video_url(self):
+        if self.video_mount:
+            url = self.video_path.as_uri()
+            url = url.replace(self.video_mount["path"], self.video_mount["nginx_root"])
+            url = url.replace('file://', f'https://{self.video_mount["host"]}')
+            return url
+        return self.video_path.as_uri()
+
 
     def preprocess(self, images):
         imgs = []
@@ -65,14 +76,22 @@ class VideoSource:
 
     def __next__(self):
         frames = []
-        while len(frames) < self.batch_size:
-            ret, frame = self.cap.read()
-            if not ret:
-                raise StopIteration
+        if self.batch_size == 1 and self.stride > 1:
+            for _ in range(self.stride):
+                ret, frame = self.cap.read()
+                self.current_frame += 1
+                if not ret:
+                    raise StopIteration
             frames.append(frame)
-            self.current_frame += 1
-        if not frames:
-            raise StopIteration
+        else:
+            while len(frames) < self.batch_size:
+                ret, frame = self.cap.read()
+                if not ret:
+                    raise StopIteration
+                frames.append(frame)
+                self.current_frame += 1
+            if not frames:
+                raise StopIteration
         return self.preprocess(frames)
 
     def close(self):
@@ -80,8 +99,8 @@ class VideoSource:
             self.cap.release()
 
     @property
-    def duration(self):
-        return self.duration_secs
+    def frame(self):
+        return self.current_frame
 
     @property
     def frame_rate(self):

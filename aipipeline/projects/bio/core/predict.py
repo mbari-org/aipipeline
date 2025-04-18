@@ -213,6 +213,7 @@ class Predictor:
                             last_depth = depth
                         t = Track(self.fake_track_id, self.source.width, self.source.height)
                         true_frame = d["frame"]  + true_frame_range[0]
+                        logger.info(f"Adding box {box} to frame {true_frame}")
                         t.update_box(frame_num=true_frame, box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
                         # Force close the track since loading does not happen on open tracks
                         t.close_track()
@@ -220,4 +221,4 @@ class Predictor:
                         tracks.append(t)
 
                 self.run_callbacks("on_predict_batch_end", self, tracks)
-            true_frame_num += len(batch_t)
+            true_frame_num = self.source.frame
