@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import random
+import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
@@ -71,20 +72,30 @@ def get_ancillary_data(dive: str, config_dict: dict, iso_datetime: any) -> dict:
         logger.error(f"Failed to capture expd data....{e}")
 
 
-def get_video_metadata(video_path: Path):
+def get_video_metadata(video_path: Path) -> dict:
     """
     Get video metadata directly from a video file and further metadata if registered in  VAM
     """
     try:
-        # Check if the metadata is cached
+        # Check if the metadata is cached and not expired
         cache_file = f"/tmp/{video_path.name}.json"
-        if os.path.exists(cache_file):
+        creation_date = video_path.stat().st_mtime
+        age = datetime.now().timestamp() - creation_date
+        if os.path.exists(cache_file) and age < 86400:  # 24 hours
             with open(cache_file, "r") as f:
                 return json.load(f)
 
         # If the video exists, get the metadata directly
         video_clip = VideoFileClip(video_path.as_posix())
         reader_metadata = video_clip.reader.infos.get('metadata')
+
+        # Extract the starting ISO datetime from the filename
+        start_timestamp_str = re.search(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z", video_path.name)
+        if start_timestamp_str:
+            from dateutil.parser import isoparse
+            start_timestamp = isoparse(start_timestamp_str.group())
+        else:
+            start_timestamp = datetime.now()
         metadata = {
             "codec": reader_metadata["encoder"],
             "mime": mimetypes.guess_type(video_path.as_posix())[0],
@@ -92,9 +103,8 @@ def get_video_metadata(video_path: Path):
             "size": os.stat(video_path.as_posix()).st_size,
             "num_frames": video_clip.reader.n_frames,
             "frame_rate": video_clip.reader.fps,
-            "uri": "",
             "video_reference_uuid": video_path.name,
-            "start_timestamp": 0,
+            "start_timestamp": start_timestamp.isoformat(), # Format, e.g. 2025-04-02T19:15:27+00:00
             "dive": video_path.name,
         }
         video_clip.close()

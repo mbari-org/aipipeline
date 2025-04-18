@@ -52,8 +52,9 @@ class AncillaryCallback(Callback):
     def on_predict_start(self, predictor: Predictor):
         video_name = predictor.source.video_name
         video_path = predictor.source.video_path
+        video_url = predictor.source.video_url
         redis_queue = predictor.redis_queue
-        print(f"Getting metadata for video: {video_name}")
+        print(f"Getting metadata for video: {video_name} {video_url}")
         try:
             md = get_video_metadata(video_path)
             if md is None:
@@ -62,11 +63,6 @@ class AncillaryCallback(Callback):
                 predictor.md = md
                 video_ref_uuid = md["video_reference_uuid"]
                 iso_start = md["start_timestamp"]
-                video_url = md["uri"]
-                # http://mantis.shore.mbari.org/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4
-                # https://m3.shore.mbari.org/videos/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4
-                # Replace m3.shore.mbari.org/videos with mantis.shore.mbari.org/M3
-                video_url = video_url.replace("https://m3.shore.mbari.org/videos", "https://mantis.shore.mbari.org")
                 logger.info(f"video_ref_uuid: {video_ref_uuid}")
                 redis_queue.hset(
                     f"video_refs_start:{video_ref_uuid}",
