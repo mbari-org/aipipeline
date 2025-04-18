@@ -55,6 +55,11 @@ if __name__ == "__main__":
     config_files, config_dict = setup_config(args.config)
     args_dict = vars(args)
     args_dict["ffmpeg_path"] = config_dict["ffmpeg_path"]
+    mounts = config_dict["mounts"]
+    for mount in mounts:
+        if mount["name"] == "video":
+            args_dict["video_mount"] = mount
+            break
 
     if not args.skip_load:
         if TATOR_TOKEN is None:
