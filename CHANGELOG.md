@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v0.67.1 (2025-04-18)
+
+### Bug Fixes
+
+- Revert munged path and add default for dive even if not yet available
+  ([`e59b070`](https://github.com/mbari-org/aipipeline/commit/e59b070e6b9dc2c9cd60a461652ff5f8ceb91ff1))
+
+- **bio**: Remove default class name for general use for any class
+  ([`df7c93c`](https://github.com/mbari-org/aipipeline/commit/df7c93c701c62c994d8816117bc6348216470193))
+
+### Performance Improvements
+
+- Better caching of metadata, parse file timestamp when possible
+  ([`30b31c2`](https://github.com/mbari-org/aipipeline/commit/30b31c245a8b23b205ced75e64919b6ecbc5af61))
+
+- Faster caching of strided frame
+  ([`004f201`](https://github.com/mbari-org/aipipeline/commit/004f201e6e6058d8213903d57e29bf0f874d7314))
+
+
 ## v0.67.0 (2025-04-14)
 
 ### Features
