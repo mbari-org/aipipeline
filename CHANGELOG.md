@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v0.68.1 (2025-04-21)
+
+### Bug Fixes
+
+- Correct docker tag for mbari/aidata
+  ([`f7dce54`](https://github.com/mbari-org/aipipeline/commit/f7dce54e7d8d0e0e357218d7a3b1af94c2a3b970))
+
+- Handle invalid characters in docker image names
+  ([`28db7b3`](https://github.com/mbari-org/aipipeline/commit/28db7b32c162d5e157cc1c5fcef1237c4a181624))
+
+
 ## v0.68.0 (2025-04-21)
 
 ### Features
