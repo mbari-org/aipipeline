@@ -44,7 +44,8 @@ def run_pipeline(argv=None):
     parser.add_argument("--download-dir", required=False, help="Directory to download images")
     parser.add_argument("--version", required=False, help="Version of the dataset")
     parser.add_argument("--skip-clean", action="store_true", help="Skip cleaning of previously downloaded data")
-    parser.add_argument("--use-cleanvision", action="store_true", help="Clean of bad data using cleanvision")
+    parser.add_argument("--use-cleanvision", action="store_true", help="Clean bad data using cleanvision")
+    parser.add_argument("--more-args", required=False, type=str, help="More args for download")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
@@ -101,6 +102,14 @@ def run_pipeline(argv=None):
     download_args = config_dict["data"]["download_args"]
     download_args.extend(["--crop-roi", "--resize", "224"])
     config_dict["data"]["download_args"] = download_args
+
+    if args.more_args:
+        more_args = args.more_args.split(",")
+        for arg in more_args:
+            if arg.startswith("--"):
+                download_args.append(arg)
+            else:
+                download_args[-1] += "," + arg
 
     with beam.Pipeline(options=options) as p:
         download_views = (

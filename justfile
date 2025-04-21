@@ -243,7 +243,7 @@ crop project='uav' *more_args="":
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
 
-# Download and crop with defaults for project; download with custom args e.g. download-crop i2map --config ./aipipeline/projects/i2map/config/config_unknown.yml
+# Download and crop with defaults for project e.g. download-crop i2map
 download-crop project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
@@ -258,6 +258,12 @@ download project='uav':
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml
 
+# Cluster only
+cluster project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml
 # Predict images using the VSS database
 predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
@@ -437,7 +443,10 @@ cluster-i2mapbulk:
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
     --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
-
+# Download and cluster on i2MAP data. Run with  just download-cluster-i2map Baseline or just download-cluster-i2map megart-mbari-i2map-vits-b-8-2025
+download-cluster-i2map version="Baseline":
+    just --justfile {{justfile()}} download-crop i2map --version {{version}}
+    just --justfile {{justfile()}} cluster --config ./aipipeline/projects/i2map/config/config.yml --version {{version}}
 # Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square
 cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
     #!/usr/bin/env bash
@@ -482,8 +491,7 @@ gen-cfe-data:
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --skip-clean True --use-cleanvision True
-
+  just --justfile {{justfile()}} download-crop i2map --skip-clean True --use-cleanvision True --version Baseline --more-args '--verified --generator vars-labelbot --group NMS'
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
   just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --use-cleanvision True
