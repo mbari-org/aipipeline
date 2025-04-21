@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.68.2 (2025-04-21)
+
+### Documentation
+
+- Updated justfile docs
+  ([`bd0c2c2`](https://github.com/mbari-org/aipipeline/commit/bd0c2c2f00f9c74aea06f0729639ba552dab69d4))
+
+### Performance Improvements
+
+- **i2MAP**: Updated model path that matches config.yml
+  ([`e594303`](https://github.com/mbari-org/aipipeline/commit/e5943036a956e6dff2642cef98ab0d8b77664f57))
+
+
 ## v0.68.1 (2025-04-21)
 
 ### Bug Fixes
