@@ -24,6 +24,11 @@ def run_docker(image: str, name: str, args_list: List[str], env_list: List[str] 
         logger.error(f"Error connecting to docker: {e}. Is the docker daemon running?")
         exit(-1)
 
+    # Check the name for invalid characters, e.g. / : and replace https:// with blank
+    if not name.isalnum():
+        logger.error(f"Invalid container name: {name}. Only alphanumeric characters are allowed. Trying to replace invalid characters.")
+        name = name.replace("https://", "").replace("/", "_").replace(":", "_")
+
     if bind_volumes is None:
         bind_volumes = {}
 
