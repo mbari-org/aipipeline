@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.69.0 (2025-04-21)
+
+### Features
+
+- Added --gen-multicrop as optional in download-crop since useful for training data but not for
+  clustering pipelines
+  ([`c05f076`](https://github.com/mbari-org/aipipeline/commit/c05f07627f41864463beab44db6b4dad7429a09c))
+
+
 ## v0.68.2 (2025-04-21)
 
 ### Documentation
