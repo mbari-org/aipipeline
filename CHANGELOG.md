@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.68.0 (2025-04-21)
+
+### Features
+
+- Add support for more-args to download and some refactoring of recipes to pull out the args
+  ([`4bdeb2b`](https://github.com/mbari-org/aipipeline/commit/4bdeb2b2bae2b78c22aa7c892fd7e7315e2ff2bc))
+
+
 ## v0.67.2 (2025-04-21)
 
 ### Bug Fixes
