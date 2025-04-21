@@ -71,7 +71,7 @@ Recipes are available to run the pipelines.  To see the available recipes, run t
 ```shell
 just list
 ```
-| Recipe | Description |
+| Command | Description |
 |--------|-------------|
 | `list` | List recipes |
 | `install` | Setup the environment |
@@ -79,56 +79,62 @@ just list
 | `update_trackers` | Update the environment. Run this command after checking out any code changes |
 | `update-env` | Update environment |
 | `cp-core` | Copy core dev code to the project on doris |
-| `cp-dev-cfe` | Copy CFE dev code to the project on doris |
-| `cp-dev-ptvr` | Copy Planktivore dev code to the project on doris |
-| `cp-dev-uav` | Copy UAV dev code to the project on doris |
-| `cp-dev-bio` | Copy Bio dev code to the project on doris |
-| `cp-dev-i2map` | Copy i2MAP dev code to the project on doris |
-| `init-labels project='uav' leaf_type_id='19'` | Initialize labels for quick lookup, e.g., `init-labels uav 19` |
+| `cp-dev-cfe` | Copy cfe dev code to the project on doris |
+| `cp-dev-ptvr` | Copy planktivore dev code to the project on doris |
+| `cp-dev-uav` | Copy uav dev code to the project on doris |
+| `cp-dev-bio` | Copy bio dev code to the project on doris |
+| `cp-dev-i2map` | Copy i2map dev code to the project on doris |
+| `init-labels project='uav' leaf_type_id='19'` | Initialize labels for quick lookup, e.g. `just init-labels uav 19` |
 | `plot-tsne-vss project='uav'` | Generate a t-SNE plot of the VSS database |
 | `optimize-vss project='uav' *more_args=""` | Optimize the VSS database |
-| `calc-acc-vss project='uav'` | Calculate the accuracy of the VSS database; run after download, then optimize |
-| `reset-vss-all` | Reset the VSS database, removing all data. Proceed with caution!! |
-| `reset-vss project='uav'` | Reset the VSS database, removing all data. Run before `init-vss` or when creating the database |
+| `calc-acc-vss project='uav'` | Calculate accuracy of the VSS database; run after download, then optimize |
+| `reset-vss-all` | Reset the VSS database, removing all data. **Proceed with caution!** |
+| `reset-vss project='uav'` | Reset the VSS database for the specified project |
 | `remove-vss project='uav' *more_args=""` | Remove an entry from the VSS database |
 | `init-vss project='uav' *more_args=""` | Initialize the VSS database for a project |
-| `load-vss project='uav'` | Load already computed exemplars into the VSS database |
-| `load-cfe-isiis-videos *more_args=""` | Load CFE ISII mission videos in `aipipeline/project/cfe/data/missions-to-process.txt` |
-| `load-ptvr-images images='tmp/roi' *more_args=""` | Load Planktivore ROI images |
-| `cluster-ptvr-images *more_args=""` | Cluster Planktivore ROI images |
-| `load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args=""` | Load Planktivore ROI clusters |
-| `rescale-ifcb-images collection="2014"` | Rescale IFCB images |
-| `rescale-ptvr-images collection="aidata-export-03-low-mag"` | Rescale Planktivore ROI images |
-| `download-rescale-ptvr-images collection="aidata-export-03-low-mag"` | Download and rescale Planktivore ROI images |
-| `cluster-uav *more_args=""` | Cluster UAV mission images |
-| `detect-uav *more_args=""` | Detect UAV mission images |
-| `detect-uav-test` | Detect UAV mission images in test mode |
+| `load-vss project='uav'` | Load computed exemplars into the VSS database |
+| `load-cfe-isiis-videos *more_args=""` | Load cfe ISII mission videos |
+| `load-ptvr-images images='tmp/roi' *more_args=""` | Load planktivore ROI images |
+| `cluster-ptvr-images *more_args=""` | Cluster planktivore ROI images |
+| `load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args=""` | Load planktivore ROI clusters |
+| `rescale-ifcb-images collection="2014"` | Rescale planktivore ROI images |
+| `rescale-ptvr-images collection="aidata-export-03-low-mag"` | Rescale planktivore ROI images |
+| `download-rescale-ptvr-images collection="aidata-export-03-low-mag"` | Download and rescale planktivore ROI images |
+| `cluster-uav *more_args=""` | Cluster UAV mission |
+| `detect-uav *more_args=""` | Detect UAV mission |
+| `detect-uav-test` | Detect UAV mission data for testing |
 | `load-uav-images` | Load UAV mission images |
 | `load-uav type="cluster"` | Load UAV detections/clusters |
-| `fix-uav-metadata` | Fix UAV metadata lat/lon/alt |
-| `compute-saliency project='uav' *more_args=""` | Compute saliency for downloaded VOC data and update the Tator database |
-| `crop project='uav' *more_args=""` | Crop detections from VOC formatted downloads |
-| `download-crop project='uav' *more_args=""` | Download and crop with defaults for project |
+| `fix-uav-metadata` | Fix UAV metadata (lat/lon/alt) |
+| `compute-saliency project='uav' *more_args=""` | Compute saliency for downloaded VOC data and update Tator DB |
+| `crop project='uav' *more_args=""` | Crop detections from VOC downloads |
+| `download-crop project='uav' *more_args=""` | Download and crop with defaults |
 | `download project='uav'` | Download only |
+| `cluster project='uav' *more_args=""` | Cluster only |
 | `predict-vss project='uav' image_dir='/tmp/download' *more_args=""` | Predict images using the VSS database |
 | `run-ctenoA-test` | Run strided inference on a single video |
-| `run-ctenoA-prod` | Run strided inference on a collection of videos in a TSV file |
-| `run-mega-inference` | Run the mega strided inference on a single video |
-| `run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4' gpu_id='0'` | Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds |
-| `run-mega-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432' gpu_id='0'` | Run the mega strided pipeline on videos in a dive for the bio project |
-| `run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20241119T165914Z_200m_F031_4.mov' gpu_id='0'` | Run tracking on an i2MAP video |
-| `run-mega-track-test-1min` | Run the mega strided tracking pipeline on a single video to test the pipeline |
-| `run-mega-track-test-fastapiyv5` | Run the mega strided tracking pipeline on a single video for the bio project with FastAPI |
-| `cluster-i2mapbulk` | Run inference and cluster on i2MAP bulk data |
-| `cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0'` | Run sweep for Planktivore data |
+| `run-ctenoA-prod` | Run strided inference on a collection of videos |
+| `run-mega-inference` | Run mega strided inference on a single video |
+| `run-mega-track-bio-video video='...' gpu_id='0'` | Track single video for bio project |
+| `run-m video='...' gpu_id='0'` | Same as above, alternative name |
+| `run-mega-bio-dive dive='...' gpu_id='0'` | Run strided pipeline on a dive for bio project |
+| `run-mega-track-bio-dive dive='...' gpu_id='0'` | Run tracking pipeline on full dive for bio |
+| `run-mega-track-i2map-video video='...' gpu_id='0'` | Track i2MAP video |
+| `run-mega-stride-i2map-dive dive='...' gpu_id='0'` | Stride pipeline on i2MAP dive |
+| `run-mega-track-test-1min` | Test pipeline on a 1-min video |
+| `run-mega-track-test-fastapiyv5` | Test pipeline with FastAPI |
+| `cluster-i2mapbulk` | Inference + cluster on i2MAP bulk data |
+| `download-cluster-i2map version="Baseline"` | Download + cluster on i2MAP data |
+| `cluster-ptvr-sweep roi_dir='...' save_dir='...' device='cuda:0'` | Run sweep for planktivore data |
 | `load-i2mapbulk data='data'` | Load i2MAP bulk data |
 | `download-i2mapbulk-unlabeled` | Download unlabeled i2MAP bulk data |
-| `gen-bio-data image_dir=""` | Generate training data for the bio project |
-| `gen-cfe-data` | Generate training data for the CFE project |
-| `gen-i2map-data` | Generate training data for the i2MAP project |
-| `gen-i2mapbulk-data` | Generate training data for the i2MAP project from the bulk server |
-| `gen-uav-data` | Generate training data for the UAV project |
+| `gen-bio-data image_dir=""` | Generate training data for bio project |
+| `gen-cfe-data` | Generate training data for CFE project |
+| `gen-i2map-data` | Generate training data for i2MAP project |
+| `gen-i2mapbulk-data` | Generate i2MAP training data from bulk server |
+| `gen-uav-data` | Generate training data for UAV project |
 | `gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/'` | Generate training data stats |
+| `transcode-i2map` | Transcode i2MAP videos |
 --
 
 ### Related projects
