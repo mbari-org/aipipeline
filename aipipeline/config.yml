@@ -3,7 +3,7 @@
 # These can be overridden per project by the config.yml in the project directory,
 # e.g. aipipeline/projects/i2map/config.yml
 docker:
-  aidata: 'mbari/aidata:latest-cuda124'
+  aidata: 'mbari/aidata:1.50-cuda124'
   sdcat: 'mbari/sdcat:latest-cuda124'
   voccropper: 'mbari/voc-imagecropper:0.4.5'
   expd: 'get-expd-data'
