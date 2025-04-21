@@ -30,6 +30,7 @@ update-env:
 # Copy core dev code to the project on doris
 cp-core:
     cp justfile /Volumes/dcline/code/aipipeline/justfile
+    cp aipipeline/config.yml /Volumes/dcline/code/aipipeline/config.yml
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
 
