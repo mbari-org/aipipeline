@@ -33,6 +33,7 @@ cp-core:
     cp aipipeline/config.yml /Volumes/dcline/code/aipipeline/aipipeline/config.yml
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/docker/  /Volumes/dcline/code/aipipeline/aipipeline/docker/
 
 # Copy cfe dev code to the project on doris
 cp-dev-cfe:
@@ -260,11 +261,12 @@ download project='uav':
         --config ./aipipeline/projects/{{project}}/config/config.yml
 
 # Cluster only
-cluster project='uav':
+cluster project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
-        --config ./aipipeline/projects/{{project}}/config/config.yml
+        --config ./aipipeline/projects/{{project}}/config/config.yml \
+        {{more_args}}
 # Predict images using the VSS database
 predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
@@ -446,8 +448,9 @@ cluster-i2mapbulk:
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 # Download and cluster on i2MAP data. Run with  just download-cluster-i2map Baseline or just download-cluster-i2map megart-mbari-i2map-vits-b-8-2025
 download-cluster-i2map version="Baseline":
-    just --justfile {{justfile()}} download-crop i2map --version {{version}}
-    just --justfile {{justfile()}} cluster --config ./aipipeline/projects/i2map/config/config.yml --version {{version}}
+    just --justfile {{justfile()}} download-crop i2map --version {{version}} --use-cleanvision True --unverified
+    echo "/mnt/ML_SCRATCH/i2map/crops/,/mnt/ML_SCRATCH/i2map/clusters/" >> /tmp/{{version}}-clu.txt
+    just --justfile {{justfile()}} cluster i2map --version {{version}} --data /tmp/{{version}}-clu.txt
 # Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square
 cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
     #!/usr/bin/env bash
@@ -480,7 +483,7 @@ download-i2mapbulk-unlabeled:
 gen-bio-data image_dir="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    just --justfile {{justfile()}} download-crop bio --skip-clean True
+    just --justfile {{justfile()}} download-crop bio --skip-clean True --gen-multicrop
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
         --config ./aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/901103-biodiversity/crops
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
@@ -488,19 +491,18 @@ gen-bio-data image_dir="":
 
 # Generate training data for the CFE project
 gen-cfe-data:
-  just --justfile {{justfile()}} download-crop cfe --skip-clean True
+  just --justfile {{justfile()}} download-crop cfe --skip-clean True --gen-multicrop
 
 # Generate training data for the i2map project
 gen-i2map-data:
   just --justfile {{justfile()}} download-crop i2map --skip-clean True --use-cleanvision True --version Baseline --more-args '--verified --generator vars-labelbot --group NMS'
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --use-cleanvision True
+  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --use-cleanvision True --gen-multicrop
 
 # Generate training data for the uav project
 gen-uav-data:
-  just --justfile {{justfile()}} download-crop uav --skip-clean True
-
+  just --justfile {{justfile()}} download-crop uav --skip-clean True --gen-multicrop
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
     #!/usr/bin/env bash
