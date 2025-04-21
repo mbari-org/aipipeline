@@ -8,7 +8,7 @@ data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
   version: ""
   labels: "all"
-  download_args: ["--verified", "--generator", "vars-labelbot", "--group", "NMS"]
+  download_args: [""]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.5
