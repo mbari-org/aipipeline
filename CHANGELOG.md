@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.67.2 (2025-04-21)
+
+### Bug Fixes
+
+- Handle first frame cached correctly
+  ([`3575f49`](https://github.com/mbari-org/aipipeline/commit/3575f49d85a167a111580bf6260793cc1334a099))
+
+
 ## v0.67.1 (2025-04-18)
 
 ### Bug Fixes
