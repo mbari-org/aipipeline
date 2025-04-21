@@ -45,6 +45,7 @@ def run_pipeline(argv=None):
     parser.add_argument("--version", required=False, help="Version of the dataset")
     parser.add_argument("--skip-clean", action="store_true", help="Skip cleaning of previously downloaded data")
     parser.add_argument("--use-cleanvision", action="store_true", help="Clean bad data using cleanvision")
+    parser.add_argument("--gen-multicrop", action="store_true", help="Artifically generate more data using multicrop")
     parser.add_argument("--more-args", required=False, type=str, help="More args for download")
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
@@ -117,8 +118,12 @@ def run_pipeline(argv=None):
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             | "Compute stats" >> beam.Map(compute_stats, config_dict=config_dict)
-            | "Generate views" >> beam.Map(generate_multicrop_views)
         )
+        if args.gen_multicrop:
+            download_views = (
+                download_views
+                | "Generate multicrop views" >> beam.Map(generate_multicrop_views, config_dict=config_dict)
+            )
         if args.use_cleanvision:
           (
             download_views
