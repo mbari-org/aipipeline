@@ -384,7 +384,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
     else:
         labels = []
 
-    now = datetime.now().strftime("%Y%m%d")#.%f")
+    now = datetime.now().strftime("%Y%m%d.%f")
     logger.info(f"Downloading data for labels: {labels}....")
     container = run_docker(
         image=config_dict["docker"]["aidata"],
