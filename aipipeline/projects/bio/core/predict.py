@@ -31,7 +31,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 class Predictor:
-    def __init__(self, detection_model: Any, source: VideoSource, tracker: BioTracker, config_dict:dict, redis_queue=None,callbacks=None, **kwargs):
+    def __init__(self, detection_model: Any, source: VideoSource, tracker: BioTracker, config_dict:dict, redis_queue=None, callbacks=None, **kwargs):
         self.md = {}
         self.callbacks = callbacks or []
         self.config = config_dict
@@ -41,20 +41,19 @@ class Predictor:
         self.detection_model = detection_model
         self.fake_track_id = 0 # only used if no tracker is available
         self.source = source
-        self.device_id = kwargs.get("device_id", 0)
         self.has_gpu = torch.cuda.is_available()
         self.output_path = Path("/tmp") / source.video_name
         frame_path = self.output_path / "frames"
         self.crop_path = self.output_path / "crops"
         frame_path.mkdir(parents=True, exist_ok=True)
         self.crop_path.mkdir(parents=True, exist_ok=True)
-        self.device = torch.device(f"cuda:{self.device_id}" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device(kwargs.get("device", "cpu"))
         self.tracker = tracker
         if self.tracker is None:
             model_name = kwargs.get("vits_model")
             if model_name is None:
                 raise ValueError("Need to set the model name for the Vision Transformer if no tracker is provided")
-            self.vit_wrapper = ViTWrapper(device_id=self.device_id, model_name=model_name)
+            self.vit_wrapper = ViTWrapper(device=kwargs.get("device", "cpu"), model_name=model_name)
         self.duration_secs = source.duration_secs
         self.fps = source.frame_rate
         self.total_frames = int(self.duration_secs * self.fps)
