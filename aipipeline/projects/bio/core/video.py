@@ -77,22 +77,30 @@ class VideoSource:
     def __next__(self):
         frames = []
         if self.batch_size == 1 and self.stride > 1:
-            while True:
+            if self.current_frame == 0:
                 ret, frame = self.cap.read()
-                if not ret:
-                    raise StopIteration
-                if self.current_frame % self.stride == 0 or self.current_frame == 0:
-                    frames.append(frame)
-                    self.current_frame += 1
-                    break
                 self.current_frame += 1
-        else:
-            while len(frames) < self.batch_size:
-                ret, frame = self.cap.read()
                 if not ret:
                     raise StopIteration
                 frames.append(frame)
+            else:
+                for _ in range(self.batch_size -1):
+                    ret = self.cap.grab()
+                    self.current_frame += 1
+                    if not ret:
+                        raise StopIteration
+                ret, frame = self.cap.retrieve()
                 self.current_frame += 1
+                if not ret:
+                    raise StopIteration
+                frames.append(frame)
+        else:
+            while len(frames) < self.batch_size:
+                ret, frame = self.cap.read()
+                self.current_frame += 1
+                if not ret:
+                    raise StopIteration
+                frames.append(frame)
             if not frames:
                 raise StopIteration
         return self.preprocess(frames)

@@ -33,7 +33,7 @@ handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
 class YV5:
-    def __init__(self, model_dir: str, device_num:int = 0):
+    def __init__(self, model_dir: str, device:str = 'cpu'):
         """
         Model class for YOLOv5
         :param model_dir: Directory containing the model .pt files
@@ -44,17 +44,13 @@ class YV5:
             logger.error(f"No .pt file found in {model_dir}")
             raise FileNotFoundError(f"No .pt file found in {model_dir}")
         weights = files[0]
-        if torch.cuda.is_available():
-            self.device = torch.device(f'cuda:{device_num}')
-        else:
-            self.device = torch.device('cpu')
+        self.device = torch.device(device)
         self.model = yolov5.load(weights)
         self.model.to(self.device)
         self.model.shape = (1280, 1280)
-        self.model.conf = 0.01 # confidence threshold (0-1)
+        self.model.conf = 0.001 # confidence threshold (0-1)
         self.model.max_det = 500  # maximum number of detections per image
         self.has_gpu = torch.cuda.is_available()
-        self.device_id = device_num
 
     @property
     def class_names(self):
@@ -84,7 +80,7 @@ class YV5:
         raw_detections = self.model(images, size=self.model_shape[0])
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
-        threshold = 0.05 # 5% threshold
+        threshold = 0.01 # 1% corner threshold
         iou_threshold = 0.25
         batch_size = len(images)
 
@@ -151,7 +147,7 @@ class YV5:
         return all_detections
 
 class YV8_10:
-    def __init__(self, model_dir: str, device_num:int = 0):
+    def __init__(self, model_dir: str, device:str = 'cpu'):
         """
         Model class for YOLOv10 or YOLOv8
         :param model_dir: Directory containing the vits_model files
@@ -165,6 +161,7 @@ class YV8_10:
         model_file = files[0]
 
         self.model = YOLO(model_file)
+        self.model.to(device)
 
     def predict_images(self, images: Tensor, min_score_det:float = 0.1) -> list[dict[str, int | float | str | Any]]:
         """
@@ -218,7 +215,7 @@ class FastAPIYV5:
     def __init__(self, endpoint_url: str):
         """
         FastAPI vits_model class for YOLOv5
-        :param endpoint_url: Endpoint for the FastAPI app, e.g. 'localhost:3000/predict_to_json'
+        :param endpoint_url: Endpoint for the FastAPI app.py, e.g. 'localhost:3000/predict_to_json'
         """
         # Make sure there is a / at the end of the path for handling file uploads
         self.last_frame = 0
@@ -290,7 +287,7 @@ class FastAPIVSS:
         def __init__(self, base_url: str, project: str, threshold: float, top_k: int = 3):
             """
             FastAPI vits_model class for VSS
-            :param base_url: Endpoint for the FastAPI app, e.g. 'localhost:3000/predict_to_json'
+            :param base_url: Endpoint for the FastAPI app.py, e.g. 'localhost:3000/predict_to_json'
             """
             # Make sure there is a / at the end of the path for handling file uploads
             if not base_url.endswith('/'):

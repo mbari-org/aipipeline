@@ -1,4 +1,5 @@
 # Model files
+models/
 *.pt*
 *.mlmodel
 
