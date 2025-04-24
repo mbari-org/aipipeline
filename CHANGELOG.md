@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.69.1 (2025-04-24)
+
+### Performance Improvements
+
+- Make docker name creation unique per each run to avoid collisions, e.g. downloading data for same
+  project two ways
+  ([`af6f0c3`](https://github.com/mbari-org/aipipeline/commit/af6f0c3dfe99bc676086b8affd3cd610a1ea9f7a))
+
+- **bio+i2map**: Significant speed-up in video processing with faster video read and beam parallel
+  processing; also some minor reorg of files for clarity and updates to README_AWS.md
+  ([`cb7834a`](https://github.com/mbari-org/aipipeline/commit/cb7834a297f2585797e1cc2bfe2c90488ea755b8))
+
+
 ## v0.69.0 (2025-04-21)
 
 ### Features
