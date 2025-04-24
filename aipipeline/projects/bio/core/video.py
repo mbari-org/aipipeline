@@ -84,7 +84,7 @@ class VideoSource:
                 frames.append(frame)
                 self.current_frame += 1
             else:
-                for _ in range(self.batch_size - 1):
+                for _ in range(self.stride - 1):
                     ret = self.cap.grab()
                     if not ret:
                         raise StopIteration
