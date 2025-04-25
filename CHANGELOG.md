@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v0.70.0 (2025-04-25)
+
+### Bug Fixes
+
+- **bio+i2map**: Default to h24 as encoder library
+  ([`9f39036`](https://github.com/mbari-org/aipipeline/commit/9f39036e05af26797f3dc7435f9c4f5c9274642b))
+
+- **bio+i2map**: Handle file handle failures gracefully in batch via try catch
+  ([`d720848`](https://github.com/mbari-org/aipipeline/commit/d7208480b0ff978b69b3613e6cb7857f00d43f0a))
+
+### Features
+
+- Export bad images to .txt for downstream processing in same directory as crops
+  ([`ac331dd`](https://github.com/mbari-org/aipipeline/commit/ac331dd2f8f06bca6613cec1bfe41ae91e9aec99))
+
+
 ## v0.69.2 (2025-04-25)
 
 ### Bug Fixes
