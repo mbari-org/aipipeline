@@ -185,7 +185,7 @@ class Predictor:
                         date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
                         if date_start is None or "depthMeters" not in date_start:
                             logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
-                            input("All ancillary data will be missing for this dive. Press any key to continue")
+                            # input("All ancillary data will be missing for this dive. Press any key to continue")
                         else:
                             depth = date_start["depthMeters"]
 
