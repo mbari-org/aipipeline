@@ -69,7 +69,7 @@ def process(element, config_dict):
 
     container = run_docker(
         image=config_dict["docker"]["sdcat"],
-        name=f"sdcat-clu-{image_path.name}",
+        name=f"sdcat-clu-{image_path.name}-{now:%Y%m%d.%f}",
         args_list=args,
         bind_volumes=config_dict["docker"]["bind_volumes"],
     )
@@ -78,13 +78,17 @@ def process(element, config_dict):
         logger.error(f"Failed to start container for {image_path}")
         return
 
-    logger.info(f"Container {container.name} started.")
-    for log in container.logs(stream=True):
-        logger.info(log.decode("utf-8").strip())
-    container.wait()
-    logger.info(f"Container {container.name} finished.")
+    try:
+        logger.info(f"Container {container.name} started.")
+        for log in container.logs(stream=True):
+            logger.info(log.decode("utf-8").strip())
+        container.wait()
+        logger.info(f"Container {container.name} finished.")
 
-    return f"{image_path} processed."
+        return f"{image_path} processed."
+    except Exception as e:
+        logger.error(f"Error processing {image_path}: {e}")
+        return
 
 def parse_line(element):
     logger.info(element)
