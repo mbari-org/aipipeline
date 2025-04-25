@@ -11,8 +11,8 @@ POSTGRES_DB=os.environ.get("POSTGRES_DB")
 
 sql_query = """
 UPDATE tator_online.public.main_media
-SET media_files = replace(media_files::TEXT, 'mantis.shore.mbari.org/t_M3', 'mantis.shore.mbari.org/M3')::jsonb
-WHERE media_files::TEXT LIKE '%mantis.shore.mbari.org/t_M3%';
+SET media_files = replace(media_files::TEXT, 'm3.shore.mbari.org', 'mantis.shore.mbari.org')::jsonb
+WHERE media_files::TEXT LIKE '%m3.shore.mbari.org%';
 """
 
 try:

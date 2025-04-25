@@ -5,7 +5,7 @@ import tator
 project_id = 3  # biodiversity project in the database
 
 # Connect to Tator
-api = tator.get_api(host='http://mantis.shore.mbari.org', token=os.environ['TATOR_TOKEN'])
+api = tator.get_api(host='https://mantis.shore.mbari.org', token=os.environ['TATOR_TOKEN'])
 
 # Get media count from source section
 media_count = api.get_media_count(project=project_id)

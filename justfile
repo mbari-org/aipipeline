@@ -461,6 +461,14 @@ load-cluster project="uav" data='data' version="Baseline" *more_args="":
 download-i2mapbulk-unlabeled:
     just --justfile {{justfile()}} download-crop i2mapbulk --unverified --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml
 
+
+# Replace m3 urls with mantis
+replace-m3-urls:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/bio
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 ./aipipeline/projects/bio/maintenance/replace_tm3.py
+
 # Generate training data for the bio project
 gen-bio-data image_dir="":
     #!/usr/bin/env bash
