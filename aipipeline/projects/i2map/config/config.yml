@@ -16,12 +16,12 @@ data:
 mounts:
   - name: "image"
     path: "/mnt/DeepSea-AI"
-    host: "mantis.shore.mbari.org"
+    host: "https://mantis.shore.mbari.org"
     nginx_root: "/DeepSea-AI"
 
   - name: "video"
     path: "/mnt/DeepSea-AI"
-    host: "mantis.shore.mbari.org"
+    host: "https://mantis.shore.mbari.org"
     nginx_root: "/DeepSea-AI"
 
 sdcat:

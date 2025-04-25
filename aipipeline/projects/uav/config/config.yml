@@ -16,7 +16,7 @@ docker:
 mounts:
   - name: "image"
     path: "/mnt/UAV"
-    host: "mantis.shore.mbari.org"
+    host: "https://mantis.shore.mbari.org"
     nginx_root: "/UAV"
 
 data:
@@ -61,7 +61,7 @@ vss:
 
 tator:
   project: "901902-uavs"
-  host: "mantis.shore.mbari.org"
+  host: "https://mantis.shore.mbari.org"
 
   image:
     attributes:
