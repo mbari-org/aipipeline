@@ -53,7 +53,9 @@ def run_predictor(video, args_dict, config_dict, version_id):
 
 def process_batch_parallel(batch, args_dict, config_dict, version_id):
     import random
-    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as executor:
+    if len(batch) == 0:
+        return []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch)) as executor:
         futures = [
             executor.submit(
                 process_single_file,
@@ -75,6 +77,10 @@ def process_single_file(path, gpu_id, args_dict, config_dict, version_id):
     device = f"cuda:{gpu_id}"
     args_copy["device"] = device
     start = time.time()
-    run_predictor(path, args_copy, config_dict, version_id)
+    try:
+        run_predictor(path, args_copy, config_dict, version_id)
+    except Exception as e:
+        print(f"====================>Error processing file {path} on GPU {device}: {e}")
+        return f"Error processing file: {path} on GPU {device} with args {args_copy}"
     end = time.time()
     return f"Processed file: {path} on GPU {device} with args {args_copy} in {end - start:.2f} seconds"
