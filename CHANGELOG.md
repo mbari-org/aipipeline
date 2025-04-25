@@ -1,6 +1,26 @@
 # CHANGELOG
 
 
+## v0.69.2 (2025-04-25)
+
+### Bug Fixes
+
+- **bio+i2map**: Correct stride
+  ([`144d503`](https://github.com/mbari-org/aipipeline/commit/144d503e1bba134091553ecadf9aa1e8a4e7fc6b))
+
+### Performance Improvements
+
+- **bio+i2map**: Adjust from 1 to 1% edge threshold
+  ([`a0b1fdc`](https://github.com/mbari-org/aipipeline/commit/a0b1fdcb28e265950c190dc7f5440f562fd2319e))
+
+- **bio+i2map**: Adjust from 1 to 1% edge threshold
+  ([`82cfe4c`](https://github.com/mbari-org/aipipeline/commit/82cfe4cbbfb157ecff14762a307c221c407273a1))
+
+- **bio+i2map**: Adjust number of parallel videos to 6 and improved detection sensitivity for
+  midwater
+  ([`7955d36`](https://github.com/mbari-org/aipipeline/commit/7955d36e1e16424f4e96589961da7a29d3406573))
+
+
 ## v0.69.1 (2025-04-24)
 
 ### Performance Improvements
