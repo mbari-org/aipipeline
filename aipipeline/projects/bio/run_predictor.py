@@ -55,6 +55,8 @@ def process_batch_parallel(batch, args_dict, config_dict, version_id):
     import random
     if len(batch) == 0:
         return []
+    # Remove any files with trashme in the name - these are bogus
+    batch = [path for path in batch if "trashme" not in str(path)]
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(batch)) as executor:
         futures = [
             executor.submit(
