@@ -328,19 +328,17 @@ run-m video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.
        --stride 4 --video {{video}} --max-seconds 5 --flush
 
 # Run the mega strided pipeline on a videos in a dive for the bio project
-run-mega-bio-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_20231019T180422Z_h265.mp4':
+run-mega-stride-bio-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_20231019T180422Z_h265.mp4':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
-    video={{dive}}
-    echo "Processing $video"
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
     --config ./aipipeline/projects/bio/config/config.yml \
-    --skip-track --min-score-det 0.1 --batch-size 60 --min-score-track 0.1 --min-frames 0 --min-depth 200 --max-depth 2000 --version ctenophora-sp-a-mega-vits \
+    --skip-track --min-score-det 0.01 --batch-size 1 --min-score-track 0.05 --min-frames 0 --min-depth 200 --max-depth 2000 --version ctenophora-sp-a-mega-vits \
     --vits-model /mnt/DeepSea-AI/models/bio/mbari-m3ctnA-vits-b16-20250331 \
     --class-name "Ctenophora sp. A" \
     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-    --stride 60 --video $video
+    --stride 60 --video '{{dive}}'
 
 #./models/mbari_452k_yolov10
 # Run the mega strided tracking pipeline on an entire dive for the bio project
@@ -381,7 +379,6 @@ run-mega-stride-i2map-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
-    echo "Processing $video"
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
     --config ./aipipeline/projects/i2map/config/config.yml \
     --skip-track --min-score-det 0.01 --batch-size 1 --min-score-track 0.05 --min-frames 0 --version megart-mbari-i2map-vits-b-8-2025 \
@@ -424,7 +421,7 @@ cluster-i2mapbulk:
 
 # Download and cluster data. Run with  just download-cluster i2map or just download-cluster megart-mbari-i2map-vits-b-8-2025 to cluster a particular version
 download-cluster project="i2map" version="Baseline":
-    just --justfile {{justfile()}} download-crop {{project}} --skip-clean True --version {{version}} --unverified
+    just --justfile {{justfile()}} download-crop {{project}} --version {{version}} --unverified --use-cleanvision True
     echo "/mnt/ML_SCRATCH/{{project}}/{{version}}/crops/,/mnt/ML_SCRATCH/{{project}}/{{version}}/clusters/" > /tmp/{{version}}-clu.txt
     just --justfile {{justfile()}} cluster {{project}} --version {{version}} --data /tmp/{{version}}-clu.txt
 
@@ -476,19 +473,19 @@ gen-bio-data image_dir="":
 
 # Generate training data for the CFE project
 gen-cfe-data:
-  just --justfile {{justfile()}} download-crop cfe --skip-clean True --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop cfe --clean --gen-multicrop --verified
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --skip-clean True --use-cleanvision True --version Baseline --verified --generator vars-labelbot --group NMS
+  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --version Baseline --verified --generator vars-labelbot --group NMS
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --skip-clean True --use-cleanvision True --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop i2mapbulk --clean --use-cleanvision True --gen-multicrop --verified
 
 # Generate training data for the uav project
 gen-uav-data:
-  just --justfile {{justfile()}} download-crop uav --skip-clean True --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop uav --clean --gen-multicrop --verified
 
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
