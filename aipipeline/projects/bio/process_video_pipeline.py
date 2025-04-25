@@ -91,7 +91,7 @@ def main():
             | "Match Files" >> MatchFiles(file_pattern=video)
             | "Read Matches" >> ReadMatches()
             | "Get File Paths" >> beam.Map(lambda f: f.metadata.path)
-            | "Batch into 12" >> beam.BatchElements(min_batch_size=12, max_batch_size=12)
+            | "Batch into 6" >> beam.BatchElements(min_batch_size=6, max_batch_size=6)
             | "Run in Parallel on GPUs" >> beam.Map(
             lambda batch: process_batch_parallel(
                 batch,

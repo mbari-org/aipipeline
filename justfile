@@ -384,10 +384,10 @@ run-mega-stride-i2map-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
     echo "Processing $video"
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
     --config ./aipipeline/projects/i2map/config/config.yml \
-    --skip-track --min-score-det 0.0005 --batch-size 1 --min-score-track 0.1 --min-frames 0 --version megart-mbari-i2map-vits-b-8-2025 \
+    --skip-track --min-score-det 0.01 --batch-size 1 --min-score-track 0.05 --min-frames 0 --version megart-mbari-i2map-vits-b-8-2025 \
     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-    --stride 3600 --video '{{dive}}'
+    --stride 60 --video '{{dive}}'
 
 # Run the mega strided tracking pipeline on a single video to test the pipeline
 run-mega-track-test-1min:

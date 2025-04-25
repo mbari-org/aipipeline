@@ -48,7 +48,7 @@ class YV5:
         self.model = yolov5.load(weights)
         self.model.to(self.device)
         self.model.shape = (1280, 1280)
-        self.model.conf = 0.001 # confidence threshold (0-1)
+        self.model.conf = 0.01 # confidence threshold (0-1)
         self.model.max_det = 500  # maximum number of detections per image
         self.has_gpu = torch.cuda.is_available()
 
@@ -81,7 +81,7 @@ class YV5:
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         threshold = 0.03 # 3% edge threshold
-        iou_threshold = 0.25
+        iou_threshold = 0.125
         batch_size = len(images)
 
         all_detections = []
@@ -176,7 +176,7 @@ class YV8_10:
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         all_detections = []
-        threshold = 0.05  # 1% threshold
+        threshold = 0.03  # 3% threshold
 
         for i, data in enumerate(raw_detections):
             for loc in data:
