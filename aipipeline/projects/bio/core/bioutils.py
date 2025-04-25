@@ -97,7 +97,7 @@ def get_video_metadata(video_path: Path) -> dict:
         else:
             start_timestamp = datetime.now()
         metadata = {
-            "codec": reader_metadata["encoder"],
+            "codec": 'h264',
             "mime": mimetypes.guess_type(video_path.as_posix())[0],
             "resolution": video_clip.reader.size,
             "size": os.stat(video_path.as_posix()).st_size,
