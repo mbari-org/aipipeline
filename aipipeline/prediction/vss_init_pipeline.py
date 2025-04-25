@@ -121,7 +121,7 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Initialize the VSS database")
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
-    parser.add_argument("--skip-clean", required=False, default=False, help="Skip cleaning of previously downloaded data")
+    parser.add_argument("--clean", action="store_true", help="Clean previously downloaded data")
     parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
     parser.add_argument("--batch-size", required=False, type=int, default=1, help="Batch size")
     args, beam_args = parser.parse_known_args(argv)
@@ -137,7 +137,7 @@ def run_pipeline(argv=None):
 
     download_path = Path(config_dict["data"]["processed_path"])
     version_path = download_path / config_dict["data"]["version"]
-    if not args.skip_clean:
+    if args.clean:
         clean(version_path.as_posix())
 
     # Always remove any previous augmented data before starting
