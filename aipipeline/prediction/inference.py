@@ -76,9 +76,9 @@ class YV5:
         :return: A list of detections for each image, where each detection is a list of dictionaries.
         """
         time_start = time.time()
-        logger.info(f"Predicting on {len(images)} images")
+        logger.debug(f"Predicting on {len(images)} images")
         raw_detections = self.model(images, size=self.model_shape[0])
-        logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
+        logger.debug(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         threshold = 0.03 # 3% edge threshold
         iou_threshold = 0.125
@@ -142,7 +142,7 @@ class YV5:
                     "confidence": score
                 })
 
-        logger.info(f"Finished NMS on {batch_size} batches")
+        logger.debug(f"Finished NMS on {batch_size} batches")
 
         return all_detections
 
