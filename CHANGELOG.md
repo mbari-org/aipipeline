@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.72.1 (2025-04-26)
+
+### Bug Fixes
+
+- Correct plugin module name for latest mbari-aidata pip module
+  ([`1fa5ae9`](https://github.com/mbari-org/aipipeline/commit/1fa5ae90e2f19a4b8376a69bf16b07892f2b10bb))
+
+
 ## v0.72.0 (2025-04-26)
 
 ### Features
