@@ -32,6 +32,7 @@ cp-core:
     cp justfile /Volumes/dcline/code/aipipeline/justfile
     cp requirements.txt /Volumes/dcline/code/aipipeline/requirements.txt
     cp aipipeline/config.yml /Volumes/dcline/code/aipipeline/aipipeline/config.yml
+    cp aipipeline/config_setup.py /Volumes/dcline/code/aipipeline/aipipeline/config_setup.py
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/docker/  /Volumes/dcline/code/aipipeline/aipipeline/docker/
@@ -126,15 +127,15 @@ load-vss project='uav' :
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt config_hawaii.yml or just load-cfe-isiis-videos rachelcarson-video.txt config.yml --dry-run
-load-cfe-isiis-videos missions="" config="" *more_args="":
+# Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt or just load-cfe-isiis-videos rachelcarson-video.txt
+load-cfe-isiis-videos missions="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/cfe
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_video_pipeline.py \
     --missions $PROJECT_DIR/data/{{missions}} \
-    --config $PROJECT_DIR/config/{{config}} \
-    {{more_args}}
+    --config $PROJECT_DIR/config/config.yml \
+    --tator-project 902111-CFE-Deployments
 # Load planktivore ROI images
 load-ptvr-images images='tmp/roi' *more_args="":
     time aidata load images \

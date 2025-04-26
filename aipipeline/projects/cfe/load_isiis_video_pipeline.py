@@ -34,7 +34,7 @@ TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 def load_video(element) -> str:
     # Data is in the format
     # <mission path>,<tator section>
-    # /mnt/CFElab/Data_archive/Videos/ISIIS/COOK/VideosMP4/20230712_RachelCarson,2023/07/RachelCarson
+    # /mnt/CFElab/Data_archive/Videos/ISIIS/COOK/VideosMP4/20230712_RachelCarson,RachelCarson/2023/07/
     logger.info(f"Processing element {element}")
     line, config_dict = element
     platform_name, mission_dir, section = parse_mission_string(line)
@@ -63,6 +63,7 @@ def load_video(element) -> str:
 
     machine_friendly = mission_dir.split(" ")[0]
     machine_friendly = machine_friendly.replace("-","")
+    machine_friendly = machine_friendly.replace(":","")
 
     try:
         container = run_docker(
@@ -89,7 +90,8 @@ def load_video(element) -> str:
 def run_pipeline(argv=None):
     args, beam_args = parse_args(argv, logger)
     options = PipelineOptions(beam_args)
-    conf_files, config_dict = setup_config(args.config)
+    overrides = {"tator": {"project": args.tator_project}}
+    conf_files, config_dict = setup_config(args.config, overrides=overrides)
     with beam.Pipeline(options=options) as p:
         (
             p

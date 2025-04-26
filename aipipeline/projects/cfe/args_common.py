@@ -15,6 +15,7 @@ def parse_args(argv, logger):
     parser = argparse.ArgumentParser(description="Batch process missions")
     parser.add_argument("--missions", required=True, help="File with missions to process")
     parser.add_argument("--config", required=True, help=f"Configuration files. For example: {CONFIG_YAML}")
+    parser.add_argument("--tator-project", required=False, default="902111-CFE-Deployments", help="Override tator project")
     args, beam_args = parser.parse_known_args(argv)
 
     if not os.path.exists(args.missions):
