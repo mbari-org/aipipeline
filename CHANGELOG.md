@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.71.0 (2025-04-26)
+
+### Features
+
+- **cfe**: Added hawaii video load support
+  ([`8cd839b`](https://github.com/mbari-org/aipipeline/commit/8cd839b3a49e94b1a95b08d6af4773196c39d911))
+
+
 ## v0.70.0 (2025-04-25)
 
 ### Bug Fixes
