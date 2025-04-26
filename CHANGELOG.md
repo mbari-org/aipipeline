@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.73.0 (2025-04-26)
+
+### Bug Fixes
+
+- Handle bogus video loads gracefully and simplify docker image name for use on older docker engines
+  ([`f0759dc`](https://github.com/mbari-org/aipipeline/commit/f0759dcf11f7a245844446e6c974db7894b51941))
+
+### Features
+
+- **cfe**: Support video loading into separate project through --tator-project
+  902111-CFE-Deployments override and better naming of docker image based on media
+  ([`2e86a56`](https://github.com/mbari-org/aipipeline/commit/2e86a5660e4ea69bf2103ee24d5d29cc16b164a4))
+
+
 ## v0.72.1 (2025-04-26)
 
 ### Bug Fixes
