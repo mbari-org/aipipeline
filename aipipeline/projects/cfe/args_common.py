@@ -8,7 +8,7 @@ import argparse
 CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
 
 # TODO: Add more platforms as needed - SHOULD BE IN CONFIG?
-POSSIBLE_PLATFORMS = ["RachelCarson"]
+POSSIBLE_PLATFORMS = ["RachelCarson", "scuba"]
 
 
 def parse_args(argv, logger):
