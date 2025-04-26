@@ -61,20 +61,27 @@ def load_video(element) -> str:
         section,
     ]
 
-    container = run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f"aidata-isiis-video-load-{platform_name}",
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"]
-    )
-    if container:
-        logger.info(f"Video loading for {platform_name}...")
-        container.wait()
-        logger.info(f"Videos loaded for {platform_name}")
-        return f"Mission {platform_name} videos loaded."
-    else:
-        logger.error(f"Failed to load videos for {platform_name}")
-        return f"Failed to load Videos for {platform_name}"
+    machine_friendly = mission_dir.split(" ")[0]
+    machine_friendly = machine_friendly.replace("-","")
+
+    try:
+        container = run_docker(
+            image=config_dict["docker"]["aidata"],
+            name=f"isiisvidload{machine_friendly}",
+            args_list=args,
+            bind_volumes=config_dict["docker"]["bind_volumes"]
+        )
+        if container:
+            logger.info(f"Video loading for {platform_name}...")
+            container.wait()
+            logger.info(f"Videos loaded for {platform_name}")
+            return f"Mission {platform_name} videos loaded."
+        else:
+            logger.error(f"Failed to load videos for {platform_name}")
+            return f"Failed to load Videos for {platform_name}"
+    except Exception as e:
+        logger.error(f"Error loading videos for {platform_name}: {e}")
+        return f"Error loading videos for {platform_name}: {e}"
 
 
 
