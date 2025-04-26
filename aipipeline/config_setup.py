@@ -55,7 +55,7 @@ def parse_labels(labels: str) -> Dict:
 
     return config_dict
 
-def setup_config(config_yml: str, silent=False) -> Tuple[Dict, Dict]:
+def setup_config(config_yml: str, overrides: dict = {}, silent=False) -> Tuple[Dict, Dict]:
     config_path_yml = Path(config_yml)
     if not config_path_yml.exists():
         logger.error(f"Cannot find {config_path_yml}")
@@ -98,23 +98,28 @@ def setup_config(config_yml: str, silent=False) -> Tuple[Dict, Dict]:
         for key, value in merged_dict.items():
             logger.info(f"{key}: {value}\n")
 
-    # Copy the config files to /tmp/project - project names are generally unique so no collision should occur
+    # Apply any overrides
+    merged_dict = merge_dicts(overrides, merged_dict)
+
+    # Copy the config files to /tmp/project - project names are unique so no collision should occur
     project = merged_dict["tator"]["project"]
     ini = merged_dict["sdcat"]["ini"]
 
+    # Prepare the config directory that stores the config files for use in the docker container
     config_root = Path(f"/tmp/{project}")
     config_root.mkdir(parents=True, exist_ok=True)
 
     sdcat_ini_path = Path(config_path_yml).parent / ini
 
-    # Check all the files are present
-    for file in [config_path_yml, sdcat_ini_path]:
-        if not file.exists():
-            logger.error(f"Cannot find {file}")
-            exit(1)
+    if not sdcat_ini_path.exists():
+        logger.error(f"Cannot find {file}")
+        exit(1)
 
-    shutil.copyfile(config_path_yml.as_posix(), f"/tmp/{project}/{config_path_yml.name}")
     shutil.copyfile(sdcat_ini_path.as_posix(), f"/tmp/{project}/{sdcat_ini_path.name}")
+
+    # Write the new yaml file to the config directory
+    with open(f"/tmp/{project}/{config_path_yml.name}", "w") as file:
+        yaml.dump(merged_dict, file)
 
     config_files = {CONFIG_KEY: f"/tmp/{project}/{config_path_yml.name}",
                     SDCAT_KEY: f"/tmp/{project}/{sdcat_ini_path.name}"}
