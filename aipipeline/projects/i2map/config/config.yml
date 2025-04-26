@@ -80,5 +80,5 @@ ffmpeg_path: "/usr/bin/ffmpeg"
 
 plugins:
   - name: "extractor"
-    module: "aidata.plugins.extractors.tap_i2map_media"
+    module: "mbari_aidata.plugins.extractors.tap_i2map_media"
     function: "extract_media"
