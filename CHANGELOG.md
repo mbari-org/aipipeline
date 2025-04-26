@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.72.0 (2025-04-26)
+
+### Features
+
+- **cfe**: Added scuba as platform
+  ([`4bb425d`](https://github.com/mbari-org/aipipeline/commit/4bb425d9eaf980eb929954dbfc3730031fbdb8fc))
+
+
 ## v0.71.0 (2025-04-26)
 
 ### Features
