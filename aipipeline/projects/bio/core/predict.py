@@ -71,6 +71,11 @@ class Predictor:
         if self.version_id < 0 and not self.skip_load:
             raise ValueError("Need to set the database version, e.g. --version Baseline if loading to the database")
 
+
+    def __del__(self):
+        torch.cuda.ipc_collect()
+        torch.cuda.empty_cache()
+
     def run_callbacks(self, method_name:str, *args: Any) -> None:
         for callback in self.callbacks:
             method = getattr(callback, method_name, None)
@@ -170,7 +175,7 @@ class Predictor:
                 self.run_callbacks("on_predict_batch_end", predictor, tracks)
                 self.tracker.purge_closed_tracks(true_frame_num)
             else:
-                logger.info("No tracker found")
+                logger.info("Tracking skipped - tracking disabled")
                 tracks = []
                 unique_frames = np.unique([d["frame"] for d in det_n])
                 for k, i in enumerate(unique_frames):
@@ -182,9 +187,9 @@ class Predictor:
                             logger.info(f"Removing track {self.fake_track_id} with class {labels} - not {self.class_name}")
                             continue
 
-                        date_start = get_ancillary_data(self.md['dive'], self.config, self.md['start_timestamp'])
+                        date_start = get_ancillary_data(self.md, self.config, self.md['start_timestamp'])
                         if date_start is None or "depthMeters" not in date_start:
-                            logger.error(f"Failed to get ancillary data for {self.md['dive']} {date_start}")
+                            logger.error(f"Failed to get ancillary data for {self.md['camera_id']} {date_start}")
                             # input("All ancillary data will be missing for this dive. Press any key to continue")
                         else:
                             depth = date_start["depthMeters"]
