@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.74.0 (2025-05-05)
+
+### Features
+
+- **ptvr**: Example query for mapping version to section
+  ([`b16ddf2`](https://github.com/mbari-org/aipipeline/commit/b16ddf2f0ae1958d9986f4bb780741b26cc9d4bc))
+
+
 ## v0.73.0 (2025-04-26)
 
 ### Bug Fixes
