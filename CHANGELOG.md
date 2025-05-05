@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v0.74.1 (2025-05-05)
+
+### Bug Fixes
+
+- **bio**: Handle missing camera metadata and some renaming for clarity
+  ([`cf737e5`](https://github.com/mbari-org/aipipeline/commit/cf737e534403008ffa0a1cd6cbb82aaca916814a))
+
+### Performance Improvements
+
+- **bio**: Clear cuda cache
+  ([`770ba7c`](https://github.com/mbari-org/aipipeline/commit/770ba7cf4e20ac9c697e199b3b47d8afcff82de9))
+
+
 ## v0.74.0 (2025-05-05)
 
 ### Features
