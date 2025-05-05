@@ -28,35 +28,36 @@ from aipipeline.prediction.utils import crop_square_image
 logger = logging.getLogger(__name__)
 
 
-def get_ancillary_data(dive: str, config_dict: dict, iso_datetime: any) -> dict:
+def get_ancillary_data(md: dict, config_dict: dict, iso_datetime: any) -> dict:
     try:
+        camera_id = md.get("camera_id", None)
+        uri = md.get("uri", None)
+
         # Handle i2MAP by extracting the depth from the filename
-        if 'i2MAP' in dive:
+        if 'i2MAP' in camera_id:
             pattern_date_depth = re.compile(r"(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z.*?(\d{3})m")  # 20161025T184500Z_300m
-            if pattern_date_depth.search(dive):
-                match = pattern_date_depth.search(dive)
+            if pattern_date_depth.search(uri):
+                match = pattern_date_depth.search(uri)
                 if match is None:
                     return {}
                 year, month, day, hour, minute, second, depth = map(int, match.groups())
                 dt = datetime(year, month, day, hour, minute, second, tzinfo=pytz.utc)
-                data = {"dive": dive, "depthMeters": depth, "iso_datetime": dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                data = {"dive": uri, "depthMeters": depth, "iso_datetime": dt.strftime("%Y-%m-%dT%H:%M:%SZ"),
                         "latitude": 36.7253, "longitude": -121.7840, "temperature": -1, "oxygen": -1,
                         "start_timestamp": dt.strftime("%Y%m%dT%H%M%SZ")}
                 return data
         else:
             # Create a random index for the container name
             index = random.randint(0, 1000)
-            platform = dive.split(' ')[:-1]  # remove the last element which is the dive number
-            platform = ''.join(platform)
             if isinstance(iso_datetime, str):
                 iso_datetime = datetime.fromisoformat(iso_datetime)
             else:
                 iso_datetime = iso_datetime
             container = run_docker(
                 image=config_dict["docker"]["expd"],
-                name=f"expd-{platform}-{iso_datetime:%Y%m%dT%H%M%S%f}-{index}",
-                args_list=[platform, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
-                auto_remove=False,
+                name=f"expd-{camera_id}-{iso_datetime:%Y%m%dT%H%M%S%f}-{index}",
+                args_list=[camera_id, iso_datetime.strftime('%Y-%m-%dT%H:%M:%S.%fZ')],
+                auto_remove=True,
             )
             if container:
                 container.wait()
@@ -104,8 +105,9 @@ def get_video_metadata(video_path: Path) -> dict:
             "num_frames": video_clip.reader.n_frames,
             "frame_rate": video_clip.reader.fps,
             "video_reference_uuid": video_path.name,
-            "start_timestamp": start_timestamp.isoformat(), # Format, e.g. 2025-04-02T19:15:27+00:00
+            "uri": video_path.as_posix(),
             "dive": video_path.name,
+            "start_timestamp": start_timestamp.isoformat(), # Format, e.g. 2025-04-02T19:15:27+00:00
         }
         video_clip.close()
 
@@ -115,13 +117,21 @@ def get_video_metadata(video_path: Path) -> dict:
         # Get the video reference uuid from the rest query JSON response
         response = requests.get(query)
         logger.info(f"response: {response}")
-        if response.status_code != 200:
+        if response.status_code == 200:
             data = json.loads(response.text)[0]
             logger.info(f"data: {data}")
             metadata['video_reference_uuid'] = data["video_reference_uuid"]
+            metadata['camera_id'] = data["camera_id"]
             metadata['dive'] = data["video_sequence_name"]
             metadata['start_timestamp'] = data["start_timestamp"]
-
+        else:
+            platforms = {"V": "Ventana", "D": "DocRicketts", "T": "Tiburon", "M": "MiniROV"}
+            pattern = r"([A-Za-z])(\d+)_"
+            match = re.search(pattern, video_path.name)
+            if match:
+                metadata['camera_id'] = platforms[match.group(1)]
+            else:
+                raise Exception(f"Could not find platform name in {video_path.name}")
         # Cache the metadata to /tmp
         with open(cache_file, "w") as f:
             json.dump(metadata, f)
