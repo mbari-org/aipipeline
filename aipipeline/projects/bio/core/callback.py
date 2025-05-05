@@ -141,10 +141,10 @@ class ExportCallback(Callback):
             if not skip_load and track.is_closed() and is_valid:
                 start_datetime = datetime.fromisoformat(predictor.md["start_timestamp"])
                 loc_datetime = start_datetime + timedelta(seconds=best_time_secs)
-                ancillary_data = get_ancillary_data(predictor.md['dive'], config_dict, loc_datetime)
+                ancillary_data = get_ancillary_data(predictor.md, config_dict, loc_datetime)
 
                 if ancillary_data is None or "depthMeters" not in ancillary_data:
-                    logger.error(f"Failed to get ancillary data for {predictor.md['dive']} {start_datetime}")
+                    logger.error(f"Failed to get ancillary data for {predictor.md['camera_id']} {start_datetime}")
                     new_loc["dive"] = predictor.source.video_name
                     new_loc["depth"] = "-1"
                     new_loc["iso_datetime"] = loc_datetime.strftime("%Y-%m-%dT%H:%M:%S")
