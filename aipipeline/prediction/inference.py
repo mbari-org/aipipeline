@@ -48,7 +48,7 @@ class YV5:
         self.model = yolov5.load(weights)
         self.model.to(self.device)
         self.model.shape = (1280, 1280)
-        self.model.conf = 0.01 # confidence threshold (0-1)
+        self.model.conf = 0.005 # confidence threshold (0-1)
         self.model.max_det = 500  # maximum number of detections per image
         self.has_gpu = torch.cuda.is_available()
 
@@ -81,7 +81,7 @@ class YV5:
         logger.debug(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         threshold = 0.03 # 3% edge threshold
-        iou_threshold = 0.125
+        iou_threshold = 0.03 # 3% IOU threshold
         batch_size = len(images)
 
         all_detections = []
@@ -163,7 +163,7 @@ class YV8_10:
         self.model = YOLO(model_file)
         self.model.to(device)
 
-    def predict_images(self, images: Tensor, min_score_det:float = 0.1) -> list[dict[str, int | float | str | Any]]:
+    def predict_images(self, images: Tensor, min_score_det:float = 0.005) -> list[dict[str, int | float | str | Any]]:
         """
         Predicts on a batch of images.
         :param min_score_det:  Minimum score for a detection to be considered
@@ -172,7 +172,7 @@ class YV8_10:
         """
         time_start = time.time()
         logger.info(f"Predicting on {len(images)} images")
-        raw_detections = self.model.predict(images, max_det=500, iou=0.25, conf=min_score_det)
+        raw_detections = self.model.predict(images, max_det=500, iou=0.03, conf=min_score_det)
         logger.info(f"Predicted in {time.time() - time_start:.2f} seconds")
 
         all_detections = []

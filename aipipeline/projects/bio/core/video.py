@@ -24,7 +24,7 @@ class VideoSource:
         self.frame_height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.duration_secs = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT) / self.cap.get(cv2.CAP_PROP_FPS))
         self.batch_size = kwargs.get("batch_size", 1)
-        self.stride = kwargs.get("stride", 4)
+        self.stride = kwargs.get("stride", 1)
         device_id = kwargs.get("device_id", 0)
         self.device = torch.device(f"cuda:{device_id}" if torch.cuda.is_available() else "cpu")
         self.current_frame = 0
@@ -76,24 +76,21 @@ class VideoSource:
 
     def __next__(self):
         frames = []
-        if self.batch_size == 1 and self.stride > 1:
-            if self.current_frame == 0:
+        if self.stride > 1:
+            for _ in range(self.batch_size + 1):
                 ret, frame = self.cap.read()
                 if not ret:
                     raise StopIteration
                 frames.append(frame)
                 self.current_frame += 1
-            else:
-                for _ in range(self.stride - 1):
-                    ret = self.cap.grab()
-                    if not ret:
-                        raise StopIteration
-                    self.current_frame += 1
-                ret, frame = self.cap.read()
+                print(f"===>1 read {self.current_frame}")
+
+            for _ in range(self.stride - 1 - self.batch_size):
+                ret = self.cap.grab()
                 if not ret:
                     raise StopIteration
                 self.current_frame += 1
-                frames.append(frame)
+                print(f"===>2 grab {self.current_frame}")
         else:
             while len(frames) < self.batch_size:
                 ret, frame = self.cap.read()
