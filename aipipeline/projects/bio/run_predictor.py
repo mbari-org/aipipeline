@@ -75,8 +75,12 @@ def process_batch_parallel(batch, args_dict, config_dict, version_id):
 
 def process_single_file(path, gpu_id, args_dict, config_dict, version_id):
     import time
+    import torch
     args_copy = args_dict.copy()
-    device = f"cuda:{gpu_id}"
+    if torch.cuda.is_available():
+        device = f"cuda:{gpu_id}"
+    else:
+        device = "cpu"
     args_copy["device"] = device
     start = time.time()
     try:

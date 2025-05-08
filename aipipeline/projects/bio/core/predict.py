@@ -60,7 +60,9 @@ class Predictor:
         self.batch_size = source.batch_size
         self.max_seconds = kwargs.get("max_seconds", None)
         self.imshow =  kwargs.get("imshow", False)
+        self.remove_blurry = kwargs.get("remove_blurry", False)
         self.max_frames_tracked = kwargs.get("max_frames_tracked", 100)
+        self.save_cotrack_video = kwargs.get("save_cotrack_video", False)
         self.redis_queue = redis_queue
         self.min_score_det = kwargs.get("min_score_det", 0.1)
         self.min_frames = kwargs.get("min_frames", 5)
@@ -72,9 +74,9 @@ class Predictor:
             raise ValueError("Need to set the database version, e.g. --version Baseline if loading to the database")
 
 
-    def __del__(self):
-        torch.cuda.ipc_collect()
-        torch.cuda.empty_cache()
+    # def __del__(self):
+    #     torch.cuda.ipc_collect()
+    #     torch.cuda.empty_cache()
 
     def run_callbacks(self, method_name:str, *args: Any) -> None:
         for callback in self.callbacks:
@@ -106,7 +108,7 @@ class Predictor:
             current_time_secs = float(true_frame_num / self.source.frame_rate)
             logger.info(f'Processing batch of {len(batch_t)} images ending at {current_time_secs}')
 
-            batch_s = batch_t[::self.source.stride]  # Only detect in every stride image
+            batch_s = batch_t[::2]  # Only detect in every other image
             image_stack_p = torch.nn.functional.interpolate(batch_s, size=(1280,1280), mode='bilinear', align_corners=False) # Resize for detection
             predictions = self.detection_model.predict_images(image_stack_p, self.min_score_det)
 
@@ -122,7 +124,7 @@ class Predictor:
                         "xy": (d["y"] + d["h"]),
                         "w": d["w"],
                         "h": d["h"],
-                        "frame":d["frame"] * self.source.stride,
+                        "frame":d["frame"] * 2,
                         "score": d["confidence"],
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
@@ -137,9 +139,10 @@ class Predictor:
                 tracks = self.tracker.update_batch(true_frame_range[0],
                                               image_stack.copy(),
                                               detections=det_n,
-                                              max_empty_frames=self.source.stride*5,
+                                              remove_blurry=self.remove_blurry,
+                                              max_empty_frames=self.max_frames_tracked*2,
                                               max_frames=self.max_frames_tracked,
-                                              save_cotrack_video=True,
+                                              save_cotrack_video=self.save_cotrack_video,
                                               imshow=self.imshow)
 
                 # Display the predictions
@@ -187,34 +190,35 @@ class Predictor:
                             logger.info(f"Removing track {self.fake_track_id} with class {labels} - not {self.class_name}")
                             continue
 
-                        date_start = get_ancillary_data(self.md, self.config, self.md['start_timestamp'])
-                        if date_start is None or "depthMeters" not in date_start:
-                            logger.error(f"Failed to get ancillary data for {self.md['camera_id']} {date_start}")
-                            # input("All ancillary data will be missing for this dive. Press any key to continue")
-                        else:
-                            depth = date_start["depthMeters"]
+                        if 'start_timestamp' in self.md and 'camera_id' in self.md:
+                            date_start = get_ancillary_data(self.md, self.config, self.md['start_timestamp'])
+                            if date_start is None or "depthMeters" not in date_start:
+                                logger.error(f"Failed to get ancillary data for {self.md['camera_id']} {date_start}")
+                                # input("All ancillary data will be missing for this dive. Press any key to continue")
+                            else:
+                                depth = date_start["depthMeters"]
 
-                            if self.min_depth > 0 and depth < self.min_depth:
-                                logger.warning(
-                                    f"Depth {depth} < {self.min_depth} skip processing {self.source.video_name}")
-                                # Stop if we are above the min depth and ascending
-                                if depth < last_depth:
-                                    logger.info(f"Reached min depth {self.min_depth} and ascending. Stopping at {depth} meters")
-                                    self.run_callbacks("on_predict_batch_end", self, tracks)
-                                    return
-                                continue
+                                if self.min_depth > 0 and depth < self.min_depth:
+                                    logger.warning(
+                                        f"Depth {depth} < {self.min_depth} skip processing {self.source.video_name}")
+                                    # Stop if we are above the min depth and ascending
+                                    if depth < last_depth:
+                                        logger.info(f"Reached min depth {self.min_depth} and ascending. Stopping at {depth} meters")
+                                        self.run_callbacks("on_predict_batch_end", self, tracks)
+                                        return
+                                    continue
 
-                            if self.max_depth > 0 and depth > self.max_depth:
-                                logger.warning(
-                                    f"Depth {depth} > {self.max_depth} skip processing {self.source.video_name}")
-                                # Stop if we are beyond the max depth and descending
-                                if depth > last_depth:
-                                    logger.info(f"Reached max depth {self.max_depth} and descending. Stopping at {depth} meters")
-                                    self.run_callbacks("on_predict_batch_end", self, tracks)
-                                    return
-                                continue
+                                if self.max_depth > 0 and depth > self.max_depth:
+                                    logger.warning(
+                                        f"Depth {depth} > {self.max_depth} skip processing {self.source.video_name}")
+                                    # Stop if we are beyond the max depth and descending
+                                    if depth > last_depth:
+                                        logger.info(f"Reached max depth {self.max_depth} and descending. Stopping at {depth} meters")
+                                        self.run_callbacks("on_predict_batch_end", self, tracks)
+                                        return
+                                    continue
 
-                            last_depth = depth
+                                last_depth = depth
                         t = Track(self.fake_track_id, self.source.width, self.source.height)
                         true_frame = d["frame"] +  self.source.frame - 1
                         logger.info(f"Adding box {box} to frame {true_frame}")
