@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.75.0 (2025-05-12)
+
+### Bug Fixes
+
+- Correct args for multicrop
+  ([`bd54c88`](https://github.com/mbari-org/aipipeline/commit/bd54c885ed13790214615570e82d43e732cb04fd))
+
+### Features
+
+- **bio+i2map**: Add options for --remove-blurry --save-cotrack-video, support cpu tracking and
+  lower min default score for detection and IOU to remove intersecting detections for midwater
+  ([`35368ca`](https://github.com/mbari-org/aipipeline/commit/35368caee856611aa433eb099b4d15c561df3698))
+
+
 ## v0.74.1 (2025-05-05)
 
 ### Bug Fixes
