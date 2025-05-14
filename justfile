@@ -136,13 +136,14 @@ load-cfe-isiis-videos missions="":
     --missions $PROJECT_DIR/data/{{missions}} \
     --config $PROJECT_DIR/config/config.yml \
     --tator-project 902111-CFE-Deployments
-# Load planktivore ROI images
+# Load planktivore ROI images, e.g. just load-ptvr-images /mnt/DeepSea-AI/data/Planktivore/raw/aidata-export-02 --section aidata-export-02
 load-ptvr-images images='tmp/roi' *more_args="":
     time aidata load images \
     --config ./aipipeline/projects/planktivore/config/config.yml \
     --input {{images}} \
     --token $TATOR_TOKEN \
     --dry-run {{more_args}}
+
 # Cluster planktivore ROI images
 cluster-ptvr-images *more_args="":
     time conda run -n aipipeline --no-capture-output sdcat cluster roi \
@@ -306,30 +307,8 @@ run-mega-inference:
     --endpoint_url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
     --video /mnt/M3/mezzanine/Ventana/2020/12/4318/V4318_20201208T203419Z_h264.mp4
 
-# Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds
-run-mega-track-bio-video video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4':
-    #!/usr/bin/env bash
-    export PYTHONPATH=deps:deps/biotrack:.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
-       --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 60 --min-frames 1 --version delme \
-       --vits-model /mnt/DeepSea-AI/models/M3/mbari-m3-vits-b-8-20250202/ \
-       --det-model /mnt/DeepSea-AI/models/FathomNet/megaladon --skip-load \
-       --stride 1 --video {{video}} --max-seconds 1 --flush
-
-# Run the mega strided tracking pipeline on a single video for the bio project for 30 seconds
-run-m video='/mnt/M3/mezzanine/Ventana/2022/09/4432/V4432_20220914T210637Z_h264.mp4':
-    #!/usr/bin/env bash
-    export PYTHONPATH=deps:deps/biotrack:.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
-       --config ./aipipeline/projects/bio/config/config.yml \
-       --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --batch-size 15 --min-frames 20 --version delme \
-       --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-m3s-vits-b-8nt-20250216 \
-       --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 --skip-load --create-video --imshow \
-       --stride 4 --video {{video}} --max-seconds 5 --flush
-
 # Run the mega strided pipeline on a videos in a dive for the bio project
-run-mega-stride-bio-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_20231019T180422Z_h265.mp4':
+run-mega-stride-bio video='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_20231019T180422Z_h265.mp4':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
@@ -339,11 +318,11 @@ run-mega-stride-bio-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/V4505_2023
     --vits-model /mnt/DeepSea-AI/models/bio/mbari-m3ctnA-vits-b16-20250331 \
     --class-name "Ctenophora sp. A" \
     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-    --stride 60 --video '{{dive}}'
+    --stride 60 --video '{{video}}'
 
 #./models/mbari_452k_yolov10
 # Run the mega strided tracking pipeline on an entire dive for the bio project
-run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432/*.mp4':
+run-mega-track-bio video='/mnt/M3/mezzanine/Ventana/2022/09/4432/*.mp4':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
@@ -359,33 +338,35 @@ run-mega-track-bio-dive dive='/mnt/M3/mezzanine/Ventana/2022/09/4432/*.mp4':
        --max-frames-tracked 200 --min-score-det 0.1 --batch-size 34 --min-score-track 0.1 --min-frames 5 --version mega-vits-track-gcam \
        --vits-model /mnt/DeepSea-AI/models/m3midwater-vit-b-16 \
        --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-       --stride 16 --video '{{dive}}'
+       --stride 16 --video '{{video}}'
 
-# Run the mega strided tracking pipeline on a single video for the i2map project
-#     --det-model /mnt/DeepSea-AI/models/FathomNet/megalodon/ \
-#run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2019/02/20190204/i2MAP_20190205T102700Z_200m_F031_17.mov':
-run-mega-track-i2map-video video='/mnt/M3/master/i2MAP/2024/11/20241119/i2MAP_20241119T165914Z_200m_F031_4.mov':
-    #!/usr/bin/env bash
-    export PYTHONPATH=.:deps/biotrack:.
-    time python3 aipipeline/projects/bio/process_video_pipeline.py \
-     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-     --config ./aipipeline/projects/i2map/config/config.yml \
-     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
-     --max-frames-tracked 200 --min-score-det 0.1 --min-score-track 0.1 --min-frames 2 --version metadetrt-vits-track-ft \
-     --stride 1 --skip-load --batch-size 30 --create-video --max-seconds 1 \
-     --video '{{video}}'
-
-# Run the mega strided pipeline on a videos in a dive for the i2map project
-run-mega-stride-i2map-dive dive='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
+# Run the mega strided pipeline on a single video or entire dive for the i2map project
+#run-mega-stride-i2map video='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
+run-mega-stride-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T172257Z_301m_F031_5.mp4':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
     --config ./aipipeline/projects/i2map/config/config.yml \
-    --skip-track --min-score-det 0.01 --batch-size 1 --min-score-track 0.05 --min-frames 0 --version megart-mbari-i2map-vits-b-8-2025 \
+    --skip-track --min-score-det 0.01 --batch-size 0 --min-score-track 0.3 --min-frames 0 --version delme \
     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-    --stride 60 --video '{{dive}}'
+    --stride 20 --video '{{video}}' --remove-blurry --max-seconds 30
+
+# Run the mega track pipeline on a single video or entire dive for the i2map project
+#run-mega-stride-i2map video='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
+run-mega-track-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T172257Z_301m_F031_5.mp4' vit_model='/mnt/DeepSea-AI/models/bio/mbari-i2map-vits-b-8-20250216' version='megadetrt-mbari-i2map-vits-b-8-20250216-track':
+    #!/usr/bin/env bash
+    export PYTHONPATH=deps:deps/biotrack:.
+    export MPLCONFIGDIR=/tmp
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
+    --config ./aipipeline/projects/i2map/config/config.yml \
+    --max-frames-tracked 300 --min-score-det 0.01 --batch-size 16 --min-score-track 0.1 --min-frames 2 \
+    --version {{version}} \
+    --vits-model {{vit_model}} \
+    --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
+    --stride 1 --video '{{video}}'
+     #--save-cotrack-video
 
 # Run the mega strided tracking pipeline on a single video to test the pipeline
 run-mega-track-test-1min:
@@ -411,6 +392,18 @@ run-mega-track-test-fastapiyv5:
      --endpoint-url http://FastAP-FastA-0RIu3xAfMhUa-337062127.us-west-2.elb.amazonaws.com/predict \
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4
 
+# Run the mega strided tracking pipeline on a single video for the cfe project
+run-mega-track-isiis-video video='/mnt/CFElab/Data_archive/Images/ISIIS/COOK/VideosMP4/20250401_Hawaii/20250405_scuba/2025-04-05 10-07-06.063/CFE_ISIIS-001-2025-04-05 10-07-06.063.mp4':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.:deps/biotrack:.
+    time python3 aipipeline/projects/bio/process_video_pipeline.py \
+     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
+     --config ./aipipeline/projects/cfe/config/config.yml \
+     --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
+     --max-frames-tracked 300 --min-score-det 0.01 --min-score-track 0.01 --min-frames 2 --version metadetrt-vits-track-ft \
+     --stride 1 --skip-load --batch-size 30 --create-video --max-seconds 1 \
+     --video '{{video}}'
+
 # Run inference and cluster on i2MAP bulk data run with ENV_FILE=.env.i2map just cluster-i2mapbulk
 cluster-i2mapbulk:
     #!/usr/bin/env bash
@@ -421,8 +414,8 @@ cluster-i2mapbulk:
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
 # Download and cluster data. Run with  just download-cluster i2map or just download-cluster megart-mbari-i2map-vits-b-8-2025 to cluster a particular version
-download-cluster project="i2map" version="Baseline":
-    just --justfile {{justfile()}} download-crop {{project}} --version {{version}} --unverified --use-cleanvision True
+download-cluster project="i2map" version="Baseline" *more_args="":
+    just --justfile {{justfile()}} download-crop {{project}} --version {{version}} {{more_args}}
     echo "/mnt/ML_SCRATCH/{{project}}/{{version}}/crops/,/mnt/ML_SCRATCH/{{project}}/{{version}}/clusters/" > /tmp/{{version}}-clu.txt
     just --justfile {{justfile()}} cluster {{project}} --version {{version}} --data /tmp/{{version}}-clu.txt
 
@@ -486,7 +479,7 @@ gen-cfe-data:
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --version Baseline --verified --generator vars-labelbot --group NMS
+  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --version Baseline --verified --more-args "'--verified --generator vars-labelbot --group NMS'"
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:

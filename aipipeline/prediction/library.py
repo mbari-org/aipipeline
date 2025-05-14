@@ -398,8 +398,10 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
     if container:
         container.wait()
         logger.info(f"Done downloading data for labels: {labels}....")
+        logs = container.logs().decode("utf-8")
+        logger.error(f"Container logs: {logs}")
     else:
-        logger.error(f"Failed to download data for labels: {labels}....")
+        logger.error(f"Failed to start download container for labels: {labels}....")
 
     return labels
 

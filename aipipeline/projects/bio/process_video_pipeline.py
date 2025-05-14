@@ -15,7 +15,7 @@ from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import init_api_project
 from aipipeline.projects.bio.core.args import parse_args
 from aipipeline.db_utils import get_version_id
-from aipipeline.projects.bio.run_predictor import process_batch_parallel
+from aipipeline.projects.bio.run_predictor import process_batch_parallel, process_single_file
 
 # Global variables
 idv = 1  # video index
@@ -83,24 +83,25 @@ def main():
         api, project_id = init_api_project(host=host, token=os.getenv("TATOR_TOKEN"), project_name=project)
         version_id = get_version_id(api, project_id, config_dict["data"]["version"])
 
-    print(f"Processing video: {video}")
-    options = PipelineOptions()
-    with beam.Pipeline(options=options) as p:
-        (
-            p
-            | "Match Files" >> MatchFiles(file_pattern=video)
-            | "Read Matches" >> ReadMatches()
-            | "Get File Paths" >> beam.Map(lambda f: f.metadata.path)
-            | "Batch into 6" >> beam.BatchElements(min_batch_size=6, max_batch_size=6)
-            | "Run in Parallel on GPUs" >> beam.Map(
-            lambda batch: process_batch_parallel(
-                batch,
-                args_dict=args_dict,
-                config_dict=config_dict,
-                version_id=version_id
-            )
-        )
-        )
+    process_single_file(video,0,args_dict,config_dict,version_id)
+    # print(f"Processing video: {video}")
+    # options = PipelineOptions()
+    # with beam.Pipeline(options=options) as p:
+    #     (
+    #         p
+    #         | "Match Files" >> MatchFiles(file_pattern=video)
+    #         | "Read Matches" >> ReadMatches()
+    #         | "Get File Paths" >> beam.Map(lambda f: f.metadata.path)
+    #         | "Batch into 6" >> beam.BatchElements(min_batch_size=6, max_batch_size=6)
+    #         | "Run in Parallel on GPUs" >> beam.Map(
+    #         lambda batch: process_batch_parallel(
+    #             batch,
+    #             args_dict=args_dict,
+    #             config_dict=config_dict,
+    #             version_id=version_id
+    #         )
+    #     )
+    #     )
 
 if __name__ == "__main__":
     main()

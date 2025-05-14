@@ -47,14 +47,8 @@ class VideoSource:
         return Path(self.video)
 
     @property
-    def video_url(self):
-        if self.video_mount:
-            url = self.video_path.as_uri()
-            url = url.replace(self.video_mount["path"], self.video_mount["nginx_root"])
-            url = url.replace('file://', f'https://{self.video_mount["host"]}')
-            return url
+    def video_uri(self):
         return self.video_path.as_uri()
-
 
     def preprocess(self, images):
         imgs = []
@@ -80,17 +74,15 @@ class VideoSource:
             for _ in range(self.batch_size + 1):
                 ret, frame = self.cap.read()
                 if not ret:
-                    raise StopIteration
+                    break
                 frames.append(frame)
                 self.current_frame += 1
-                print(f"===>1 read {self.current_frame}")
 
             for _ in range(self.stride - 1 - self.batch_size):
                 ret = self.cap.grab()
                 if not ret:
-                    raise StopIteration
+                    break
                 self.current_frame += 1
-                print(f"===>2 grab {self.current_frame}")
         else:
             while len(frames) < self.batch_size:
                 ret, frame = self.cap.read()
@@ -98,8 +90,9 @@ class VideoSource:
                     raise StopIteration
                 self.current_frame += 1
                 frames.append(frame)
-            if not frames:
-                raise StopIteration
+
+        if not frames:
+            raise StopIteration
         return self.preprocess(frames)
 
     def close(self):

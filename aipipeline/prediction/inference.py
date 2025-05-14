@@ -80,8 +80,8 @@ class YV5:
         raw_detections = self.model(images, size=self.model_shape[0])
         logger.debug(f"Predicted in {time.time() - time_start:.2f} seconds")
 
-        threshold = 0.03 # 3% edge threshold
-        iou_threshold = 0.03 # 3% IOU threshold
+        threshold = 0.05 # 5% edge threshold
+        iou_threshold = 0.01 # 5% IOU threshold
         batch_size = len(images)
 
         all_detections = []
