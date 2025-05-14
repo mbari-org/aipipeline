@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.76.0 (2025-05-14)
+
+### Features
+
+- **bio+i2map**: More adjustments to detection params, refactoring redis load to pass
+  video_reference_uuid and uri in same queue, removed confidence factor in soft BIoU
+  ([`1231103`](https://github.com/mbari-org/aipipeline/commit/123110359f0b9b34c38522cbe664befb90493e4b))
+
+
 ## v0.75.0 (2025-05-12)
 
 ### Bug Fixes
