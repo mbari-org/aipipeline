@@ -1,4 +1,4 @@
-# aipipeline/projects/planktivore/config_highmag.yml
+# aipipeline/projects/planktivore/config.yml
 # Config file for Planktivore project high mag images
 
 redis:
@@ -12,11 +12,10 @@ docker:
      mode: rw
 
 data:
-  raw_data_path: "/mnt/DeepSea-AI/data/Planktivore/raw"
   processed_path: "/mnt/ML_SCRATCH/Planktivore/aidata-export-02-high-mag"
   version: "google-vit-base-patch16-224"
   labels: ""
-  download_args: ["--verified", "--section", "aidata-export-02-high-mag"]
+  download_args: [""]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
