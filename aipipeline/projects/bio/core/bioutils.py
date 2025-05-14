@@ -97,6 +97,7 @@ def get_video_metadata(video_path: Path) -> dict:
             start_timestamp = isoparse(start_timestamp_str.group())
         else:
             start_timestamp = datetime.now()
+
         metadata = {
             "codec": reader_metadata.get("encoder", "unknown"),
             "mime": mimetypes.guess_type(video_path.as_posix())[0],
@@ -105,7 +106,7 @@ def get_video_metadata(video_path: Path) -> dict:
             "num_frames": video_clip.reader.n_frames,
             "frame_rate": video_clip.reader.fps,
             "video_reference_uuid": video_path.name,
-            "uri": video_path.as_posix(),
+            "uri": video_path.name,
             "dive": video_path.name,
             "start_timestamp": start_timestamp.isoformat(), # Format, e.g. 2025-04-02T19:15:27+00:00
         }
@@ -117,7 +118,7 @@ def get_video_metadata(video_path: Path) -> dict:
         # Get the video reference uuid from the rest query JSON response
         response = requests.get(query)
         logger.info(f"response: {response}")
-        if response.status_code == 200:
+        if response.status_code == 200 and len(response.text) > 0:
             data = json.loads(response.text)[0]
             logger.info(f"data: {data}")
             metadata['video_reference_uuid'] = data["video_reference_uuid"]
@@ -145,17 +146,6 @@ def read_image(file_path: str) -> tuple[bytes, str]:
     with open(file_path, 'rb') as file:
         img = io.BytesIO(file.read()).getvalue()
         return img, file_path
-
-
-def resolve_video_path(video_path: Path) -> Path:
-    # Resolve the video URI to a local path
-    md = get_video_metadata(video_path.name)
-    if md is None:
-        logger.error(f"Failed to get video metadata for {video_path}")
-        return None
-
-    resolved_path = Path(f'/mnt/M3/mezzanine' + md['uri'].split('/mezzanine')[-1])
-    return resolved_path
 
 
 def video_to_frame(timestamp: str, video_path: Path, output_path: Path, ffmpeg_path: str = "/usr/bin/ffmpeg"):

@@ -108,12 +108,11 @@ class Predictor:
             current_time_secs = float(true_frame_num / self.source.frame_rate)
             logger.info(f'Processing batch of {len(batch_t)} images ending at {current_time_secs}')
 
-            batch_s = batch_t[::2]  # Only detect in every other image
-            image_stack_p = torch.nn.functional.interpolate(batch_s, size=(1280,1280), mode='bilinear', align_corners=False) # Resize for detection
+            image_stack_p = torch.nn.functional.interpolate(batch_t, size=(1280,1280), mode='bilinear', align_corners=False) # Resize for detection
             predictions = self.detection_model.predict_images(image_stack_p, self.min_score_det)
 
             logger.info(f"Filtering blurry detections")
-            filtered_pred = filter_blur_pred(batch_s, predictions, self.crop_path, self.source.width, self.source.height)
+            filtered_pred = filter_blur_pred(batch_t, predictions, self.crop_path, self.source.width, self.source.height)
 
             # Convert the x, y to the image coordinates and adjust the frame number to reflect the stride
             det_n = []
@@ -124,7 +123,7 @@ class Predictor:
                         "xy": (d["y"] + d["h"]),
                         "w": d["w"],
                         "h": d["h"],
-                        "frame":d["frame"] * 2,
+                        "frame":d["frame"],
                         "score": d["confidence"],
                         "crop_path": d["crop_path"]}
                 det_n.append(t_d)
@@ -159,7 +158,7 @@ class Predictor:
                             t.close_track()
 
                 # Report how many tracks are greater than the minimum frames and not closed
-                good_tracks = [t for t in tracks if t.num_frames > self.min_frames and not t.is_closed()]
+                good_tracks = [t for t in tracks if t.num_frames >= self.min_frames and not t.is_closed()]
                 logger.info("===============================================")
                 logger.info(f"Number of tracks {len(tracks)}")
                 logger.info(f"Number of good tracks {len(good_tracks)}")
@@ -167,19 +166,12 @@ class Predictor:
                     t.dump()
 
                 predictor = self
-                if self.max_seconds and current_time_secs > self.max_seconds:
-                    logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
-                    self.tracker.close_all_tracks()
-                    self.run_callbacks("on_predict_batch_end", predictor, tracks)
-                    self.tracker.purge_closed_tracks(true_frame_num)
-                    self.run_callbacks("on_end", predictor)
-                    return
-
                 self.run_callbacks("on_predict_batch_end", predictor, tracks)
                 self.tracker.purge_closed_tracks(true_frame_num)
             else:
                 logger.info("Tracking skipped - tracking disabled")
                 tracks = []
+                new_tracks = []
                 unique_frames = np.unique([d["frame"] for d in det_n])
                 for k, i in enumerate(unique_frames):
                     boxes = [[d['x'], d['y'], d['xx'], d['xy']] for d in det_n if d["frame"] == i]
@@ -204,7 +196,6 @@ class Predictor:
                                     # Stop if we are above the min depth and ascending
                                     if depth < last_depth:
                                         logger.info(f"Reached min depth {self.min_depth} and ascending. Stopping at {depth} meters")
-                                        self.run_callbacks("on_predict_batch_end", self, tracks)
                                         return
                                     continue
 
@@ -214,13 +205,12 @@ class Predictor:
                                     # Stop if we are beyond the max depth and descending
                                     if depth > last_depth:
                                         logger.info(f"Reached max depth {self.max_depth} and descending. Stopping at {depth} meters")
-                                        self.run_callbacks("on_predict_batch_end", self, tracks)
                                         return
                                     continue
 
                                 last_depth = depth
                         t = Track(self.fake_track_id, self.source.width, self.source.height)
-                        true_frame = d["frame"] +  self.source.frame - 1
+                        true_frame = d["frame"] +  true_frame_num
                         logger.info(f"Adding box {box} to frame {true_frame}")
                         t.update_box(frame_num=true_frame, box=box, scores=scores, labels=labels, emb=emb, image_path=img_path)
                         # Force close the track since loading does not happen on open tracks
@@ -228,5 +218,17 @@ class Predictor:
                         self.fake_track_id += 1
                         tracks.append(t)
 
+            if self.max_seconds and current_time_secs > self.max_seconds:
+                logger.info(f"Reached {self.max_seconds}. Stopping at {current_time_secs} seconds")
+                if self.tracker:
+                    self.tracker.close_all_tracks()
+                    self.tracker.purge_closed_tracks(true_frame_num)
                 self.run_callbacks("on_predict_batch_end", self, tracks)
+                return
+
+            self.run_callbacks("on_predict_batch_end", self, tracks)
             true_frame_num = self.source.frame
+
+        if self.tracker:
+            self.tracker.close_all_tracks()
+            self.tracker.purge_closed_tracks(true_frame_num)

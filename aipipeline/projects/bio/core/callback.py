@@ -52,37 +52,38 @@ class AncillaryCallback(Callback):
     def on_predict_start(self, predictor: Predictor):
         video_name = predictor.source.video_name
         video_path = predictor.source.video_path
-        video_url = predictor.source.video_url
+        video_uri = predictor.source.video_uri
         redis_queue = predictor.redis_queue
-        print(f"Getting metadata for video: {video_name} {video_url}")
+        print(f"Getting metadata for video: {video_name} {video_uri}")
         try:
             md = get_video_metadata(video_path)
             if md is None:
-                logger.error(f"Failed to get video metadata for {video_name}")
+                logger.error(f"Failed to get video metadata for {video_path}")
             else:
                 predictor.md = md
-                video_ref_uuid = md["video_reference_uuid"]
                 iso_start = md["start_timestamp"]
-                logger.info(f"video_ref_uuid: {video_ref_uuid}")
+                video_ref_uuid = md["video_reference_uuid"]
+                print(f"video_uri: {video_uri} video_ref_uuid: {video_ref_uuid} start_timestamp: {iso_start}")
                 redis_queue.hset(
-                    f"video_refs_start:{video_ref_uuid}",
+                    f"video_refs_start:{video_uri}",
                     "start_timestamp",
                     iso_start,
                 )
                 redis_queue.hset(
-                    f"video_refs_load:{video_ref_uuid}",
-                    "video_uri",
-                    video_url,
+                    f"video_refs_load:{video_uri}",
+                    mapping={
+                        "video_uri": video_uri,
+                        "video_ref_uuid": video_ref_uuid,
+                    }
                 )
         except Exception as e:
-            logger.info(f"Error: {e}")
+            logger.error(f"Error: {e}")
             if predictor.md is None:
                 predictor.md = {}
             else:
                 # Remove the video reference from the queue
-                video_ref_uuid = predictor.md["video_reference_uuid"]
-                redis_queue.delete(f"video_refs_start:{video_ref_uuid}")
-                redis_queue.delete(f"video_refs_load:{video_ref_uuid}")
+                redis_queue.delete(f"video_refs_start:{video_uri}")
+                redis_queue.delete(f"video_refs_load:{video_uri}")
 
 class ExportCallback(Callback):
     
@@ -132,9 +133,9 @@ class ExportCallback(Callback):
             is_valid = True
             if track.is_closed():
                 logger.info(f"Track {track.id} is closed")
-            if track.num_frames < min_frames or best_score[0] < min_score_track:
+            if track.num_frames < min_frames or best_score[0] <= min_score_track:
                 logger.info(
-                    f"Track {track.id} is too short num frames {track.num_frames} or "
+                    f"Track {track.id} is too short num frames {track.num_frames} <= {min_frames} or "
                     f"best score {best_score[0]:.2f} is < {min_score_track}, skipping")
                 is_valid = False
 
@@ -164,8 +165,8 @@ class ExportCallback(Callback):
 
                 new_loc = {k: int(v) if isinstance(v, np.integer) else float(v) if isinstance(v, np.floating) else v for
                            k, v in new_loc.items()} # Convert numpy types to python types
-                logger.info(f"queuing loc: {new_loc} {predictor.md['dive']} {loc_datetime}")
-                redis_queue.hset(f"locs:{predictor.md['video_reference_uuid']}", str(self.num_loaded), json.dumps(new_loc))
+                logger.info(f"queuing loc: {new_loc} {predictor.source.video_uri} {loc_datetime}")
+                redis_queue.hset(f"locs:{predictor.source.video_uri}", str(self.num_loaded), json.dumps(new_loc))
                 logger.info(f"{predictor.source.video_name} found total possible {self.num_loaded} localizations")
                 self.num_loaded += 1
 
