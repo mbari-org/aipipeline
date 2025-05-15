@@ -342,16 +342,17 @@ run-mega-track-bio video='/mnt/M3/mezzanine/Ventana/2022/09/4432/*.mp4':
 
 # Run the mega strided pipeline on a single video or entire dive for the i2map project
 #run-mega-stride-i2map video='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
-run-mega-stride-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T172257Z_301m_F031_5.mp4':
+run-mega-stride-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T172257Z_301m_F031_5.mp4' vit_model='/mnt/DeepSea-AI/models/bio/mbari-i2map-vits-b-8-20250216' version='megadetrt-mbari-i2map-vits-b-8-20250216':
     #!/usr/bin/env bash
     export PYTHONPATH=deps:deps/biotrack:.
     export MPLCONFIGDIR=/tmp
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/process_video_pipeline.py \
     --config ./aipipeline/projects/i2map/config/config.yml \
-    --skip-track --min-score-det 0.01 --batch-size 0 --min-score-track 0.3 --min-frames 0 --version delme \
-    --vits-model /mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216 \
+    --skip-track --min-score-det 0.01 --batch-size 0 --min-score-track 0.3 --min-frames 0 \
+    --version {{version}} \
+    --vits-model {{vit_model}} \
     --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
-    --stride 20 --video '{{video}}' --remove-blurry --max-seconds 30
+    --stride 30 --video '{{video}}'
 
 # Run the mega track pipeline on a single video or entire dive for the i2map project
 #run-mega-stride-i2map video='/mnt/M3/mezzanine/Ventana/2023/10/4505/*.mp4':
