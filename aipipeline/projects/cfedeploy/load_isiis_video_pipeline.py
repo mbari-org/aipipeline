@@ -3,6 +3,7 @@
 # Description: Batch load video for missions
 import os
 from datetime import datetime
+from pathlib import Path
 
 import apache_beam as beam
 import dotenv
@@ -61,14 +62,10 @@ def load_video(element) -> str:
         section,
     ]
 
-    machine_friendly = mission_dir.split(" ")[0]
-    machine_friendly = machine_friendly.replace("-","")
-    machine_friendly = machine_friendly.replace(":","")
-
     try:
         container = run_docker(
             image=config_dict["docker"]["aidata"],
-            name=f"isiisvidload{machine_friendly}",
+            name=f'isiisvidload{datetime.now().strftime("%Y%m%d_%H%M%S")}',
             args_list=args,
             bind_volumes=config_dict["docker"]["bind_volumes"]
         )
