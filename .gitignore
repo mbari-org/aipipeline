@@ -1,9 +1,10 @@
 # Model files
-models/*
-deps/*
-
+models/
 *.pt*
 *.mlmodel
+
+# Dependencies
+deps/
 
 *.txt
 *.log
