@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v0.76.2 (2025-05-23)
+
+### Bug Fixes
+
+- **cfe**: Recipe for video load aligned with new cfedeploy project
+  ([`5aa4805`](https://github.com/mbari-org/aipipeline/commit/5aa4805deec8783ad04b15effee0389a8b1b295c))
+
+
 ## v0.76.1 (2025-05-23)
 
 ### Bug Fixes
