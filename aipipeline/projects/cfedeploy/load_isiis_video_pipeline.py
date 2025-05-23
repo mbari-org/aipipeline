@@ -3,16 +3,15 @@
 # Description: Batch load video for missions
 import os
 from datetime import datetime
-from pathlib import Path
 
 import apache_beam as beam
 import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
+import subprocess
 
-from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
-from aipipeline.projects.cfe.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
+from aipipeline.projects.cfedeploy.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -33,9 +32,9 @@ TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 
 
 def load_video(element) -> str:
-    # Data is in the format
-    # <mission path>,<tator section>
-    # /mnt/CFElab/Data_archive/Videos/ISIIS/COOK/VideosMP4/20230712_RachelCarson,RachelCarson/2023/07/
+    # Data is in the format below. Note there is some redundancy here, but this format allows for flexibility in the loading
+    # <platform>,<mission path>,<tator section>
+    # RachelCarson,/mnt/CFElab/Data_archive/Videos/ISIIS/COOK/VideosMP4/20230712_RachelCarson,RachelCarson/2023/07/
     logger.info(f"Processing element {element}")
     line, config_dict = element
     platform_name, mission_dir, section = parse_mission_string(line)
@@ -45,15 +44,18 @@ def load_video(element) -> str:
         return f"Could not find platform name in path: {line} that ends with {POSSIBLE_PLATFORMS}"
 
     logger.info(f"Platform: {platform_name}")
+    logger.info(f"Section: {section}")
+    logger.info(f"Mission directory: {mission_dir}")
 
     project = config_dict["tator"]["project"]
 
     logger.info(f"Loading videos in {mission_dir} to Tator project {project} in section {section}")
     args = [
+        "aidata",
         "load",
         "videos",
         "--input",
-        f"'{mission_dir}'",
+        mission_dir,
         "--config",
         f"/tmp/{project}/config.yml",
         "--token",
@@ -63,20 +65,16 @@ def load_video(element) -> str:
     ]
 
     try:
-        container = run_docker(
-            image=config_dict["docker"]["aidata"],
-            name=f'isiisvidload{datetime.now().strftime("%Y%m%d_%H%M%S")}',
-            args_list=args,
-            bind_volumes=config_dict["docker"]["bind_volumes"]
-        )
-        if container:
-            logger.info(f"Video loading for {platform_name}...")
-            container.wait()
-            logger.info(f"Videos loaded for {platform_name}")
-            return f"Mission {platform_name} videos loaded."
-        else:
-            logger.error(f"Failed to load videos for {platform_name}")
-            return f"Failed to load Videos for {platform_name}"
+        logger.info(f"Running command: {' '.join(args)}")
+
+        try:
+            subprocess.run(args, check=True)
+            logger.info("Video loaded successfully.")
+            return f"Video loaded successfully."
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Error occurred: {e}")
+    except Exception as e:
+        logger.error(f"Error loading videos: {e}")
     except Exception as e:
         logger.error(f"Error loading videos for {platform_name}: {e}")
         return f"Error loading videos for {platform_name}: {e}"
