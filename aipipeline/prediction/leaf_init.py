@@ -3,7 +3,7 @@
 # Description: This script is used to create a tree structure in Tator. It reads the tree structure from a yaml file and creates the tree structure in Tator.
 from datetime import datetime
 
-from aipipeline.db_utils import init_api_project
+from aipipeline.db.utils import init_api_project
 from aipipeline.config_setup import setup_config, parse_labels
 import logging
 import os

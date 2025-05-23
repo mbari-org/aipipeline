@@ -30,14 +30,18 @@ def parse_args(argv, logger):
 
 def parse_mission_string(line: str):
     mission_parts = line.split(",")
-    mission_dir = mission_parts[0]
-    section = mission_parts[1]
+    platform = mission_parts[0]
+    mission_dir = mission_parts[1]
+    section = mission_parts[2]
     # The platform name is in the name of the mission directory
     # RachelCarson from
     # /mnt/CFELab/Data_archive/Images/ISIIS/COOK/VideosMP4/20230712_RachelCarson/2023-07-12\ 09-14-56.898,RachelCarson/2023/07
     platform_name = None
     for p in POSSIBLE_PLATFORMS:
-        if p in mission_dir:
+        if p in platform:
             platform_name = p
             break
+    if platform_name is None:
+        raise ValueError(f"Could not find platform name in path: {line} that is in {POSSIBLE_PLATFORMS}")
+
     return platform_name, mission_dir, section

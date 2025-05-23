@@ -8,12 +8,10 @@ import time
 from datetime import datetime
 import numpy as np
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List
 
 import cv2
 import requests
-import tator
-from tator.openapi.tator_openapi import TatorApi
 
 from aipipeline.docker.utils import run_docker
 import apache_beam as beam
@@ -72,7 +70,7 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     imagelab = Imagelab(data_path=crop_path)
     issues = {
         issue["name"]: {key: value for key, value in issue.items() if key != "name"}
-        for issue in config_dict["data"]["cleanvision_issues"]
+        for issue in config_dict["data"]["  cleanvision_issues"]
     }
     imagelab.find_issues(issues)
     imagelab.report()
@@ -461,41 +459,3 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
     return file_paths, best_predictions, best_scores
 
 
-def get_box_type(api: TatorApi, project_id: int) -> Any | None:
-    types = api.get_localization_type_list(project=project_id)
-    for t in types:
-        if t.name == 'Box':
-            return t
-    return None
-
-
-def init_api_project(host: str, token: str, project_name: str) -> tuple[Any, int]:
-    """
-    Fetch the Tator API and project
-    :param host: hostname, e.g. localhost
-    :param token: api token
-    :param project_name:  project name
-    :return: Tator API and project id
-    """
-    try:
-        logger.info(f"Connecting to Tator at {host}")
-        api = tator.get_api(host, token)
-    except Exception as e:
-        raise e
-
-    logger.info(f"Searching for project {project_name} on {host}.")
-    projects = api.get_project_list()
-    logger.info(f"Found {len(projects)} projects")
-    project = None
-    for p in projects:
-        if p.name == project_name:
-            project = p
-            break
-    if project is None:
-        raise Exception(f"Could not find project {project_name}")
-
-    logger.info(f"Found project {project.name} with id {project.id}")
-    if project is None:
-        raise Exception(f"Could not find project {project}")
-
-    return api, project.id
