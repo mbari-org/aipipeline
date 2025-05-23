@@ -1,6 +1,4 @@
-opencv-python-headless
 requests
-pandas
 docker==7.1.0
 piexif
 plotly
@@ -8,16 +6,10 @@ python-dotenv
 pyyaml
 scikit-learn
 matplotlib
-moviepy
-albumentations==1.4.23
-tator
-torch
-torchvision
+mbari-aidata==1.52.2
 apache-beam==2.53.0
 cleanvision
 ultralytics
 yolov5
-huggingface-hub==0.24.7
-tokenizers==0.19.1
-transformers==4.40.2
 psycopg2-binary
+pytz
