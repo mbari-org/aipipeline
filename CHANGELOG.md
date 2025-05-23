@@ -1,6 +1,15 @@
 # CHANGELOG
 
 
+## v0.76.1 (2025-05-23)
+
+### Bug Fixes
+
+- **cfe**: Fixed loader pipeline, some file renaming for clarity and add platform to element format
+  for flexibility in future loads
+  ([`b09d3ec`](https://github.com/mbari-org/aipipeline/commit/b09d3ece175c7df961225573926068b3d9484534))
+
+
 ## v0.76.0 (2025-05-14)
 
 ### Features
