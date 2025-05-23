@@ -12,9 +12,9 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 from apache_beam.io.fileio import MatchFiles, ReadMatches
 from aipipeline.config_setup import setup_config
-from aipipeline.prediction.library import init_api_project
+from aipipeline.db.utils import init_api_project
 from aipipeline.projects.bio.core.args import parse_args
-from aipipeline.db_utils import get_version_id
+from aipipeline.db.utils import get_version_id
 from aipipeline.projects.bio.run_predictor import process_batch_parallel, process_single_file
 
 # Global variables
@@ -80,7 +80,7 @@ def main():
         project = config_dict["tator"]["project"]
         if args.version:
             config_dict["data"]["version"] = args.version
-        api, project_id = init_api_project(host=host, token=os.getenv("TATOR_TOKEN"), project_name=project)
+        api, project_id = init_api_project(host=host, token=os.getenv("TATOR_TOKEN"), project=project)
         version_id = get_version_id(api, project_id, config_dict["data"]["version"])
 
     process_single_file(video,0,args_dict,config_dict,version_id)

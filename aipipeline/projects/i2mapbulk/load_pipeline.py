@@ -13,8 +13,7 @@ import logging
 
 from aipipeline.projects.i2mapbulk.args import parse_args
 from aipipeline.config_setup import setup_config
-from aipipeline.prediction.library import init_api_project, get_box_type
-from aipipeline.db_utils import get_version_id
+from aipipeline.db.utils import get_box_type, init_api_project
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
