@@ -40,6 +40,7 @@ cp-core:
 # Copy cfe dev code to the project on doris
 cp-dev-cfe:
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.png' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/cfe/ /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.png' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/cfedeploy/ /Volumes/dcline/code/aipipeline/aipipeline/projects/cfedeploy/
 
 # Copy planktivore dev code to the project on doris
 cp-dev-ptvr:
@@ -127,15 +128,15 @@ load-vss project='uav' :
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
-# Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt or just load-cfe-isiis-videos rachelcarson-video.txt
+# Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt or just load-cfe-isiis-videos rachelcarson-video.txt. Populate files in project/cfedeploy/data first
 load-cfe-isiis-videos missions="":
     #!/usr/bin/env bash
-    export PROJECT_DIR=./aipipeline/projects/cfe
+    export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_video_pipeline.py \
     --missions $PROJECT_DIR/data/{{missions}} \
-    --config $PROJECT_DIR/config/config.yml \
-    --tator-project 902111-CFE-Deployments
+    --config $PROJECT_DIR/config/config.yml
+
 # Load planktivore ROI images, e.g. just load-ptvr-images /mnt/DeepSea-AI/data/Planktivore/raw/aidata-export-02 --section aidata-export-02
 load-ptvr-images images='tmp/roi' *more_args="":
     time aidata load images \
