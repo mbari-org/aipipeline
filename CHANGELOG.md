@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v0.76.3 (2025-05-25)
+
+### Build System
+
+- Add mbari-aidata, pytz deps, and removed duplicate requirements
+  ([`5c9fe47`](https://github.com/mbari-org/aipipeline/commit/5c9fe47b59c5747317a4d7c8b019ccc40d05ecdc))
+
+### Performance Improvements
+
+- **ptvr**: Updated model with latest best oerforming
+  /mnt/DeepSea-AI/models/Planktivore/mbari-ptvr-vits-b8-20250513
+  ([`acdced7`](https://github.com/mbari-org/aipipeline/commit/acdced7266ad7261db882b18cb404831dfd5e4ea))
+
+
 ## v0.76.2 (2025-05-23)
 
 ### Bug Fixes
