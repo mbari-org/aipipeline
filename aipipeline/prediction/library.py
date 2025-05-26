@@ -70,7 +70,7 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     imagelab = Imagelab(data_path=crop_path)
     issues = {
         issue["name"]: {key: value for key, value in issue.items() if key != "name"}
-        for issue in config_dict["data"]["  cleanvision_issues"]
+        for issue in config_dict["data"]["cleanvision_issues"]
     }
     imagelab.find_issues(issues)
     imagelab.report()
