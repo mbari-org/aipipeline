@@ -422,20 +422,28 @@ download-cluster project="i2map" version="Baseline" *more_args="":
     just --justfile {{justfile()}} cluster {{project}} --version {{version}} --data /tmp/{{version}}-clu.txt
 
 # Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square
-cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda:0':
+cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda':
     #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/planktivore
     export PYTHONPATH=.
-    for alpha in 1.0 1.1; do
-        for min_cluster in 2 10; do
-          echo "Running alpha=$alpha min_samples=$min_samples min_cluster=$min_cluster"
-            just --justfile {{justfile()}} cluster-ptvr-images \
+    echo "Running clean pipeline"
+    time conda run -n aipipeline --no-capture-output python3 \
+                            aipipeline/prediction/clean_pipeline.py \
+                            --config $PROJECT_DIR/config/config.yml \
+                            --image-dir {{roi_dir}}
+    for min_sample in 2; do
+        for min_cluster in 3 5 7 20; do
+          echo "Running alpha=1 min_sample=$min_sample min_cluster=$min_cluster"
+            time conda run -n rapids-25.04 sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
                     --roi-dir {{roi_dir}} \
                     --save-dir {{save_dir}} \
-                    --alpha $alpha \
-                    --min-sample-size 1 \
+                    --alpha 1 \
+                    --min-sample-size $min_sample \
                     --min-cluster-size $min_cluster \
                     --device {{device}} \
-                    --use-vits
+                    --use-vits \
+                    --vits-batch-size 512 \
+                    --hdbscan-batch-size 50000
             done
     done
 
