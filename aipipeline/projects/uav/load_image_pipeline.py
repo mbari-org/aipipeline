@@ -9,7 +9,7 @@ import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
-from aipipeline.docker.utils import run_docker
+from aipipeline.engines.subproc import run_subprocess
 from aipipeline.config_setup import setup_config
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 
@@ -48,7 +48,8 @@ def load_images(element) -> str:
     project = config_dict["tator"]["project"]
 
     logger.info(f"Loading images in {mission_dir} to Tator project {project} in section {section}")
-    args = [
+    args_list = [
+        "aidata",
         "load",
         "images",
         "--input",
@@ -62,25 +63,16 @@ def load_images(element) -> str:
     ]
 
     if start_image:
-        args += ["--start-image", start_image]
+        args_list += ["--start-image", start_image]
     if end_image:
-        args += ["--end-image", end_image]
+        args_list += ["--end-image", end_image]
 
-    container = run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f"aidata-image-load-{mission_name}",
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"]
-    )
-    if container:
-        logger.info(f"Images loading for {mission_name}...")
-        container.wait()
-        logger.info(f"Images loaded for {mission_name}")
-        return f"Mission {mission_name} images loaded."
-    else:
+    result = run_subprocess(args_list=args_list)
+    if result != 0:
         logger.error(f"Failed to load images for {mission_name}")
         return f"Failed to load images for {mission_name}"
-
+    logger.info(f"Images loaded for {mission_name}")
+    return f"Mission {mission_name} images loaded."
 
 
 # Run the pipeline, reading missions from a file and skipping lines that start with #

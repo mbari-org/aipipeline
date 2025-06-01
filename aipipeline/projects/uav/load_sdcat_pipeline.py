@@ -2,7 +2,6 @@
 # Filename: projects/uav/load-sdcat-pipeline.py
 # Description: Load detections into Tator from sdcat clustering
 import os
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -11,10 +10,8 @@ import dotenv
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
-from pandas import read_csv
-
 from aipipeline.projects.uav.args_common import parse_args, parse_mission_string, POSSIBLE_PLATFORMS
-from aipipeline.docker.utils import run_docker
+from aipipeline.engines.subproc import run_subprocess
 from aipipeline.config_setup import setup_config, CONFIG_KEY
 
 logger = logging.getLogger(__name__)
@@ -85,7 +82,8 @@ def load_mission(element) -> str:
     load_min_score = config_dict["data"]["load_min_score"]
 
     logger.info(f"Loading detections in {load_file_or_dir} >= {load_min_score}....")
-    args = [
+    args_list = [
+        "aidata",
         "load",
         "boxes",
         "--input",
@@ -108,21 +106,12 @@ def load_mission(element) -> str:
         "Reflectance"
     ]
 
-    container = run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f"aidata-sdcat-load-{type}-{mission_name}",
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"],
-    )
-    if container:
-        logger.info(f"Loading {mission_name}....")
-        container.wait()
-        logger.info(f"Done loading {mission_name}....")
-    else:
-        logger.error(f"Failed to load {mission_name}....")
-
+    result = run_subprocess(args_list=args_list)
+    if result != 0:
+        logger.error(f"Failed to load {mission_name} with args: {' '.join(args_list)}")
+        return f"Failed to load {mission_name} with args: {' '.join(args_list)}"
+    logger.info(f"Successfully loaded {mission_name} with args: {' '.join(args_list)}")
     return f"Mission {mission_name} processed."
-
 
 # Run the pipeline, reading missions from a file and skipping lines that start with #
 def run_pipeline(argv=None):

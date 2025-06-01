@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipiipeline/prediction/vss_init_pipeline.py
+# Filename: aipiipeline/db/redis/vss/init_pipeline.py
 # Description: Run the VSS initialization pipeline
 import time
 from datetime import datetime
@@ -12,8 +12,9 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from typing import Dict
 import logging
 
-from aipipeline.docker.utils import run_docker
+from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
+from aipipeline.engines.subproc import run_subprocess
 from aipipeline.prediction.library import (
     download,
     compute_stats,
@@ -67,7 +68,8 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
             exemplar_count = len(f.readlines())
 
         logger.info(f"Loading {exemplar_count} exemplars for {label} as {label} from {exemplar_file}")
-        args = [
+        args_list = [
+            "aidata",
             "load",
             "exemplars",
             "--input",
@@ -83,33 +85,16 @@ def load_exemplars(data, config_dict=Dict, conf_files=Dict) -> str:
             "--token",
             TATOR_TOKEN,
         ]
-        n = 3  # Number of retries
-        delay_secs = 30  # Delay between retries
-
-        for attempt in range(1, n + 1):
-            try:
-                container = run_docker(
-                    image=str(config_dict["docker"]["aidata"]),
-                    name=f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
-                    args_list=args,
-                    bind_volumes=dict(config_dict["docker"]["bind_volumes"]),
-                )
-                if container:
-                    logger.info(f"Loading cluster exemplars for {label} from {exemplar_file}...")
-                    container.wait()
-                    logger.info(f"Loaded cluster exemplars for {label} from {exemplar_file}")
-                    num_loaded += 1
-                    break
-                else:
-                    logger.error(f"Failed to load cluster exemplars for {label}")
-            except Exception as e:
-                logger.error(f"Failed to load v exemplars for {label}: {e}")
-                if attempt < n:
-                    logger.info(f"Retrying in {delay_secs} seconds...")
-                    time.sleep(delay_secs)
-                else:
-                    logger.error(f"All {n} attempts failed. Giving up.")
-                    return f"Failed to load exemplars for {label}"
+        try:
+            result = run_subprocess(args_list=args_list)
+            if result != 0:
+                logger.error(f"Error loading examplars to VSS: {result}")
+                return f"Failed to load exemplars to VSS: {result}"
+            logger.info(f"Loaded cluster exemplars for {label} from {exemplar_file}")
+            num_loaded += 1
+        except Exception as e:
+            logger.error(f"Failed to load v exemplars for {label}: {e}")
+            return f"Failed to load exemplars for {label}: {e}"
 
     return f"Loaded {num_loaded} labels"
 
@@ -127,23 +112,30 @@ def run_pipeline(argv=None):
     args, beam_args = parser.parse_known_args(argv)
 
     MIN_DETECTIONS = 2000
-    conf_files, config_dict = setup_config(args.config)
     batch_size = int(args.batch_size)
-    processed_data = config_dict["data"]["processed_path"]
-    base_path = str(os.path.join(processed_data, config_dict["data"]["version"]))
-    labels = extract_labels_config(config_dict)
-
-    options = PipelineOptions(beam_args)
+    args, other_args = parser.parse_known_args(argv)
+    options = PipelineOptions(other_args)
+    conf_files, config_dict = setup_config(args.config, silent=True)
+    config_dict = parse_override_args(config_dict, other_args)
 
     download_path = Path(config_dict["data"]["processed_path"])
-    version_path = download_path / config_dict["data"]["version"]
+    labels = extract_labels_config(config_dict)
+
+    # Print the new config
+    logger.info("Configuration:")
+    for key, value in config_dict.items():
+        logger.info(f"{key}: {value}\n")
+
     if args.clean:
-        clean(version_path.as_posix())
+        clean(download_path.as_posix())
 
     # Always remove any previous augmented data before starting
-    remove_multicrop_views(version_path.as_posix())
+    remove_multicrop_views(download_path.as_posix())
 
-    download_args = config_dict["data"]["download_args"]
+    # Set up the configuration for downloading
+    download_args = config_dict["data"].get("download_args", []) # Get download arguments from config
+    download_args = download_args.split(" ") if isinstance(download_args, str) else download_args # Convert to list if it's a string
+    download_args = [arg for arg in download_args if arg] # Remove empty strings
     download_args.extend(["--crop-roi", "--resize", "224"])
     config_dict["data"]["download_args"] = download_args
 

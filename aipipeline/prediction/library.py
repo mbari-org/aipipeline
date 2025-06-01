@@ -13,11 +13,12 @@ from typing import Dict, List
 import cv2
 import requests
 
-from aipipeline.docker.utils import run_docker
 import apache_beam as beam
 from albumentations.pytorch import ToTensorV2
 
 from aipipeline.config_setup import CONFIG_KEY
+from aipipeline.engines.docker import run_docker
+from aipipeline.engines.subproc import run_subprocess
 from aipipeline.prediction.utils import top_majority
 
 logger = logging.getLogger(__name__)
@@ -243,7 +244,18 @@ def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: st
         processed_data = config_dict["data"]["processed_path"]
     else:
         processed_data = processed_dir
-    base_path = os.path.join(processed_data, config_dict["data"]["version"])
+
+    # Find the nested directory called "crops" in processed_data and get its parent directory - this is where everything is stored
+    base_path = None
+    for f in Path(processed_data).rglob("crops"):
+        logger.info(f"Found crops directory {f}")
+        base_path = f.parent.as_posix()
+        break
+
+    if base_path is None:
+        logger.error(f"Cannot find crops directory in {processed_data}?")
+        return []
+
     # Find the file stats.txt in base_path read it as a json file
     stats_file = None
     for f in Path(base_path).rglob("*stats.json"):
@@ -360,47 +372,28 @@ def clean(base_path: str) -> str:
 
 def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str]:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
-    processed_data = config_dict["data"]["processed_path"]
-    version = config_dict["data"]["version"]
-    project = config_dict["tator"]["project"]
-    host = config_dict["tator"]["host"]
-    short_name = get_short_name(project + host.split(".")[0])
-    args = [
+    args_list = [
+        "aidata",
         "download",
         "dataset",
         "--voc",
-        "--token",
-        TATOR_TOKEN,
-        "--config",
-        conf_files[CONFIG_KEY],
-        "--base-path",
-        processed_data
+        "--token", TATOR_TOKEN,
+        "--config", conf_files[CONFIG_KEY],
+        "--base-path", config_dict["data"]["processed_path"]
     ]
-    if version and len(version) > 0:
-        args.extend(["--version", version])
-    args.extend(config_dict["data"]["download_args"])
+    args_list.extend(config_dict["data"]["download_args"])
     if labels != "all":
         labels_str = ",".join(labels)
-        args.extend(["--labels", f'"{labels_str}"'])
+        if len(labels_str) > 1:
+            args_list.extend(["--labels", f'"{labels_str}"'])
+            logger.info(f"Downloading data for labels: {labels}....")
     else:
         labels = []
 
-    now = datetime.now().strftime("%Y%m%d.%f")
-    logger.info(f"Downloading data for labels: {labels}....")
-    container = run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f"{short_name}-download-{now}",
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"]
-    )
-    if container:
-        container.wait()
-        logger.info(f"Done downloading data for labels: {labels}....")
-        logs = container.logs().decode("utf-8")
-        logger.error(f"Container logs: {logs}")
-    else:
-        logger.error(f"Failed to start download container for labels: {labels}....")
-
+    result = run_subprocess(args_list=args_list)
+    if result != 0:
+        logger.error(f"Failed to download data: {result}")
+        return [f"Failed to download data: {result}"]
     return labels
 
 

@@ -13,7 +13,7 @@ import logging
 
 from aipipeline.projects.i2mapbulk.args import parse_args
 from aipipeline.config_setup import setup_config
-from aipipeline.db.utils import get_box_type, init_api_project
+from mbari_aidata.plugins.loaders.tator.common import init_api_project
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -42,9 +42,6 @@ def load(element, config_dict) -> str:
 
     # Get the project id and specific version id
     api, project_id = init_api_project(config_dict["tator"]["host"], TATOR_TOKEN, config_dict["tator"]["project"])
-
-    # Get the box type which is the type of localization - the id is needed from this
-    box_type = get_box_type(api, project_id)
 
     # Get the minimum score to load
     load_min_score = config_dict["data"]["load_min_score"]

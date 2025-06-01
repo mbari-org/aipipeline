@@ -14,8 +14,12 @@ SDCAT_KEY = "sdcat"
 CONFIG_KEY = "config"
 
 def extract_labels_config(config_dict) -> List[str]:
-    logger.info(config_dict["data"]["labels"].split(","))
-    return config_dict["data"]["labels"].split(",")
+    if config_dict["data"]["labels"]:
+        labels = config_dict["data"]["labels"].split(",")
+    else:
+        labels = []
+    logger.info(f'Extracted labels: {labels}')
+    return labels
 
 
 def check_config(config_dict: Dict) -> bool:

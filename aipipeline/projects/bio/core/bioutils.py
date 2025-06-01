@@ -3,7 +3,6 @@
 # Description: General utility functions for bio projects
 import hashlib
 import mimetypes
-import re
 
 import cv2
 import pytz
@@ -22,7 +21,7 @@ from typing import List, Dict
 
 from moviepy import VideoFileClip
 
-from aipipeline.docker.utils import run_docker
+from aipipeline.engines.docker import run_docker
 from aipipeline.prediction.utils import crop_square_image
 
 logger = logging.getLogger(__name__)

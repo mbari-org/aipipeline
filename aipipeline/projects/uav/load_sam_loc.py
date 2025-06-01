@@ -1,8 +1,8 @@
 # Utility to load the bounding box data from a CSV file and update the bounding box data in Tator
 import os
 from pathlib import Path
-from aipipeline.db.utils import init_api_project
 import pandas as pd
+from mbari_aidata.plugins.loaders.tator.common import init_api_project
 
 out_csv = Path("/Users/dcline/aidata/datasets/Baseline/crops/BirdOut") / "birdbox.csv"
 host = "mantis.shore.mbari.org"

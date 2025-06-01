@@ -8,8 +8,8 @@ import os
 import logging
 import sys
 
-from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
+from aipipeline.engines.subproc import run_subprocess
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -39,18 +39,13 @@ def run_pipeline(argv=None):
 
     config_files, config_dict = setup_config(args.config)
     conf_temp = config_files["config"]
-    project = config_dict["vss"]["project"]
 
     if not os.getenv("REDIS_PASSWORD"):
         logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
-    args = ["db", "reset", "--redis-password", REDIS_PASSWORD, "--config", conf_temp]
-    run_docker(
-        image=config_dict["docker"]["aidata"],
-        name=f'vss-reset_{project}',
-        args_list=args,
-        bind_volumes=config_dict["docker"]["bind_volumes"])
+    args_list = ["aidata", "db", "reset", "--redis-password", REDIS_PASSWORD, "--config", conf_temp]
+    run_subprocess(args_list)
 
 
 if __name__ == "__main__":

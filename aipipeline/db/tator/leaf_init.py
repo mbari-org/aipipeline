@@ -1,14 +1,13 @@
 # aipipeline, Apache-2.0 license
-# Filename: ai_pipeline/prediction/leaf_init.py
+# Filename: ai_pipeline/db/leaf_init.py
 # Description: This script is used to create a tree structure in Tator. It reads the tree structure from a yaml file and creates the tree structure in Tator.
 from datetime import datetime
 
-from aipipeline.db.utils import init_api_project
+from aipipeline.db.tator.utils import init_api_project
 from aipipeline.config_setup import setup_config, parse_labels
 import logging
 import os
 import dotenv
-import sys
 from textwrap import dedent
 
 # Secrets

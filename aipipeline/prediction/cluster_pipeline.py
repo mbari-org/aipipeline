@@ -9,9 +9,9 @@ import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 
 from aipipeline.config_setup import setup_config
+from aipipeline.engines.docker import run_docker
 from aipipeline.prediction.library import clean_bad_images
 from aipipeline.projects.i2mapbulk.args import parse_args
-from aipipeline.docker.utils import run_docker
 
 # Secrets
 dotenv.load_dotenv()

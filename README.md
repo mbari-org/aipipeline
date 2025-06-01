@@ -86,32 +86,32 @@ just list
 | `cp-dev-i2map` | Copy i2map dev code to the project on doris |
 | `init-labels project='uav' leaf_type_id='19'` | Initialize labels for quick lookup, e.g. `just init-labels uav 19` |
 | `plot-tsne-vss project='uav'` | Generate a t-SNE plot of the VSS database |
-| `optimize-vss project='uav' *more_args=""` | Optimize the VSS database |
+| `optimize-vss project='uav' *download_args=""` | Optimize the VSS database |
 | `calc-acc-vss project='uav'` | Calculate accuracy of the VSS database; run after download, then optimize |
 | `reset-vss-all` | Reset the VSS database, removing all data. **Proceed with caution!** |
 | `reset-vss project='uav'` | Reset the VSS database for the specified project |
-| `remove-vss project='uav' *more_args=""` | Remove an entry from the VSS database |
-| `init-vss project='uav' *more_args=""` | Initialize the VSS database for a project |
+| `remove-vss project='uav' *download_args=""` | Remove an entry from the VSS database |
+| `init-vss project='uav' *download_args=""` | Initialize the VSS database for a project |
 | `load-vss project='uav'` | Load computed exemplars into the VSS database |
-| `load-cfe-isiis-videos *more_args=""` | Load cfe ISII mission videos |
-| `load-ptvr-images images='tmp/roi' *more_args=""` | Load planktivore ROI images |
-| `cluster-ptvr-images *more_args=""` | Cluster planktivore ROI images |
-| `load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args=""` | Load planktivore ROI clusters |
+| `load-cfe-isiis-videos *download_args=""` | Load cfe ISII mission videos |
+| `load-ptvr-images images='tmp/roi' *download_args=""` | Load planktivore ROI images |
+| `cluster-ptvr-images *download_args=""` | Cluster planktivore ROI images |
+| `load-ptvr-clusters clusters='tmp/roi/cluster.csv' *download_args=""` | Load planktivore ROI clusters |
 | `rescale-ifcb-images collection="2014"` | Rescale planktivore ROI images |
 | `rescale-ptvr-images collection="aidata-export-03-low-mag"` | Rescale planktivore ROI images |
 | `download-rescale-ptvr-images collection="aidata-export-03-low-mag"` | Download and rescale planktivore ROI images |
-| `cluster-uav *more_args=""` | Cluster UAV mission |
-| `detect-uav *more_args=""` | Detect UAV mission |
+| `cluster-uav *download_args=""` | Cluster UAV mission |
+| `detect-uav *download_args=""` | Detect UAV mission |
 | `detect-uav-test` | Detect UAV mission data for testing |
 | `load-uav-images` | Load UAV mission images |
 | `load-uav type="cluster"` | Load UAV detections/clusters |
 | `fix-uav-metadata` | Fix UAV metadata (lat/lon/alt) |
-| `compute-saliency project='uav' *more_args=""` | Compute saliency for downloaded VOC data and update Tator DB |
-| `crop project='uav' *more_args=""` | Crop detections from VOC downloads |
-| `download-crop project='uav' *more_args=""` | Download and crop with defaults |
+| `compute-saliency project='uav' *download_args=""` | Compute saliency for downloaded VOC data and update Tator DB |
+| `crop project='uav' *download_args=""` | Crop detections from VOC downloads |
+| `download-crop project='uav' *download_args=""` | Download and crop with defaults |
 | `download project='uav'` | Download only |
-| `cluster project='uav' *more_args=""` | Cluster only |
-| `predict-vss project='uav' image_dir='/tmp/download' *more_args=""` | Predict images using the VSS database |
+| `cluster project='uav' *download_args=""` | Cluster only |
+| `predict-vss project='uav' image_dir='/tmp/download' *download_args=""` | Predict images using the VSS database |
 | `run-ctenoA-test` | Run strided inference on a single video |
 | `run-ctenoA-prod` | Run strided inference on a collection of videos |
 | `run-mega-inference` | Run mega strided inference on a single video |

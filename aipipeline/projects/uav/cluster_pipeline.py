@@ -10,7 +10,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 import sys
 
-from aipipeline.docker.utils import run_docker
+from aipipeline.engines.docker import run_docker
 from aipipeline.projects.uav.args_common import parse_args, POSSIBLE_PLATFORMS, parse_mission_string
 from aipipeline.config_setup import setup_config
 
