@@ -149,4 +149,5 @@ just list
 - [fastapi-vss](https://github.com/mbari-org/fastapi-vss) - A RESTful API for vector similarity search using foundational models.
 - [fastapi-tator](https://github.com/mbari-org/fastapi-tator) - A RESTful API server for bulk operations on a Tator annotation database.
 
-**updated: 2025-02-20**
+
+🗓️ Last updated: 2025-06-01
