@@ -31,11 +31,11 @@ update-env:
 cp-core:
     cp justfile /Volumes/dcline/code/aipipeline/justfile
     cp requirements.txt /Volumes/dcline/code/aipipeline/requirements.txt
-    cp aipipeline/config.yml /Volumes/dcline/code/aipipeline/aipipeline/config.yml
-    cp aipipeline/config_setup.py /Volumes/dcline/code/aipipeline/aipipeline/config_setup.py
+    cp aipipeline/config.* /Volumes/dcline/code/aipipeline/aipipeline/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
-    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/docker/  /Volumes/dcline/code/aipipeline/aipipeline/docker/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/db/  /Volumes/dcline/code/aipipeline/aipipeline/db/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/engines/  /Volumes/dcline/code/aipipeline/aipipeline/engines/
 
 # Copy cfe dev code to the project on doris
 cp-dev-cfe:
@@ -97,7 +97,7 @@ reset-vss-all:
     projects=(uav cfe bio i2map)
     for project in ${projects[@]}; do
       project_dir=./aipipeline/projects/$project
-      time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config ${project_dir}/config/config.yml
+      time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/reset.py --config ${project_dir}/config/config.yml
     done
 
 # Reset the VSS database, removing all data. Run before init-vss or when creating the database. Run with e.g. `uav`
@@ -105,28 +105,28 @@ reset-vss project='uav':
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_reset.py --config $PROJECT_DIR/config/config.yml
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/reset.py --config $PROJECT_DIR/config/config.yml
 
 # Remove an entry from the VSS database, e.g. j remove-vss i2map --doc \'doc:marine organism:\*\'
 remove-vss project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_remove.py --config $PROJECT_DIR/config/config.yml {{more_args}}
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/remove.py --config $PROJECT_DIR/config/config.yml {{more_args}}
 
 # Initialize the VSS database for a project
 init-vss project='uav' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_init_pipeline.py --batch-size 1 --config $PROJECT_DIR/config/config.yml {{more_args}}
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/init_pipeline.py --batch-size 1 --skip-clean True --config $PROJECT_DIR/config/config.yml {{more_args}}
 
 # Load already computed exemplars into the VSS database
 load-vss project='uav' :
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_load_pipeline.py --config $PROJECT_DIR/config/config.yml
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/load_pipeline.py --config $PROJECT_DIR/config/config.yml
 
 # Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt or just load-cfe-isiis-videos rachelcarson-video.txt. Populate files in project/cfedeploy/data first
 load-cfe-isiis-videos missions="":
@@ -137,6 +137,16 @@ load-cfe-isiis-videos missions="":
     --missions $PROJECT_DIR/data/{{missions}} \
     --config $PROJECT_DIR/config/config.yml
 
+# Cluster CFE ISIIS hawaii mission frames. Cleans first, then clusters
+cluster-cfe-isiis-frames roi_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/crops/" save_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/cluster/ ":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/cfedeploy
+    export PYTHONPATH=.
+    echo "Running clean pipeline"
+    time conda run -n aipipeline --no-capture-output python3 \
+                            aipipeline/prediction/clean_pipeline.py \
+                            --config $PROJECT_DIR/config/config.yml \
+                            --image-dir {{roi_dir}}
 # Load planktivore ROI images, e.g. just load-ptvr-images /mnt/DeepSea-AI/data/Planktivore/raw/aidata-export-02 --section aidata-export-02
 load-ptvr-images images='tmp/roi' *more_args="":
     time aidata load images \
@@ -150,6 +160,7 @@ cluster-ptvr-images *more_args="":
     time conda run -n aipipeline --no-capture-output sdcat cluster roi \
     --config-ini ./aipipeline/projects/planktivore/config/sdcat.ini \
     --device cuda:1 {{more_args}}
+
 # Load planktivore ROI clusters, e.g. just load-ptvr-clusters aidata-export-03-low-mag tmp/roi/cluster.csv
 load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
   cp {{clusters}} test.csv
@@ -158,6 +169,7 @@ load-ptvr-clusters clusters='tmp/roi/cluster.csv' *more_args="":
         --config ./aipipeline/projects/planktivore/config/config_lowmag.yml \
         --input test.csv \
         --token $TATOR_TOKEN {{more_args}}
+
 # Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
 rescale-ifcb-images collection="2014":
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/cfe/adjust_roi_ifcb.py \
@@ -165,16 +177,19 @@ rescale-ifcb-images collection="2014":
     --output_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}}-square/crops
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/cfe/gen_ifcb_stats.py \
     --input_dir /mnt/ML_SCRATCH/ifcb/raw/{{collection}}-square/crops
+
 # Rescale planktivore ROI images, e.g. just rescale-ptvr-images aidata-export-03-low-mag
 rescale-ptvr-images collection="aidata-export-03-low-mag":
     time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore/adjust_roi.py \
     --input_dir /mnt/DeepSea-AI/data/Planktivore/raw/{{collection}} \
     --output_dir /mnt/DeepSea-AI/data/Planktivore/raw/{{collection}}-square
+
 # Download and rescale planktivore ROI images, e.g. just download-rescale-ptvr-images aidata-export-03-low-mag
 download-rescale-ptvr-images collection="aidata-export-03-low-mag":
     time conda run -n aipipeline --no-capture-output python aipipeline/prediction/download_pipeline.py \
         --config ./aipipeline/projects/planktivore/config/{{collection}}.yml
     just --justfile {{justfile()}} rescale-ptvr-images {{collection}}
+
 # Cluster mission in aipipeline/projects/uav/data/hawaii-video.txt
 cluster-uav *more_args="":
     #!/usr/bin/env bash
@@ -253,7 +268,7 @@ crop project='uav' *more_args="":
 download-crop project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_crop_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
 
@@ -261,21 +276,21 @@ download-crop project='uav' *more_args="":
 download project='uav':
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/download_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml
 
 # Cluster only
 cluster project='uav' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
 # Predict images using the VSS database
 predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/vss_predict_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/predict_pipeline.py \
     --config ./aipipeline/projects/{{project}}/config/config.yml \
     --image-dir {{image_dir}} \
     {{more_args}}
@@ -411,7 +426,7 @@ cluster-i2mapbulk:
     #!/usr/bin/env bash
     export PYTHONPATH=.
     export MPLCONFIGDIR=/tmp
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/cluster_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
     --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml \
     --data aipipeline/projects/i2mapbulk/data/bydepth.txt
 
@@ -463,8 +478,7 @@ load-cluster project="uav" data='data' version="Baseline" *more_args="":
 
 # Download i2mpabulk unlabeled data run with ENV_FILE=.env.i2map just download-i2mapbulk-unlabeled
 download-i2mapbulk-unlabeled:
-    just --justfile {{justfile()}} download-crop i2mapbulk --unverified --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml
-
+    just --justfile {{justfile()}} download-crop i2mapbulk --config ./aipipeline/projects/i2mapbulk/config/config_unknown.yml --download-args "'--unverified'"
 
 # Replace m3 urls with mantis
 replace-m3-urls:
@@ -485,19 +499,19 @@ gen-bio-data image_dir="":
 
 # Generate training data for the CFE project
 gen-cfe-data:
-  just --justfile {{justfile()}} download-crop cfe --clean --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop cfe --clean --gen-multicrop --data.download_args "'--verified'"
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --version Baseline --verified --more-args "'--verified --generator vars-labelbot --group NMS'"
+  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --data.download_args "'--version Baseline  --generator vars-labelbot --group NMS'"
 
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --clean --use-cleanvision True --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop i2mapbulk --clean --use-cleanvision True --gen-multicrop --data.download_args "'--verified'"
 
 # Generate training data for the uav project
 gen-uav-data:
-  just --justfile {{justfile()}} download-crop uav --clean --gen-multicrop --verified
+  just --justfile {{justfile()}} download-crop uav --clean --gen-multicrop --data.download_args "'--verified --version yolo11x-oneclass-uav-vits-b-8-20250202'"
 
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
@@ -505,6 +519,16 @@ gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
     export PYTHONPATH=.
     time conda run -n aipipeline python3 aipipeline/prediction/gen_stats.py --data {{data}} --prefix {{project}}
 
-# Transcode i2MAP videos
+# Generate training data for the planktivore low mag
+gen-ptvr-lowmag-data:
+  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
+  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --section aidata-export-03-low-mag --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
+
+# Initialize the VSS database for the planktivore low mag data
+init-ptvr-lowmag-vss:
+  just --justfile {{justfile()}} init-vss planktivore --data.processed_path /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
+  just --justfile {{justfile()}} init-vss planktivore --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --section aidata-export-03-low-mag --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
+
+# Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh

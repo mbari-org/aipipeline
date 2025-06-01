@@ -6,7 +6,7 @@ python-dotenv
 pyyaml
 scikit-learn
 matplotlib
-mbari-aidata==1.52.2
+mbari-aidata==1.53.0
 apache-beam==2.53.0
 cleanvision
 ultralytics

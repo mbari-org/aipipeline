@@ -1,16 +1,23 @@
+# aipipeline, Apache-2.0 license
+# Filename: aipiipeline/engines/docker/__init__.py
+# Description: Utilities for executing docker within a pipeline
 import logging
 import os
+from datetime import datetime
 from typing import List
 
 import docker
 import torch
 
 logger = logging.getLogger(__name__)
-formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-# Also log to the console
-console = logging.StreamHandler()
-logger.addHandler(console)
 logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+now = datetime.now()
+log_filename = f"docker-{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 MLDEVOPS_UID = os.getuid()
 MLDEVOPS_GID = os.getgid()

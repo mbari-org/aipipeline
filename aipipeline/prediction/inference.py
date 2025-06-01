@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: prediction/inference.py
+# Filename: aipipeline/prediction/inference.py
 # Description: model inference classes for projects
 import glob
 import logging

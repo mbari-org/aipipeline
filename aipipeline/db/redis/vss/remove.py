@@ -10,7 +10,6 @@ import sys
 
 import redis
 
-from aipipeline.docker.utils import run_docker
 from aipipeline.config_setup import setup_config
 
 logger = logging.getLogger(__name__)

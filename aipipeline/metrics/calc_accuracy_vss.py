@@ -12,9 +12,9 @@ from sklearn.metrics import confusion_matrix
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from aidata.predictors.process_vits import ViTWrapper
 from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import remove_multicrop_views
+from mbari_aidata.predictors.process_vits import ViTWrapper
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

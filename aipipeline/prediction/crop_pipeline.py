@@ -1,12 +1,10 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/predictions/crop-pipeline.py
+# Filename: projects/predictions/crop_pipeline.py
 # Description: Crop images based on voc formatted data
 from datetime import datetime
-from typing import List
 
 import dotenv
 import os
-import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 

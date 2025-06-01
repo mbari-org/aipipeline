@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipiipeline/prediction/vss_load_pipeline.py
+# Filename: aipiipeline/prediction/load_pipeline.py
 # Description: Run the VSS initialization pipeline
 import json
 import time
@@ -13,8 +13,9 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from typing import Dict, List
 import logging
 
-from aipipeline.docker.utils import run_docker
+from aipipeline.engines.docker import run_docker
 from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
+from aipipeline.engines.subproc import run_subprocess
 from aipipeline.prediction.library import (
     get_short_name,
     gen_machine_friendly_label,
@@ -73,7 +74,8 @@ def load_exemplars(labels: List[tuple[str, str]], config_dict=Dict, conf_files=D
             logger.info(f"To few exemplars, using detections file {exemplar_file} instead")
 
         logger.info(f"Loading {exemplar_count} exemplars for {label} as {machine_friendly_label} from {exemplar_file}")
-        args = [
+        args_list = [
+            "aidata",
             "load",
             "exemplars",
             "--input",
@@ -94,28 +96,15 @@ def load_exemplars(labels: List[tuple[str, str]], config_dict=Dict, conf_files=D
 
         for attempt in range(1, n + 1):
             try:
-                container = run_docker(
-                    image=str(config_dict["docker"]["aidata"]),
-                    name=f"{short_name}-aidata-loadexemplar-{machine_friendly_label}",
-                    args_list=args,
-                    bind_volumes=dict(config_dict["docker"]["bind_volumes"]),
-                )
-                if container:
-                    logger.info(f"Loading cluster exemplars for {label}...")
-                    container.wait()
-                    logger.info(f"Loaded cluster exemplars for {label}")
-                    num_loaded += 1
-                    break
-                else:
-                    logger.error(f"Failed to load cluster exemplars for {label}")
+                result = run_subprocess(args_list=args_list)
+                if result != 0:
+                    logger.error(f"Error loading exemplars to VSS: {result}")
+                    return f"Failed to load exemplars to VSS: {result}"
+                logger.info(f"Loaded cluster exemplars for {label} from {exemplar_file}")
+                num_loaded += 1
             except Exception as e:
                 logger.error(f"Failed to load v exemplars for {label}: {e}")
-                if attempt < n:
-                    logger.info(f"Retrying in {delay_secs} seconds...")
-                    time.sleep(delay_secs)
-                else:
-                    logger.error(f"All {n} attempts failed. Giving up.")
-                    return f"Failed to load exemplars for {label}"
+                return f"Failed to load v exemplars for {label}: {e}"
 
     return f"Loaded {num_loaded} labels"
 
@@ -130,19 +119,31 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Load exemplars into the VSS database")
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
-    args, beam_args = parser.parse_known_args(argv)
+    args, unknown_args = parser.parse_known_args(argv)
 
     conf_files, config_dict = setup_config(args.config)
     labels = extract_labels_config(config_dict)
-    base_path = Path(config_dict["data"]["processed_path"]) / config_dict["data"]["version"]
-    options = PipelineOptions(beam_args)
+    options = PipelineOptions(unknown_args)
+
+    processed_path = config_dict["data"]["processed_path"]
+
+    # Find the nested directory called "crops" in processed_data and get its parent directory - this is where everything is stored
+    base_path = None
+    for f in Path(processed_path).rglob("crops"):
+        logger.info(f"Found crops directory {f}")
+        base_path = f.parent.as_posix()
+        break
+
+    if base_path is None:
+        logger.error(f"Cannot find crops directory in {processed_path}?")
+        exit(1)
 
     if labels == "all":
         # Find the file stats.txt and read it as a json file
         stats_file = Path(f"{base_path}/crops/stats.json")
         if not stats_file.exists():
             logger.error(f"Cannot find {stats_file}. Exiting.")
-            return []
+            exit(1)
 
         data = []
         with stats_file.open("r") as f:

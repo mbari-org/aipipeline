@@ -14,8 +14,10 @@ from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
 from aipipeline.config_setup import setup_config
-from aipipeline.db.utils import get_box_type, get_video_type, init_api_project, get_media_ids, format_attributes
-from aipipeline.db.utils import get_version_id, gen_spec, load_bulk_boxes
+from mbari_aidata.plugins.loaders.tator.attribute_utils import format_attributes
+from mbari_aidata.plugins.loaders.tator.common import init_api_project, get_version_id, find_box_type, find_media_type
+from mbari_aidata.plugins.loaders.tator.localization import gen_spec, load_bulk_boxes
+from mbari_aidata.plugins.loaders.tator.media import get_media_ids
 
 # Secrets
 dotenv.load_dotenv()
@@ -50,8 +52,8 @@ def load(element, config_dict) -> str:
         version = config_dict["data"]["version"]
         logger.info(f"Loading to version {version} in project {config_dict['tator']['project']} id {project_id}")
         version_id = get_version_id(api, project_id, version)
-        video_type = get_video_type(api, project_id)
-        box_type = get_box_type(api, project_id)
+        video_type = find_media_type(api, project_id, "Video")
+        box_type = find_box_type(api, project_id)
         box_attributes = config_dict["tator"]["box"]["attributes"]
 
         logger.info(f"Loading cluster detections from {all_detections}")
@@ -93,6 +95,7 @@ def load(element, config_dict) -> str:
                         box=[row["x"], row["y"], row["xx"], row["xy"]],
                         version_id=version_id,
                         label=row["class"],
+                        score=row["score"],
                         attributes=attributes,
                         frame_number=int(frame_number),
                         type_id=box_type.id,

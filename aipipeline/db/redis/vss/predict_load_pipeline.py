@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipipeline/prediction/vss_predict_pipeline.py
+# Filename: aipipeline/prediction/predict_load_pipeline.py
 # Description: Batch process missions with visual search server
 
 import apache_beam as beam
@@ -13,6 +13,7 @@ from datetime import datetime
 from pathlib import Path
 import dotenv
 
+from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import run_vss
 
@@ -24,7 +25,7 @@ logger.addHandler(console)
 logger.setLevel(logging.DEBUG)
 # and log to file
 now = datetime.now()
-log_filename = f"vss_predict_pipeline_{now:%Y%m%d}.log"
+log_filename = f"vss_predict_load_pipeline_{now:%Y%m%d}.log"
 handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
@@ -77,7 +78,7 @@ def process_image_batch(batch, config_dict) -> int:
 def run_pipeline(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Process images with VSS")
+    parser = argparse.ArgumentParser(description="Process images with VSS and load predictions into Tator")
     default_project = (
         Path(__file__).resolve().parent.parent.parent
         / "aipipeline"
@@ -93,9 +94,10 @@ def run_pipeline(argv=None):
                         help="Config yaml file path")
     parser.add_argument("--batch-size", required=False, default=3, help="Batch size")
     parser.add_argument("--max-images", required=False,  help="Maximum number of images to process")
-    args, beam_args = parser.parse_known_args(argv)
-    options = PipelineOptions(beam_args)
+    args, other_args = parser.parse_known_args(argv)
+    options = PipelineOptions(other_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
+    config_dict = parse_override_args(config_dict, other_args)
 
     with beam.Pipeline(options=options) as p:
         image_pcoll = (
