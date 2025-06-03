@@ -1,5 +1,5 @@
-# Utility script to fix lat/lon values in the database for trinity media
-# Replace missing lat/lon values with the values from images EXIF data
+# Utility script to fix lat/lon/date values in the database for trinity media
+# Replace missing lat/lon/date values with the values from images EXIF data
 import re
 from datetime import datetime
 from pathlib import Path
@@ -15,7 +15,7 @@ fh = logging.FileHandler("fix_metadata.log")
 fh.setLevel(logging.INFO)
 logging.getLogger().addHandler(fh)
 
-from aidata.plugins.extractors.tap_sony_media import extract_media
+from mbari_aidata.plugins.extractors.tap_sony_media import extract_media
 
 kwargs = {}
 project = 4  # uav project in the database
@@ -145,9 +145,9 @@ for d in local_22:
     for i, row in match_df.iterrows():
         # Update the media with the lat/lon values
         m = tator.models.MediaUpdate(attributes={
-            "date_correct": row.date_y,
-            "lat_correct": row.latitude,
-            "lon_correct": row.longitude,
+            "date": row.date_y,
+            "latitude": row.latitude,
+            "longitude": row.longitude,
             "altitude": row.altitude
         })
         response = api.update_media(id=row.id, media_update=m)
