@@ -137,8 +137,17 @@ load-cfe-isiis-videos missions="":
     --missions $PROJECT_DIR/data/{{missions}} \
     --config $PROJECT_DIR/config/config.yml
 
+# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-frames /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/
+load-cfe-isiis-sdcat data_dir="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/cfedeploy
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_sdcat_pipeline.py \
+    --data {{data_dir}} \
+    --config $PROJECT_DIR/config/config.yml
+
 # Cluster CFE ISIIS hawaii mission frames. Cleans first, then clusters
-cluster-cfe-isiis-frames roi_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/crops/" save_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/cluster/ ":
+cluster-cfe-isiis roi_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/crops/" save_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/cluster/ ":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
@@ -290,10 +299,22 @@ cluster project='uav' *more_args="":
 predict-vss project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/predict_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/predict_load_pipeline.py \
     --config ./aipipeline/projects/{{project}}/config/config.yml \
     --image-dir {{image_dir}} \
     {{more_args}}
+
+# Predict and save using the VSS database
+predict-vss-save project='planktivore' *more_args="--output-csv /tmp/predict-vss.csv --batch-size 64 --resize":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/predict_save_pipeline.py \
+    --config $PROJECT_DIR/config/config.yml {{more_args}}
+
+# Predict velella test images using the VSS database and save the results
+predict-vss-velella:
+    just --justfile {{justfile()}} predict-vss-save planktivore --resize --batch-size 64 --
 
 # Run the strided inference on a collection of videos in a TSV file
 run-ctenoA-prod:
