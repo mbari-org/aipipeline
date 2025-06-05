@@ -14,7 +14,7 @@ docker:
 data:
   raw_data_path: "/mnt/CFElab/"
   processed_path: "/mnt/ML_SCRATCH/902111-CFE-Deployments"
-  version: "Baseline"
+  version: "cfe_isiis_final-20250509"
   labels: "all"
   download_args: ["--verified"]
   cleanvision_issues:
@@ -69,14 +69,18 @@ tator:
         type: string
       score:
         type: float
+      score_s:
+        type: float
+      label_s:
+        type: string
       cluster:
         type: string
       saliency:
         type: float
       area:
         type: int
-      exemplar:
-        type: bool
+      depth:
+        type: float
 
 ffmpeg_path: "/usr/bin/ffmpeg"
 

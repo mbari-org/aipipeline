@@ -1,0 +1,223 @@
+# aipipeline, Apache-2.0 license
+# Filename: projects/uav/load_isiis_sdcat_pipeline.py
+# Description: Load detections into Tator from sdcat clustering
+import argparse
+import os
+import re
+from datetime import datetime
+from pathlib import Path
+from textwrap import dedent
+
+import apache_beam as beam
+import dotenv
+import numpy as np
+import pandas as pd
+from apache_beam.options.pipeline_options import PipelineOptions
+import logging
+
+from aipipeline.config_setup import setup_config
+from mbari_aidata.plugins.loaders.tator.attribute_utils import format_attributes
+from mbari_aidata.plugins.loaders.tator.common import init_api_project, get_version_id, find_box_type, find_media_type
+from mbari_aidata.plugins.loaders.tator.localization import gen_spec, load_bulk_boxes
+from mbari_aidata.plugins.loaders.tator.media import get_media_ids
+
+# Secrets
+dotenv.load_dotenv()
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
+TATOR_TOKEN = os.getenv("TATOR_TOKEN")
+
+# Logging
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# Also log to the console
+console = logging.StreamHandler()
+logger.addHandler(console)
+logger.setLevel(logging.INFO)
+# and log to file
+now = datetime.now()
+log_filename = f"load_isiis_sdcat_pipeline_{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+def timestamp_to_frame_index(timestamp_sec: float, start_time_sec: float, fps: int) -> int:
+    """
+    Convert a timestamp (in seconds) to the corresponding frame number,
+    adjusted for a non-zero start time and given frame rate.
+
+    Args:
+        timestamp_sec (float): The actual timestamp in seconds (e.g., 4.3)
+        start_time_sec (float): Start time of video from FFmpeg (e.g., 0.066)
+        fps (int): Frames per second (e.g., 15)
+
+    Returns:
+        int: Adjusted frame number
+    """
+    adjusted_time = timestamp_sec - start_time_sec
+    return min(0,int(adjusted_time * fps))
+
+def load(element, config_dict) -> str:
+    # Data is in the format
+    # <image base directory path to process>
+    logger.info(f"Processing element {element}")
+    all_detections = element
+
+    try:
+        # Get needed database ids and attributes for loading from the project config
+        api, project = init_api_project(config_dict["tator"]["host"], TATOR_TOKEN, config_dict["tator"]["project"])
+        project_id = project.id
+        version = config_dict["data"]["version"]
+        logger.info(f"Loading to version {version} in project {config_dict['tator']['project']} id {project_id}")
+        version_id = get_version_id(api, project, version)
+        video_type = find_media_type(api, project_id, "Video")
+        box_type = find_box_type(api, project_id)
+        box_attributes = config_dict["tator"]["box"]["attributes"]
+
+        logger.info(f"Loading cluster detections from {all_detections}")
+        all_detections_path = Path(all_detections)
+        if not all_detections_path.exists():
+            logger.error(f"File {all_detections} does not exist.")
+            return f"File {all_detections} does not exist."
+
+        if not all_detections_path.is_file():
+            all_csv_files = list(all_detections_path.glob("*.csv"))
+            if len(all_csv_files) == 0:
+                logger.error(f"No CSV files found in {all_detections}.")
+                return f"No CSV files found in {all_detections}."
+        else:
+            all_csv_files = [all_detections_path]
+
+        logger.info(f"Getting video files names from project {project_id}")
+        media_map = get_media_ids(api, project, video_type.id)
+
+        for csv_file in all_csv_files:
+            df = pd.read_csv(csv_file)
+
+            # Rename class_s to label_s if it exists - this matches the attribute name in the config.yaml
+            df.rename(columns={"class_s": "label_s"}, inplace=True)
+
+            # Get the first row to extract the image path
+            if df.empty:
+                logger.error(f"No data found in {csv_file}.")
+                continue
+
+            row = df.iloc[0]
+            image_path = Path(row["image_path"])
+            logger.info(f"Processing image {image_path}")
+            filename = image_path.name
+            # "CFE_ISIIS-180-2024-02-06 13-14-46.425_0014_598.12m.jpg or CFE_ISIIS-012-2025-04-04 11-43-06.238_0355.jpg"
+            pattern1 = re.compile(
+                r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})_*\.jpg$'
+            )
+            pattern2 = re.compile(
+                r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})_(\d+\.\d+)m\.jpg$'
+            )
+            match1 = pattern1.search(filename)
+            match2 = pattern2.search(filename)
+            if match2:
+                video_name = f"{match2.group(1)}.mp4"
+                second = float(match2.group(2))
+                if second == 0.0:
+                    frame = 0
+                else:
+                    frame = int(second*15)
+                depth = match2.group(3)
+            elif match1:
+                video_name = f"{match1.group(1)}.mp4"
+                second = float(match1.group(2))
+                if second == 0.0:
+                    frame = 0
+                else:
+                    frame = int(second*15)
+                depth = None
+            else:
+                logger.error(f"No match found in filename {filename} with pattern {pattern}")
+                continue
+
+            if video_name not in media_map.keys():
+                logger.info(f'No video found with name {video_name} in project {config_dict["tator"]["project"]}.')
+                logger.info("Video must be loaded before localizations.")
+                continue
+
+            # Assign the labels to the localizations, batching by 500
+            batch_size = 500
+            num_loaded = 0
+            logger.info("Creating localizations ...")
+            for i in range(0, len(df), batch_size):
+                batch_df = df.iloc[i : i + batch_size]
+
+                specs = []
+                for index, row in batch_df.iterrows():
+                    if row['area'] > 300 and depth is not None:  # Filter out small boxes
+                    # /mnt/CFElab/Data_archive/Images/ISIIS/COOK/Videos2frames/20250401_Hawaii_allframes/20250404_scuba/2025-04-04 11-41-36.032/CFE_ISIIS-012-2025-04-04 11-43-06.238_0355.jpg
+                        attributes = format_attributes(row, box_attributes)
+                        if depth is not None:
+                            attributes["depth"] = depth
+                        specs.append(
+                            gen_spec(
+                                box=[row["x"] + .001, row["y"], row["xx"], row["xy"]],
+                                width=row["image_width"],
+                                height=row["image_height"],
+                                version_id=version_id,
+                                label=row["class"],
+                                attributes=attributes,
+                                frame_number=int(frame),
+                                type_id=box_type.id,
+                                media_id=media_map[video_name],
+                                project_id=project_id,
+                                normalize=False
+                            )
+                        )
+                        logger.info(specs)
+                        num_loaded += 1
+                    # if num_loaded > 20:
+                    #     logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
+                    #     break
+
+                box_ids = load_bulk_boxes(project_id, api, specs)
+                logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
+
+        return f"{all_detections} loaded."
+    except Exception as e:
+        logger.error(f"Error loading {all_detections}: {e}")
+        return f"Error loading {all_detections}: {e}"
+
+
+def parse_args(argv, logger):
+    parser = argparse.ArgumentParser(
+        description=dedent("""\
+        Load detections into Tator from sdcat clustering from ISIIS frames extracted from videos
+        """),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument("--config", required=True, help=f"Configuration files", type=str)
+    parser.add_argument("--data", help="Path to cluster csv file to load", required=True, type=str)
+    args, beam_args = parser.parse_known_args(argv)
+    if not os.path.exists(args.data):
+        logger.error(f"Data file {args.data} not found")
+        raise FileNotFoundError(f"Data file {args.data} not found")
+
+    if not os.path.exists(args.config):
+        logger.error(f"Config yaml {args.config} not found")
+        raise FileNotFoundError(f"Config yaml {args.config} not found")
+
+    return args, beam_args
+
+# Run the pipeline, reading deployments from a file and skipping lines that start with #
+def run_pipeline(argv=None):
+    args, beam_args = parse_args(argv, logger)
+    options = PipelineOptions()
+    config_file, config_dict = setup_config(args.config)
+
+    with beam.Pipeline(options=options) as p:
+        (
+            p
+            | "Data" >> beam.Create([args.data])
+            | "Load csv" >> beam.Map(load, config_dict=config_dict)
+            | "Log results" >> beam.Map(logger.debug)
+        )
+
+
+if __name__ == "__main__":
+    run_pipeline()
