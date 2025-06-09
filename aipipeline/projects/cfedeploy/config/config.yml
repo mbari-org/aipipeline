@@ -82,8 +82,6 @@ tator:
       depth:
         type: float
 
-ffmpeg_path: "/usr/bin/ffmpeg"
-
 plugins:
   - name: "extractor"
     module: "mbari_aidata.plugins.extractors.tap_cfe_media"

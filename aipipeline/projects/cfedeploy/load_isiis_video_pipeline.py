@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/cfe/load_isiis_video_pipeline.py
+# Filename: projects/cfedeploy/load_isiis_video_pipeline.py
 # Description: Batch load video for missions
 import os
 from datetime import datetime
