@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/cfe/args_common.py
+# Filename: projects/cfedeploy/args_common.py
 # Description: Batch process missions with sdcat clustering
 from pathlib import Path
 import os
@@ -7,7 +7,6 @@ import argparse
 
 CONFIG_YAML = Path(__file__).resolve().parent / "config" / "config.yml"
 
-# TODO: Add more platforms as needed - SHOULD BE IN CONFIG?
 POSSIBLE_PLATFORMS = ["RachelCarson", "scuba"]
 
 

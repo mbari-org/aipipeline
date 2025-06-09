@@ -138,12 +138,12 @@ load-cfe-isiis-videos missions="":
     --config $PROJECT_DIR/config/config.yml
 
 # Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-frames /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/
-load-cfe-isiis-sdcat data_dir="":
+load-cfe-isiis-sdcat data_dir="" stride="14":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_sdcat_pipeline.py \
-    --data {{data_dir}} \
+    --data {{data_dir}} --stride {{stride}} \
     --config $PROJECT_DIR/config/config.yml
 
 # Cluster CFE ISIIS hawaii mission frames. Cleans first, then clusters
@@ -553,3 +553,15 @@ init-ptvr-lowmag-vss:
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh
+# Transcode CFE ISIIS videos from mov to mp4 for use in Tator
+transcode-cfe-isiis-rc:
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/cfedeploy/mov2mp4.py \
+    --input "/mnt/CFElab/Data_archive/Images/ISIIS/RAW/20240206_RachelCarson/2024-02-06 10-00-17.043/" \
+    --output "/mnt/DeepSea-AI/data/ISIIS/20240206_RachelCarson/2024-02-06 10-00-17.043/" \
+    --gop 30
+# Transcode CFE ISIIS videos from mov to mp4 for use in Tator
+transcode-cfe-isiis-hawaii:
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/cfedeploy/avi2mp4.py \
+    --input "/mnt/CFElab/Data_archive/Images/ISIIS/RAW/20250401_Hawaii" \
+    --output "/mnt/DeepSea-AI/data/ISIIS/20250401_Hawaii" \
+    --gop 30

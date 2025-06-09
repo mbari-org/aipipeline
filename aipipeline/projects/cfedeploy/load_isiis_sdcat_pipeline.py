@@ -1,6 +1,7 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/load_isiis_sdcat_pipeline.py
-# Description: Load detections into Tator from sdcat clustering
+# Filename: projects/cfedeploy/load_isiis_sdcat_pipeline.py
+# Description: Load detections into Tator from sdcat clustering. Working with ISIIS frames extracted from videos.
+# This load frame-based detections on video media
 import argparse
 import os
 import re
@@ -20,6 +21,7 @@ from mbari_aidata.plugins.loaders.tator.attribute_utils import format_attributes
 from mbari_aidata.plugins.loaders.tator.common import init_api_project, get_version_id, find_box_type, find_media_type
 from mbari_aidata.plugins.loaders.tator.localization import gen_spec, load_bulk_boxes
 from mbari_aidata.plugins.loaders.tator.media import get_media_ids
+from mpmath.libmp import normalize
 
 # Secrets
 dotenv.load_dotenv()
@@ -41,27 +43,11 @@ handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
-def timestamp_to_frame_index(timestamp_sec: float, start_time_sec: float, fps: int) -> int:
-    """
-    Convert a timestamp (in seconds) to the corresponding frame number,
-    adjusted for a non-zero start time and given frame rate.
-
-    Args:
-        timestamp_sec (float): The actual timestamp in seconds (e.g., 4.3)
-        start_time_sec (float): Start time of video from FFmpeg (e.g., 0.066)
-        fps (int): Frames per second (e.g., 15)
-
-    Returns:
-        int: Adjusted frame number
-    """
-    adjusted_time = timestamp_sec - start_time_sec
-    return min(0,int(adjusted_time * fps))
-
 def load(element, config_dict) -> str:
     # Data is in the format
-    # <image base directory path to process>
+    # <image base directory path to process>,<stride frame images were captured at>
     logger.info(f"Processing element {element}")
-    all_detections = element
+    all_detections, stride = element
 
     try:
         # Get needed database ids and attributes for loading from the project config
@@ -121,7 +107,7 @@ def load(element, config_dict) -> str:
                 if second == 0.0:
                     frame = 0
                 else:
-                    frame = int(second*15)
+                    frame = int(second*stride + 1)
                 depth = match2.group(3)
             elif match1:
                 video_name = f"{match1.group(1)}.mp4"
@@ -129,7 +115,7 @@ def load(element, config_dict) -> str:
                 if second == 0.0:
                     frame = 0
                 else:
-                    frame = int(second*15)
+                    frame = int(second*stride + 1)
                 depth = None
             else:
                 logger.error(f"No match found in filename {filename} with pattern {pattern}")
@@ -149,20 +135,19 @@ def load(element, config_dict) -> str:
 
                 specs = []
                 for index, row in batch_df.iterrows():
-                    if row['area'] > 300 and depth is not None:  # Filter out small boxes
-                    # /mnt/CFElab/Data_archive/Images/ISIIS/COOK/Videos2frames/20250401_Hawaii_allframes/20250404_scuba/2025-04-04 11-41-36.032/CFE_ISIIS-012-2025-04-04 11-43-06.238_0355.jpg
+                    if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
                         attributes = format_attributes(row, box_attributes)
                         if depth is not None:
                             attributes["depth"] = depth
                         specs.append(
                             gen_spec(
-                                box=[row["x"] + .001, row["y"], row["xx"], row["xy"]],
+                                box=[row["x"], row["y"], row["xx"], row["xy"]],
                                 width=row["image_width"],
                                 height=row["image_height"],
                                 version_id=version_id,
                                 label=row["class"],
                                 attributes=attributes,
-                                frame_number=int(frame),
+                                frame_number=frame,
                                 type_id=box_type.id,
                                 media_id=media_map[video_name],
                                 project_id=project_id,
@@ -171,10 +156,9 @@ def load(element, config_dict) -> str:
                         )
                         logger.info(specs)
                         num_loaded += 1
-                    # if num_loaded > 20:
-                    #     logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
-                    #     break
-
+                    if num_loaded > 1:
+                        logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
+                        exit(0)
                 box_ids = load_bulk_boxes(project_id, api, specs)
                 logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
 
@@ -193,6 +177,7 @@ def parse_args(argv, logger):
     )
     parser.add_argument("--config", required=True, help=f"Configuration files", type=str)
     parser.add_argument("--data", help="Path to cluster csv file to load", required=True, type=str)
+    parser.add_argument("--stride", help="Frame stride images were capture at", default=14, type=int)
     args, beam_args = parser.parse_known_args(argv)
     if not os.path.exists(args.data):
         logger.error(f"Data file {args.data} not found")
@@ -204,7 +189,7 @@ def parse_args(argv, logger):
 
     return args, beam_args
 
-# Run the pipeline, reading deployments from a file and skipping lines that start with #
+# Run the pipeline. This could be modified to read multiple files or directories.
 def run_pipeline(argv=None):
     args, beam_args = parse_args(argv, logger)
     options = PipelineOptions()
@@ -213,7 +198,7 @@ def run_pipeline(argv=None):
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "Data" >> beam.Create([args.data])
+            | "Data" >> beam.Create([(args.data, args.stride)])
             | "Load csv" >> beam.Map(load, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.debug)
         )
