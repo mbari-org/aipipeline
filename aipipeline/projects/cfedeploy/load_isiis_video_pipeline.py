@@ -21,10 +21,6 @@ handler = logging.FileHandler(log_filename, mode="w")
 handler.setFormatter(formatter)
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
-# Also log to the console
-console = logging.StreamHandler()
-logger.addHandler(console)
-logger.setLevel(logging.INFO)
 
 # Constants
 dotenv.load_dotenv()
@@ -68,13 +64,17 @@ def load_video(element) -> str:
         logger.info(f"Running command: {' '.join(args)}")
 
         try:
-            subprocess.run(args, check=True)
-            logger.info("Video loaded successfully.")
+            proc = subprocess.run(args)
+            if proc.returncode != 0:
+                logger.error(f"Command failed with return code {proc.returncode}")
+                return f"Command failed with return code {proc.returncode}"
             return f"Video loaded successfully."
         except subprocess.CalledProcessError as e:
             logger.error(f"Error occurred: {e}")
+            return f"Error occurred: {e}"
     except Exception as e:
         logger.error(f"Error loading videos: {e}")
+        return f"Error loading videos: {e}"
     except Exception as e:
         logger.error(f"Error loading videos for {platform_name}: {e}")
         return f"Error loading videos for {platform_name}: {e}"
@@ -96,7 +96,6 @@ def run_pipeline(argv=None):
             | "Process Missions (Load Videos)" >> beam.Map(load_video)
             | "Log results" >> beam.Map(logger.info)
         )
-
 
 if __name__ == "__main__":
     run_pipeline()
