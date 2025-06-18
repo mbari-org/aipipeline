@@ -77,6 +77,7 @@ def load(element, config_dict) -> str:
         logger.info(f"Getting video files names from project {project_id}")
         media_map = get_media_ids(api, project, video_type.id)
 
+        ok_to_load = False
         for csv_file in all_csv_files:
             df = pd.read_csv(csv_file)
 
@@ -118,12 +119,16 @@ def load(element, config_dict) -> str:
                     frame = int(second*stride + 1)
                 depth = None
             else:
-                logger.error(f"No match found in filename {filename} with pattern {pattern}")
+                ok_to_load = True
+                logger.error(f"No match found in filename {filename} with pattern {pattern1} or {pattern2}.")
                 continue
 
             if video_name not in media_map.keys():
                 logger.info(f'No video found with name {video_name} in project {config_dict["tator"]["project"]}.')
                 logger.info("Video must be loaded before localizations.")
+                continue
+
+            if ok_to_load is False:
                 continue
 
             # Assign the labels to the localizations, batching by 500
@@ -135,30 +140,30 @@ def load(element, config_dict) -> str:
 
                 specs = []
                 for index, row in batch_df.iterrows():
-                    if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
-                        attributes = format_attributes(row, box_attributes)
-                        if depth is not None:
-                            attributes["depth"] = depth
-                        specs.append(
-                            gen_spec(
-                                box=[row["x"], row["y"], row["xx"], row["xy"]],
-                                width=row["image_width"],
-                                height=row["image_height"],
-                                version_id=version_id,
-                                label=row["class"],
-                                attributes=attributes,
-                                frame_number=frame,
-                                type_id=box_type.id,
-                                media_id=media_map[video_name],
-                                project_id=project_id,
-                                normalize=False
-                            )
+                    # if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
+                    attributes = format_attributes(row, box_attributes)
+                    if depth is not None:
+                        attributes["depth"] = depth
+                    specs.append(
+                        gen_spec(
+                            box=[row["x"], row["y"], row["xx"], row["xy"]],
+                            width=row["image_width"],
+                            height=row["image_height"],
+                            version_id=version_id,
+                            label=row["class"],
+                            attributes=attributes,
+                            frame_number=frame,
+                            type_id=box_type.id,
+                            media_id=media_map[video_name],
+                            project_id=project_id,
+                            normalize=False
                         )
-                        logger.info(specs)
-                        num_loaded += 1
-                    if num_loaded > 1:
-                        logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
-                        exit(0)
+                    )
+                    logger.info(specs)
+                    num_loaded += 1
+                    # if num_loaded > 1:
+                    #     logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
+                    #     return f"Loaded {num_loaded} localizations, stopping for testing."
                 box_ids = load_bulk_boxes(project_id, api, specs)
                 logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
 
