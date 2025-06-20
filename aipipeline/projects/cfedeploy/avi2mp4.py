@@ -1,3 +1,6 @@
+# aipipeline, Apache-2.0 license
+# Filename: projects/cfedeploy/avi2mp4.py
+# Description: Utility to recursively transcode AVI files to fast start MP4 with keyframes compatible with Tator. Retains directory structure.
 import os
 import subprocess
 from pathlib import Path
