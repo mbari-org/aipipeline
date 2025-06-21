@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipipeline/prediction/compute_stats.py
+# Filename: aipipeline/prediction/gen_stats.py
 # Description: Compute stats for downloaded datasets and save to a csv file
 import json
 from datetime import datetime
