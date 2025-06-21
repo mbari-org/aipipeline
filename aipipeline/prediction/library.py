@@ -420,7 +420,7 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
 
     if response.status_code != 200:
         logger.error(f"Error processing images: {response.text}")
-        return [f"Error processing images: {response.text}"]
+        return None
 
     predictions = response.json()["predictions"]
     scores = response.json()["scores"]
