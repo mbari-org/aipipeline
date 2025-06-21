@@ -6,7 +6,6 @@ redis:
 
 data:
   processed_path: "/mnt/ML_SCRATCH/i2map"
-  version: ""
   labels: "all"
   download_args: [""]
   cleanvision_issues:
@@ -77,6 +76,8 @@ tator:
         type: bool
 
 ffmpeg_path: "/usr/bin/ffmpeg"
+mp4dump_path: "/usr/local/bento4/bin/mp4dump"
+ffprobe_path: "/usr/bin/ffprobe"
 
 plugins:
   - name: "extractor"

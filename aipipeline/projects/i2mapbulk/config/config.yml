@@ -7,7 +7,6 @@ redis:
 data:
   processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
   processed_path_sdcat: "/mnt/ML_SCRATCH/i2mapbulkprocessed"
-  version: ""
   labels: "all"
   download_args: ["--verified"]
   load_min_score: 0.7
@@ -51,6 +50,8 @@ tator:
 
 
 ffmpeg_path: "/usr/bin/ffmpeg"
+mp4dump_path: "/usr/local/bento4/bin/mp4dump"
+ffprobe_path: "/usr/bin/ffprobe"
 
 plugins:
   - name: "extractor"
