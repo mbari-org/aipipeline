@@ -11,7 +11,7 @@ import tator
 import pandas as pd
 
 logging.basicConfig(level=logging.INFO)
-fh = logging.FileHandler("fix_metadata.log")
+fh = logging.FileHandler("../fix_metadata.log")
 fh.setLevel(logging.INFO)
 logging.getLogger().addHandler(fh)
 
