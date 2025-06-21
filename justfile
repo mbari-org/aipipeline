@@ -31,7 +31,7 @@ update-env:
 cp-core:
     cp justfile /Volumes/dcline/code/aipipeline/justfile
     cp requirements.txt /Volumes/dcline/code/aipipeline/requirements.txt
-    cp aipipeline/config.* /Volumes/dcline/code/aipipeline/aipipeline/
+    cp aipipeline/config* /Volumes/dcline/code/aipipeline/aipipeline/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/prediction/  /Volumes/dcline/code/aipipeline/aipipeline/prediction/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/metrics/  /Volumes/dcline/code/aipipeline/aipipeline/metrics/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/db/  /Volumes/dcline/code/aipipeline/aipipeline/db/
@@ -137,7 +137,7 @@ load-cfe-isiis-videos missions="":
     --missions $PROJECT_DIR/data/{{missions}} \
     --config $PROJECT_DIR/config/config.yml
 
-# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-frames /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/
+# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-sdcat /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/
 load-cfe-isiis-sdcat data_dir="" stride="14":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
@@ -156,6 +156,43 @@ cluster-cfe-isiis roi_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_re
                             aipipeline/prediction/clean_pipeline.py \
                             --config $PROJECT_DIR/config/config.yml \
                             --image-dir {{roi_dir}}
+
+# Cluster CFE ISIIS hawaii mission frames. First pass with trained local model
+cluster-cfe-isiis-hawaii-p1:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/cfedeploy
+    export PYTHONPATH=.
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export DET_DIR=/mnt/CFElab/Data_archive/Images/ISIIS/COOK/Videos2frames/Hawaii_detections/det_filtered_reduction
+    # Run the first pass clustering with the local model
+    python -m sdcat cluster detections \
+    --det-dir $DET_DIR \
+    --save-dir /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction \
+    --config-ini /u/dcline/code/aipipeline/aipipeline/projects/cfedeploy/config/sdcat_cfe_isiis_final-20250509.ini \
+    --vits-batch-size 512 \
+    --hdbscan-batch-size 50000 \
+    --device cuda \
+    --use-vits \
+    --use-cuhdbscan --skip-visualization
+    echo "First pass clustering complete. Now copy the cluster run output in $DET_DIR to a directory and use with the cluster-cfe-isiis-hawaii-p2 recipe
+
+cluster-cfe-isiis-hawaii-p2 p1_dir="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/cfedeploy
+    export PYTHONPATH=.
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    # Run the first pass clustering with the local model
+    python -m sdcat cluster detections \
+    --det-dir {{p1_dir}} \
+    --save-dir /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction \
+    --config-ini $PROJECT_DIR/config/sdcat_fb_dino-vits8.ini \
+    --vits-batch-size 512 \
+    --hdbscan-batch-size 50000 \
+    --device cuda \
+    --use-vits
+
 # Load planktivore ROI images, e.g. just load-ptvr-images /mnt/DeepSea-AI/data/Planktivore/raw/aidata-export-02 --section aidata-export-02
 load-ptvr-images images='tmp/roi' *more_args="":
     time aidata load images \
@@ -314,7 +351,9 @@ predict-vss-save project='planktivore' *more_args="--output-csv /tmp/predict-vss
 
 # Predict velella test images using the VSS database and save the results
 predict-vss-velella:
-    just --justfile {{justfile()}} predict-vss-save planktivore --resize --batch-size 64 --
+    just --justfile {{justfile()}} predict-vss-save planktivore --resize --batch-size 64 \
+    --output-csv /tmp/predict-vss-velella.csv \
+    --input  /mnt/ML_SCRATCH/Planktivore/lowmag/mbari-ifcb2014-vitb16-20250318_20250320_002422/crops/
 
 # Run the strided inference on a collection of videos in a TSV file
 run-ctenoA-prod:
@@ -553,13 +592,13 @@ init-ptvr-lowmag-vss:
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh
-# Transcode CFE ISIIS videos from mov to mp4 for use in Tator
+# Transcode CFE ISIIS videos from mov to mp4 for use in Tator from Rachel Carson
 transcode-cfe-isiis-rc:
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/cfedeploy/mov2mp4.py \
     --input "/mnt/CFElab/Data_archive/Images/ISIIS/RAW/20240206_RachelCarson/2024-02-06 10-00-17.043/" \
     --output "/mnt/DeepSea-AI/data/ISIIS/20240206_RachelCarson/2024-02-06 10-00-17.043/" \
     --gop 30
-# Transcode CFE ISIIS videos from mov to mp4 for use in Tator
+# Transcode CFE ISIIS videos from mov to mp4 for use in Tator from Hawaii
 transcode-cfe-isiis-hawaii:
     time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/cfedeploy/avi2mp4.py \
     --input "/mnt/CFElab/Data_archive/Images/ISIIS/RAW/20250401_Hawaii" \
