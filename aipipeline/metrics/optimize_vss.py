@@ -1,7 +1,6 @@
 # aipipeline, Apache-2.0 license
 # Filename: aipipeline/metrics/optimize_vss.py
 # Description: Read in the vss performance file and optimize the VSS data based on the performance
-import glob
 import os
 from datetime import datetime
 import dotenv
