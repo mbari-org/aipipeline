@@ -12,8 +12,7 @@ docker:
      mode: rw
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/Planktivore/aidata-export-02-high-mag"
-  version: "google-vit-base-patch16-224"
+  processed_path: "/mnt/ML_SCRATCH/Planktivore"
   labels: ""
   download_args: [""]
   cleanvision_issues:
