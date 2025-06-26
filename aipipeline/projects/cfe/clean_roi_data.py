@@ -18,6 +18,8 @@ from tempfile import TemporaryDirectory
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+CROP_COLUMN = "crop_path"  # column for image paths
+AREA_COLUMN = "area"  # column for area values
 
 def clean_bad_images(filepaths: List[str]) -> List[str]:
     """Remove blurry images and near-duplicates"""
@@ -82,8 +84,6 @@ def process_chunk(chunk_df, chunk_idx, min_area, bad_image_log_dir):
     :rtype: str
     """
     logger.info(f"Processing chunk {chunk_idx}")
-    crop_column = "crop_path"  # column for image paths
-    area_column = "area" # column for area values
 
     # Skip over any rows greater than min_area
     chunk_df = chunk_df[chunk_df[area_column] < min_area]
@@ -145,9 +145,10 @@ def clean_csv_images_parallel(
     # Read the input CSV again to filter out bad images
     df = pd.read_csv(input_csv)
     initial_row_count = len(df)
-    df = df[~df[crop_column].isin(bad_images)]
+    df = df[~df[CROP_COLUMN].isin(bad_images)]
     final_row_count = len(df)
     logger.info(f"Removed {initial_row_count - final_row_count} bad images from the CSV.")
+    df.to_csv(output_csv, index=False)
     logger.info(f"Saved cleaned CSV to {output_csv}")
     logger.info(f"Bad image logs saved to {bad_image_log_dir}")
 
