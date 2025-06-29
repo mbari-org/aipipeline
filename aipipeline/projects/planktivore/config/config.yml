@@ -3,7 +3,7 @@
 
 redis:
   host: "doris.shore.mbari.org"
-  port: 6382
+  port: 6383
 
 docker:
   bind_volumes:
