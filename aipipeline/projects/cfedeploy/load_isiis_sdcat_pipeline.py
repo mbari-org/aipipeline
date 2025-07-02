@@ -136,6 +136,11 @@ def load(element, config_dict) -> str:
                     if row.depth is not None:
                         attributes["depth"] = row.depth
                     if row.frame is not None and row.video_name is not None:
+                        # Clamp all boxes to be within the normalized range of 0 to 1
+                        row["x"] = max(0, min(1, row["x"]))
+                        row["y"] = max(0, min(1, row["y"]))
+                        row["xx"] = max(0, min(1, row["xx"]))
+                        row["xy"] = max(0, min(1, row["xy"]))
                         specs.append(
                             gen_spec(
                                 box=[row["x"], row["y"], row["xx"], row["xy"]],
@@ -171,7 +176,7 @@ def parse_args(argv, logger):
     )
     parser.add_argument("--config", required=True, help=f"Configuration files", type=str)
     parser.add_argument("--data", help="Path to cluster csv file to load", required=True, type=str)
-    parser.add_argument("--stride", help="Frame stride images were capture at", default=14, type=int)
+    parser.add_argument("--stride", help="Frame stride the image index in the filenames represent", default=14, type=int)
     parser.add_argument('--label', help="Override label to use for the boxes", type=str)
     parser.add_argument('--version', help="Version to load the data into", type=str, default="Baseline")
     args, beam_args = parser.parse_known_args(argv)
