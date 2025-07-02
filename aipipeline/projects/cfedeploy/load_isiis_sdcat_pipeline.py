@@ -35,25 +35,52 @@ formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 console = logging.StreamHandler()
 logger.addHandler(console)
 logger.setLevel(logging.INFO)
-# and log to file
-now = datetime.now()
-log_filename = f"load_isiis_sdcat_pipeline_{now:%Y%m%d}.log"
-handler = logging.FileHandler(log_filename, mode="w")
-handler.setFormatter(formatter)
-handler.setLevel(logging.DEBUG)
-logger.addHandler(handler)
+
+pattern1 = re.compile(
+    r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})\.jpg$'
+)
+pattern2 = re.compile(
+    r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})_(\d+\.\d+)m\.jpg$'
+)
+
+def frame_depth_video(row, stride) -> tuple:
+    if 'image_path' in row:
+        filename = Path(row['image_path']).name
+    elif 'crop_path' in row:
+        filename = Path(row['crop_path']).name
+    else:
+        return (None, None,None)
+
+    match1 = pattern1.search(filename)
+    match2 = pattern2.search(filename)
+    if match1:
+        video_name = f"{match1.group(1)}.mp4"
+        second = float(match1.group(2))
+        frame = 0 if second == 0.0 else int(second*stride-1)
+        depth = None
+        return (frame, depth, video_name)
+    elif match2:
+        video_name = f"{match2.group(1)}.mp4"
+        second = float(match2.group(2))
+        frame = 0 if second == 0.0 else int(second*stride-1)
+        depth = match2.group(3)
+        return (frame, depth, video_name)
+    else:
+        logger.error(f"No match found in filename {filename} with pattern {pattern1} or {pattern2}.")
+        return (None, None,None)
 
 def load(element, config_dict) -> str:
     # Data is in the format
     # <image base directory path to process>,<stride frame images were captured at>
     logger.info(f"Processing element {element}")
-    all_detections, stride = element
+    all_detections, stride, label, version = element
 
     try:
         # Get needed database ids and attributes for loading from the project config
         api, project = init_api_project(config_dict["tator"]["host"], TATOR_TOKEN, config_dict["tator"]["project"])
         project_id = project.id
-        version = config_dict["data"]["version"]
+        if version is None:
+            version = config_dict["tator"]["version"]
         logger.info(f"Loading to version {version} in project {config_dict['tator']['project']} id {project_id}")
         version_id = get_version_id(api, project, version)
         video_type = find_media_type(api, project_id, "Video")
@@ -77,9 +104,13 @@ def load(element, config_dict) -> str:
         logger.info(f"Getting video files names from project {project_id}")
         media_map = get_media_ids(api, project, video_type.id)
 
-        ok_to_load = False
         for csv_file in all_csv_files:
             df = pd.read_csv(csv_file)
+            df['frame'] = None
+            df['depth'] = None
+            df['video_name'] = None
+
+            df['frame'], df['depth'] ,df['video_name']= zip(*df.apply(lambda row: frame_depth_video(row, stride), axis=1))
 
             # Rename class_s to label_s if it exists - this matches the attribute name in the config.yaml
             df.rename(columns={"class_s": "label_s"}, inplace=True)
@@ -89,50 +120,8 @@ def load(element, config_dict) -> str:
                 logger.error(f"No data found in {csv_file}.")
                 continue
 
-            row = df.iloc[0]
-            image_path = Path(row["image_path"])
-            logger.info(f"Processing image {image_path}")
-            filename = image_path.name
-            # "CFE_ISIIS-180-2024-02-06 13-14-46.425_0014_598.12m.jpg or CFE_ISIIS-012-2025-04-04 11-43-06.238_0355.jpg"
-            pattern1 = re.compile(
-                r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})_*\.jpg$'
-            )
-            pattern2 = re.compile(
-                r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})_(\d+\.\d+)m\.jpg$'
-            )
-            match1 = pattern1.search(filename)
-            match2 = pattern2.search(filename)
-            if match2:
-                video_name = f"{match2.group(1)}.mp4"
-                second = float(match2.group(2))
-                if second == 0.0:
-                    frame = 0
-                else:
-                    frame = int(second*stride + 1)
-                depth = match2.group(3)
-            elif match1:
-                video_name = f"{match1.group(1)}.mp4"
-                second = float(match1.group(2))
-                if second == 0.0:
-                    frame = 0
-                else:
-                    frame = int(second*stride + 1)
-                depth = None
-            else:
-                ok_to_load = True
-                logger.error(f"No match found in filename {filename} with pattern {pattern1} or {pattern2}.")
-                continue
-
-            if video_name not in media_map.keys():
-                logger.info(f'No video found with name {video_name} in project {config_dict["tator"]["project"]}.')
-                logger.info("Video must be loaded before localizations.")
-                continue
-
-            if ok_to_load is False:
-                continue
-
             # Assign the labels to the localizations, batching by 500
-            batch_size = 500
+            batch_size = min(500, len(df))
             num_loaded = 0
             logger.info("Creating localizations ...")
             for i in range(0, len(df), batch_size):
@@ -142,28 +131,28 @@ def load(element, config_dict) -> str:
                 for index, row in batch_df.iterrows():
                     # if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
                     attributes = format_attributes(row, box_attributes)
-                    if depth is not None:
-                        attributes["depth"] = depth
-                    specs.append(
-                        gen_spec(
-                            box=[row["x"], row["y"], row["xx"], row["xy"]],
-                            width=row["image_width"],
-                            height=row["image_height"],
-                            version_id=version_id,
-                            label=row["class"],
-                            attributes=attributes,
-                            frame_number=frame,
-                            type_id=box_type.id,
-                            media_id=media_map[video_name],
-                            project_id=project_id,
-                            normalize=False
+                    if "label_s" in attributes and label is not None:
+                        attributes["label_s"] = label
+                    if row.depth is not None:
+                        attributes["depth"] = row.depth
+                    if row.frame is not None and row.video_name is not None:
+                        specs.append(
+                            gen_spec(
+                                box=[row["x"], row["y"], row["xx"], row["xy"]],
+                                width=row["image_width"],
+                                height=row["image_height"],
+                                version_id=version_id,
+                                label=label if label is not None else row["class"],
+                                attributes=attributes,
+                                frame_number=row.frame,
+                                type_id=box_type.id,
+                                media_id=media_map[row.video_name],
+                                project_id=project_id,
+                                normalize=False
+                            )
                         )
-                    )
-                    logger.info(specs)
-                    num_loaded += 1
-                    # if num_loaded > 1:
-                    #     logger.info(f"Loaded {num_loaded} localizations, stopping for testing.")
-                    #     return f"Loaded {num_loaded} localizations, stopping for testing."
+                        logger.info(specs)
+                        num_loaded += 1
                 box_ids = load_bulk_boxes(project_id, api, specs)
                 logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
 
@@ -183,6 +172,8 @@ def parse_args(argv, logger):
     parser.add_argument("--config", required=True, help=f"Configuration files", type=str)
     parser.add_argument("--data", help="Path to cluster csv file to load", required=True, type=str)
     parser.add_argument("--stride", help="Frame stride images were capture at", default=14, type=int)
+    parser.add_argument('--label', help="Override label to use for the boxes", type=str)
+    parser.add_argument('--version', help="Version to load the data into", type=str, default="Baseline")
     args, beam_args = parser.parse_known_args(argv)
     if not os.path.exists(args.data):
         logger.error(f"Data file {args.data} not found")
@@ -203,7 +194,7 @@ def run_pipeline(argv=None):
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "Data" >> beam.Create([(args.data, args.stride)])
+            | "Data" >> beam.Create([(args.data, args.stride, args.label, args.version)])
             | "Load csv" >> beam.Map(load, config_dict=config_dict)
             | "Log results" >> beam.Map(logger.debug)
         )
