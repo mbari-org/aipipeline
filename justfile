@@ -137,13 +137,13 @@ load-cfe-isiis-videos missions="":
     --missions $PROJECT_DIR/data/{{missions}} \
     --config $PROJECT_DIR/config/config.yml
 
-# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-sdcat /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/
-load-cfe-isiis-sdcat data_dir="" stride="14":
+# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-sdcat /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/ 14
+load-cfe-isiis-sdcat data_dir="" stride="14" version="Baseline":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_isiis_sdcat_pipeline.py \
-    --data {{data_dir}} --stride {{stride}} \
+    --data {{data_dir}} --stride {{stride}}  --label Unknown  --version {{version}} \
     --config $PROJECT_DIR/config/config.yml
 
 # Cluster CFE ISIIS hawaii mission frames. Cleans first, then clusters
@@ -160,13 +160,14 @@ cluster-cfe-isiis roi_dir="/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_re
 # Cluster CFE ISIIS hawaii mission frames. First pass with trained local model
 cluster-cfe-isiis-hawaii-p1:
     #!/usr/bin/env bash
+    conda activate rapids-25.04
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
     export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
     export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
     export DET_DIR=/mnt/CFElab/Data_archive/Images/ISIIS/COOK/Videos2frames/Hawaii_detections/det_filtered_reduction
     # Run the first pass clustering with the local model
-    python -m sdcat cluster detections \
+    sdcat cluster detections \
     --det-dir $DET_DIR \
     --save-dir /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction \
     --config-ini /u/dcline/code/aipipeline/aipipeline/projects/cfedeploy/config/sdcat_cfe_isiis_final-20250509.ini \
@@ -179,12 +180,13 @@ cluster-cfe-isiis-hawaii-p1:
 
 cluster-cfe-isiis-hawaii-p2 p1_dir="":
     #!/usr/bin/env bash
+    conda activate rapids-25.04
     export PROJECT_DIR=./aipipeline/projects/cfedeploy
     export PYTHONPATH=.
     export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
     export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
     # Run the first pass clustering with the local model
-    python -m sdcat cluster detections \
+    sdcat cluster detections \
     --det-dir {{p1_dir}} \
     --save-dir /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction \
     --config-ini $PROJECT_DIR/config/sdcat_fb_dino-vits8.ini \
@@ -496,6 +498,27 @@ download-cluster project="i2map" version="Baseline" *more_args="":
     echo "/mnt/ML_SCRATCH/{{project}}/{{version}}/crops/,/mnt/ML_SCRATCH/{{project}}/{{version}}/clusters/" > /tmp/{{version}}-clu.txt
     just --justfile {{justfile()}} cluster {{project}} --version {{version}} --data /tmp/{{version}}-clu.txt
 
+# Run vss search  to planktivore data
+vss-search-ptvr image_dir="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/planktivore
+    export PYTHONPATH=.
+    ##############################################
+    # Create a unique name for the image directory listing file and
+    # search the images first and then run the search pipeline
+    # This is because the beam file match pipeline incurs some overhead
+    # This is simply faster for millions of images
+    image_dir="{{image_dir}}"
+    flat_name="${image_dir//\//-}" # Replace all slashes with dashes
+    flat_name="${flat_name#-}" # Remove leading dash if it exists
+    image_listing="${flat_name}-images.txt"
+    if [ ! -f $image_listing ]; then
+        echo "Finding images in {{image_dir}}"
+        find {{image_dir}} -name '*.jpg' > $image_listing
+    else
+        echo "Using existing file $image_listing"
+    fi
+    time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/vss_search_pipeline.py --config $PROJECT_DIR/config/config.yml  --image_list $image_listing
 # Run sweep for planktivore data. Example just cluster-ptvr-swp /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square /mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square
 cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square' save_dir='/mnt/ML_SCRATCH/Planktivore/cluster/aidata-export-03-low-mag-square' device='cuda':
     #!/usr/bin/env bash
@@ -521,7 +544,32 @@ cluster-ptvr-sweep roi_dir='/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag
                     --hdbscan-batch-size 50000
             done
     done
-
+# run sweep for ISIIS data. Example just cluster-isiis-sweep /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/denoise_s2 /mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction
+cluster-isiis-sweep det_dir='/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction/denoise_s2/' save_dir='/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_reduction':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=$PWD/aipipeline/projects/cfedeploy
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export RAY_DEDUP_LOGS=0
+    cd ~/code/sdcat
+    for epsilon in 0. .001 .002 .003; do
+        for alpha in 1. 1.1 1.2; do
+            for min_cluster in 3 5 7; do
+                echo "Running alpha=$alpha epsilon=$epsilon min_cluster=$min_cluster"
+                time conda run -n rapids-25.04 python -m sdcat cluster detections --config-ini $PROJECT_DIR/config/sdcat.ini \
+                        --det-dir {{det_dir}} \
+                        --save-dir {{save_dir}} \
+                        --alpha $alpha \
+                        --cluster-selection-epsilon $epsilon \
+                        --min-cluster-size $min_cluster \
+                        --device cuda \
+                        --use-vits \
+                        --vits-batch-size 512 \
+                        --hdbscan-batch-size 50000 \
+                        --skip-visualization
+            done
+        done
+    done
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
     #!/usr/bin/env bash
