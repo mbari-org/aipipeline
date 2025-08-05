@@ -108,7 +108,7 @@ with out_csv.open("w") as f:
                 filtered_keypoints.append(kp)
 
         # Convert cv2 keypoints to numpy array
-        keypoints = np.array([[int(kp.pt[0]),int(kp.pt[1])] for kp in keypoints])
+        keypoints = np.array([[int(kp.pt[0]),int(kp.pt[1])] for kp in filtered_keypoints])
 
         # Display keypoints on the image at the chosen indices
         image_kp = image.copy()
