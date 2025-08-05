@@ -1,7 +1,6 @@
 from cleanvision import Imagelab
 import json
 import logging
-import multiprocessing
 import os
 import shutil
 import time
@@ -13,7 +12,6 @@ from typing import Dict, List
 import cv2
 import requests
 
-import apache_beam as beam
 from albumentations.pytorch import ToTensorV2
 
 from aipipeline.config_setup import CONFIG_KEY
@@ -96,6 +94,13 @@ def clean_images(elements, config_dict: Dict) -> List[tuple]:
 
     return elements
 
+def cluster_collections(elements, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
+    logger.info(f"Clustering in {elements} ")
+    for element in elements:
+        cluster(element, config_dict, min_detections=min_detections)
+
+    return elements
+
 
 def generate_multicrop_views(elements) -> List[tuple]:
     data = []
@@ -129,91 +134,70 @@ def generate_multicrop_views(elements) -> List[tuple]:
     return data
 
 
-def cluster(data, config_dict: Dict, min_detections: int) -> List[tuple]:
+def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
     logger.info(f'Clustering {data} with min_detections {min_detections}')
     num_images, crop_dir, cluster_dir = data
     project = config_dict["tator"]["project"]
     sdcat_config = config_dict["sdcat"]["ini"]
-    cluster_results = []
     tmp_config = Path('/tmp') / project / sdcat_config
     if not tmp_config.exists():
         logger.error(f"Cannot find {tmp_config}. Did the config_setup run successfully?")
-        return []
+        return 0, crop_dir, cluster_dir
     short_name = get_short_name(project)
     logger.info(data)
 
-    logger.info(f"Clustering {num_images} images in {crop_dir} ....")
-    min_cluster_size = 2
-
-    logger.info(f"Running clustering on {num_images} images with min-cluster-size=2")
-    args = [
-        "cluster",
-        "roi",
-        "--skip-visualization",
-        "--config-ini",
-        tmp_config.as_posix(),
-        "--min-cluster-size",
-        f"{min_cluster_size}",
-        "--roi-dir",
-        f"'{crop_dir}'",
-        "--save-dir",
-        f"'{cluster_dir}'",
-        "--device",
-        "cuda:0",
-    ]
     label = Path(crop_dir).name
     machine_friendly_label = gen_machine_friendly_label(label)
+
     try:
         # Skip clustering if there are too few images, but generate a detection file for the next step
         if num_images < min_detections:
             logger.info(f"Skipping clustering for {label} with {num_images} images")
             Path(cluster_dir).mkdir(parents=True, exist_ok=True)
-            cluster_results.append((Path(crop_dir).name, cluster_dir))
             images = [f"{crop_dir}/{f}" for f in os.listdir(crop_dir) if f.endswith(".jpg")]
             with open(f"{cluster_dir}/no_cluster_exemplars.csv", "w") as f:
-                # Add the header image_path,image_width,image_height,crop_path,cluster
                 f.write("image_path,image_width,image_height,crop_path,cluster\n")
                 for image in images:
                     f.write(f"{image},224,224,{image},-1\n")
-            return cluster_results
-
-        container = run_docker(
-            image=config_dict["docker"]["sdcat"],
-            name=f"{short_name}-sdcat-clu-{machine_friendly_label}",
-            args_list=args,
-            bind_volumes=config_dict["docker"]["bind_volumes"],
-        )
-        if container:
-            logger.info(f"Clustering {label}....")
-            container.wait()
-            logger.info(f"Done clustering {label}....")
-            if not Path(cluster_dir).exists():
-                logger.error(f"Failed to cluster {label}")
-                return []
-            cluster_results.append((Path(crop_dir).name, cluster_dir))
         else:
-            logger.error(f"Failed to cluster for {label}....")
+            logger.info(f"Clustering {num_images} images in {crop_dir} ....")
+            min_cluster_size = 2
+
+            logger.info(f"Running clustering on {num_images} images with min-cluster-size=2")
+            args = [
+                "cluster",
+                "roi",
+                "--skip-visualization",
+                "--config-ini",
+                tmp_config.as_posix(),
+                "--min-cluster-size",
+                f"{min_cluster_size}",
+                "--roi-dir",
+                f"'{crop_dir}'",
+                "--save-dir",
+                f"'{cluster_dir}'",
+                "--device",
+                "cuda:0",
+            ]
+            container = run_docker(
+                image=config_dict["docker"]["sdcat"],
+                name=f"{short_name}-sdcat-clu-{machine_friendly_label}",
+                args_list=args,
+                bind_volumes=config_dict["docker"]["bind_volumes"],
+            )
+            if container:
+                logger.info(f"Clustering {label}....")
+                container.wait()
+                logger.info(f"Done clustering {label}....")
+                if not Path(cluster_dir).exists():
+                    logger.error(f"Failed to cluster {label}")
+                    return 0, crop_dir, cluster_dir
+            else:
+                logger.error(f"Failed to cluster for {label}....")
     except Exception as e:
         logger.error(f"Failed to cluster for {label}....{e}")
 
-    return cluster_results
-
-
-class ProcessClusterBatch(beam.DoFn):
-
-    def __init__(self, config_dict: Dict, min_detections: int):
-        self.config_dict = config_dict
-        self.min_detections = min_detections
-
-    def process(self, batch):
-        if len(batch) > 1:
-            num_processes = min(1, len(batch))
-        else:
-            num_processes = 1
-        with multiprocessing.Pool(num_processes) as pool:
-            args = [(data, self.config_dict, self.min_detections) for data in batch]
-            results = pool.starmap(cluster, args)
-        return results
+    return data
 
 
 def batch_elements(elements, batch_size=3):

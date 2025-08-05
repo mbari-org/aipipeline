@@ -20,6 +20,7 @@ from aipipeline.prediction.library import (
     get_short_name,
     gen_machine_friendly_label,
 )
+from aipipeline.db.redis.vss.exemplars import load_exemplars
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -39,74 +40,6 @@ logger.addHandler(handler)
 dotenv.load_dotenv()
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 TATOR_TOKEN = os.getenv("TATOR_TOKEN")
-
-
-# Load exemplars into Vector Search Server
-def load_exemplars(labels: List[tuple[str, str]], config_dict=Dict, conf_files=Dict) -> str:
-    project = str(config_dict["tator"]["project"])
-    short_name = get_short_name(project)
-
-    logger.info(labels)
-    num_loaded = 0
-    for label, save_dir in labels:
-        machine_friendly_label = gen_machine_friendly_label(label)
-        # Grab the most recent file
-        all_exemplars = list(Path(save_dir).rglob("*_exemplars.csv"))
-        exemplar_file = sorted(all_exemplars, key=os.path.getmtime, reverse=True)[0] if all_exemplars else None
-
-        if exemplar_file is None:
-            logger.info(f"No exemplar file found for {label}")
-            exemplar_count = 0
-        else:
-            with open(exemplar_file, "r") as f:
-                exemplar_count = len(f.readlines())
-
-        if exemplar_count < 10 or exemplar_file is None:
-            all_detections = list(Path(save_dir).rglob("*_detections.csv"))
-            exemplar_file = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
-
-            if exemplar_file is None:
-                logger.info(f"No detections file found for {label}")
-                continue
-
-            with open(exemplar_file, "r") as f:
-                exemplar_count = len(f.readlines())
-            logger.info(f"To few exemplars, using detections file {exemplar_file} instead")
-
-        logger.info(f"Loading {exemplar_count} exemplars for {label} as {machine_friendly_label} from {exemplar_file}")
-        args_list = [
-            "aidata",
-            "load",
-            "exemplars",
-            "--input",
-            f"'{exemplar_file}'",
-            "--label",
-            f"'{label}'",
-            "--device",
-            "cuda:0",
-            "--password",
-            REDIS_PASSWORD,
-            "--config",
-            conf_files[CONFIG_KEY],
-            "--token",
-            TATOR_TOKEN,
-        ]
-        n = 3  # Number of retries
-        delay_secs = 30  # Delay between retries
-
-        for attempt in range(1, n + 1):
-            try:
-                result = run_subprocess(args_list=args_list)
-                if result != 0:
-                    logger.error(f"Error loading exemplars to VSS: {result}")
-                    return f"Failed to load exemplars to VSS: {result}"
-                logger.info(f"Loaded cluster exemplars for {label} from {exemplar_file}")
-                num_loaded += 1
-            except Exception as e:
-                logger.error(f"Failed to load v exemplars for {label}: {e}")
-                return f"Failed to load v exemplars for {label}: {e}"
-
-    return f"Loaded {num_loaded} labels"
 
 def get_labels(config_dict: Dict) -> Dict:
     labels = extract_labels_config(config_dict)
@@ -166,7 +99,7 @@ def run_pipeline(argv=None):
         (
             p
             | "Create labels" >> beam.Create([data])
-            | "Load exemplars" >> beam.Map(load_exemplars, config_dict=config_dict, conf_files=conf_files)
+            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
             | "Log results" >> beam.Map(logger.info)
         )
 
