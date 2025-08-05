@@ -1,6 +1,6 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipipeline/prediction/predict_save_pipeline.py
-# Description: Batch process images with vector search server VSS and save results to a csv file
+# Filename: aipipeline/prediction/predict_pipeline.py
+# Description: Batch process images with vector search server VSS
 import csv
 
 import apache_beam as beam
@@ -76,38 +76,17 @@ def read_image_pad(readable_file):
 class ProcessVSSBatch(beam.DoFn):
     def process(self, batch, config_dict):
         """
-        Process a batch of images and return any predictions that meet the VSS threshold.
+        Process a batch of images
         """
-        vss_threshold = float(config_dict["vss"]["threshold"])
         try:
             logger.debug(f"Processing batch of {len(batch)} images")
             results = run_vss(batch, config_dict, top_k=3)
             if results is None:
                 logger.error("No results returned from VSS")
                 return
-            file_paths, best_predictions, best_scores = results
-            for file_path, best_pred, best_score in zip(file_paths, best_predictions, best_scores):
-                if best_pred is not None and best_score is not None and best_score > vss_threshold:
-                    logger.info(f"Image {file_path} predicted as {best_pred} with score {best_score}")
-                    yield {
-                        "file_path": file_path,
-                        "best_prediction": best_pred,
-                        "best_score": best_score
-                    }
+            yield results
         except Exception as ex:
             logger.error(f"Error processing batch: {ex}")
-
-class WriteToCSV(beam.DoFn):
-    def __init__(self, output_path):
-        self.output_path = output_path
-
-    def process(self, elements):
-        with open(self.output_path, 'w', newline='') as f:
-            writer = csv.DictWriter(f, fieldnames=['file_path', 'best_prediction', 'best_score'])
-            writer.writeheader()
-            for row in elements:
-                writer.writerow(row)
-        yield self.output_path
 
 def run_pipeline(argv=None):
     import argparse
@@ -126,9 +105,8 @@ def run_pipeline(argv=None):
     )
     parser.add_argument("--config", required=False, default=default_project.as_posix(),
                         help="Config yaml file path")
-    parser.add_argument("--batch-size", required=False, type=int, default=3, help="Batch size")
+    parser.add_argument("--batch-size", required=False, type=int, default=64, help="Batch size")
     parser.add_argument("--max-images", required=False, type=int, help="Maximum number of images to process")
-    parser.add_argument("--output-csv", required=True, help="Output CSV file path")
     parser.add_argument("--resize", action='store_true', help="Resize images to 224x224 and pad to square")
     args, other_args = parser.parse_known_args(argv)
     options = PipelineOptions(other_args)
@@ -155,8 +133,6 @@ def run_pipeline(argv=None):
                 | "ReadImages" >> beam.Map(read_image_pad if args.resize else read_image)
                 | "BatchImages" >> beam.BatchElements(min_batch_size=args.batch_size, max_batch_size=args.batch_size)
                 | "ProcessBatches" >> beam.ParDo(ProcessVSSBatch(), config_dict)
-                | 'Combine to list' >> beam.combiners.ToList()
-                | 'Write CSV' >> beam.ParDo(WriteToCSV(args.output_csv))
                 | "LogResults" >> beam.Map(logger.info)
         )
 

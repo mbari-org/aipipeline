@@ -334,14 +334,16 @@ cluster project='uav' *more_args="":
     time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
         --config ./aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}
-# Predict images using the VSS database
-predict-vss project='uav' image_dir='/tmp/download' *more_args="":
+# Predict images using the VSS database and load the results into Tator
+predict-vss-load project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
     time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/predict_load_pipeline.py \
     --config ./aipipeline/projects/{{project}}/config/config.yml \
     --image-dir {{image_dir}} \
     {{more_args}}
+
+# Predict images using the VSS database and results are saved to the VSS output directory as defined in the config.yml /Volumes/DeepSea-AI/data/Planktivore/processed/vss
 
 # Predict and save using the VSS database
 predict-vss-save project='planktivore' *more_args="--output-csv /tmp/predict-vss.csv --batch-size 64 --resize":

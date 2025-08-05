@@ -90,7 +90,7 @@ def parse_voc_xml(xml_file) -> tuple[
     return paths, boxes, labels, poses, ids
 
 
-def crop_square_image(image: torch.Tensor, row: dict, square_dim: int):
+def crop_square_image(image: torch.Tensor, row: dict, square_dim: int = 224):
     """
     Crop the image to a square, pad the shortest dimension, then resize it to square_dim x square_dim.
     Uses GPU for acceleration.
