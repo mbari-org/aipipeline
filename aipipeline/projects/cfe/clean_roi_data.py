@@ -86,8 +86,8 @@ def process_chunk(chunk_df, chunk_idx, min_area, bad_image_log_dir):
     logger.info(f"Processing chunk {chunk_idx}")
 
     # Skip over any rows greater than min_area
-    chunk_df = chunk_df[chunk_df[area_column] < min_area]
-    filepaths = chunk_df[crop_column].tolist()
+    chunk_df = chunk_df[chunk_df[AREA_COLUMN] < min_area]
+    filepaths = chunk_df[CROP_COLUMN].tolist()
     bad_files = clean_bad_images(filepaths)
 
     bad_log_path = os.path.join(bad_image_log_dir, f"bad_images_chunk_{chunk_idx}.txt")
