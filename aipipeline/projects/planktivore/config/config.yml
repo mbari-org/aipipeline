@@ -11,10 +11,15 @@ docker:
      bind: /mnt/DeepSea-AI
      mode: rw
 
+   /mnt/ML_SCRATCH:
+     bind: /mnt/ML_SCRATCH
+     mode: rw
+
 data:
   processed_path: "/mnt/ML_SCRATCH/Planktivore"
   labels: ""
-  download_args: [""]
+    #download_args: ["--section", "Velella-low-mag", "--version", "Baseline", "--verified"]
+  download_args: ["--section", "aidata-export-03-low-mag", "--verified", "--version", "Baseline"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
