@@ -8,14 +8,13 @@ box_type = 18  # Box type ID for planktivore localizations (e.g., 18 for boundin
 token = os.getenv("TATOR_TOKEN")
 api = tator.get_api(host='https://mantis.shore.mbari.org', token=token)
 
-
 count = api.get_localization_count(project=project_id, type=box_type, version=[f"{version_id}"])
 
 print(f"Found: {count} localizations for version {version_id}")
 if count > 0:
 
     # Delete in batches
-    batch_size = 500
+    batch_size = 1000
     while count > 0:
         deleted = api.delete_localization_list(project=project_id, version=[version_id], start=0, stop=batch_size)
         print(f"Deleted {deleted if deleted is not None else 0} localizations in current batch.")
@@ -25,3 +24,5 @@ if count > 0:
             break
 
 
+# Delete the version itself
+api.delete_version(project=project_id, version=version_id)
