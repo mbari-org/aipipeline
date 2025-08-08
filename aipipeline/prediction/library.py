@@ -47,8 +47,12 @@ def remove_multicrop_views(data_dir: str):
 def mbari_augmentations(image_size: int):
     import albumentations as A
     return A.Compose([
-        A.HorizontalFlip(p=1.0),
-        A.RandomResizedCrop(size=(image_size,image_size), scale=(0.5, 1.0), p=1.0),
+        A.OneOf([
+            A.Rotate(limit=(45, 45), p=1/3),
+            A.Rotate(limit=(90, 90), p=1/3),
+            A.Rotate(limit=(135, 135), p=1/3),
+        ], p=1.0),
+        A.RandomResizedCrop(size=(image_size, image_size), scale=(0.5, 1.0), p=1.0),
         A.GaussianBlur(blur_limit=(3, 7), sigma_limit=0.1, p=0.5),
         ToTensorV2()
     ])
