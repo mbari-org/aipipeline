@@ -1,9 +1,9 @@
-# aipipeline/projects/planktivore/config.yml
-# Config file for Planktivore project high mag images
+# aipipeline/projects/planktivore/config_lowmag.yml
+# Config file for Planktivore project log mag images
 
 redis:
   host: "doris.shore.mbari.org"
-  port: 6383
+  port: 6384
 
 docker:
   bind_volumes:
@@ -11,13 +11,12 @@ docker:
      bind: /mnt/DeepSea-AI
      mode: rw
 
-   /mnt/ML_SCRATCH:
-     bind: /mnt/ML_SCRATCH
-     mode: rw
-
 data:
-  processed_path: "/mnt/ML_SCRATCH/Planktivore"
+  raw_data_path: "/mnt/DeepSea-AI/data/Planktivore/raw"
+  processed_path: "/mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag"
+  version: "google-vit-base-patch16-224"
   labels: ""
+  download_args: ["--section", "aidata-export-03-low-mag"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
@@ -30,7 +29,7 @@ sdcat:
   ini: "sdcat.ini"
 
 vss:
-  project: "902004-Planktivore"
+  project: "902004-Planktivore-LowMag"
   threshold: 0.8
   model: "google/vit-base-patch16-224"
 
