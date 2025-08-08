@@ -45,6 +45,8 @@ cp-dev-cfe:
 # Copy planktivore dev code to the project on doris
 cp-dev-ptvr:
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/planktivore/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/planktivore-lm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-lm/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/planktivore-hm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-hm/
 
 # Copy uav dev code to the project on doris
 cp-dev-uav:
@@ -601,7 +603,7 @@ replace-m3-urls:
 gen-bio-data image_dir="":
     #!/usr/bin/env bash
     export PYTHONPATH=.
-    just --justfile {{justfile()}} download-crop bio --skip-clean True --gen-multicrop --verified
+    just --justfile {{justfile()}} download-crop bio --skip-clean True --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/bio --data.download_args "'--verified'"
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
         --config ./aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/901103-biodiversity/crops
     time conda run -n aipipeline --no-capture-output python3 aipipeline/prediction/clean_pipeline.py \
@@ -613,16 +615,16 @@ gen-cfe-data:
 
 # Generate training data for the i2map project
 gen-i2map-data:
-  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --data.download_args "'--version Baseline  --generator vars-labelbot --group NMS'"
-
+  just --justfile {{justfile()}} download-crop i2map --clean --use-cleanvision True --data.processed_path /mnt/ML_SCRATCH/i2map --data.download_args "'--version Baseline --generator vars-labelbot --group NMS'"
+  rm -r /mnt/ML_SCRATCH/i2map
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
-  just --justfile {{justfile()}} download-crop i2mapbulk --clean --use-cleanvision True --gen-multicrop --data.download_args "'--verified'"
-
+  just --justfile {{justfile()}} download-crop i2mapbulk --clean --use-cleanvision True --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/i2mapbulk  --data.download_args "'--verified'"
+  rm -r /mnt/ML_SCRATCH/i2mapbulk
 # Generate training data for the uav project
 gen-uav-data:
-  just --justfile {{justfile()}} download-crop uav --clean --gen-multicrop --data.download_args "'--verified --version yolo11x-oneclass-uav-vits-b-8-20250202'"
-
+  just --justfile {{justfile()}} download-crop uav --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/uav --data.download_args "'--verified --version yolo11x-oneclass-uav-vits-b-8-20250202'"
+  echo "Done. Data is in /mnt/ML_SCRATCH/uav"
 # Generate training data stats
 gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
     #!/usr/bin/env bash
@@ -632,13 +634,18 @@ gen-stats-csv project='UAV' data='/mnt/ML_SCRATCH/UAV/':
 # Generate training data for the planktivore low mag
 gen-ptvr-lowmag-data:
   just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
-  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --section aidata-export-03-low-mag --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
+  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
 
 # Initialize the VSS database for the planktivore low mag data
 init-ptvr-lowmag-vss:
-  just --justfile {{justfile()}} init-vss planktivore --data.processed_path /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
-  just --justfile {{justfile()}} init-vss planktivore --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --section aidata-export-03-low-mag --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
-
+  just --justfile {{justfile()}} init-vss planktivore-lm --data.processed_path /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
+  just --justfile {{justfile()}} init-vss planktivore-lm --data.processed_path /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
+  rm -r /mnt/ML_SCRATCH/Planktivore/velella /mnt/ML_SCRATCH/Planktivore/lowmag
+# Initialize the VSS database for the planktivore low mag data
+init-ptvr-highmag-vss:
+  just --justfile {{justfile()}} init-vss planktivore-hm --data.processed_path /mnt/ML_SCRATCH/Planktivore/highmag0 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000'"
+  just --justfile {{justfile()}} init-vss planktivore-hm --data.processed_path /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025'"
+  rm -r /mnt/ML_SCRATCH/Planktivore/highmag0 /mnt/ML_SCRATCH/Planktivore/highmag1
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh
