@@ -116,7 +116,7 @@ def setup_config(config_yml: str, overrides: dict = {}, silent=False) -> Tuple[D
     sdcat_ini_path = Path(config_path_yml).parent / ini
 
     if not sdcat_ini_path.exists():
-        logger.error(f"Cannot find {file}")
+        logger.error(f"Cannot find {sdcat_ini_path}")
         exit(1)
 
     shutil.copyfile(sdcat_ini_path.as_posix(), f"/tmp/{project}/{sdcat_ini_path.name}")
