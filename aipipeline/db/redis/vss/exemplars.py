@@ -96,7 +96,7 @@ def load_exemplar(data, conf_files=Dict) -> str:
     logger.debug(data)
     num_loaded = 0
     _, label_path, save_dir = data
-    label = label_path.stem if isinstance(label_path, Path) else label_path
+    label = Path(label_path).stem # Get the label from the path
     # Grab the most recent file
     all_exemplars = list(Path(save_dir).rglob("*exemplars.csv"))
     logger.info(f"Found {len(all_exemplars)} exemplar files for {label}")
@@ -146,4 +146,4 @@ def load_exemplars(elements, conf_files: Dict) -> str:
     for element in elements:
         load_exemplar(element, conf_files=conf_files)
 
-    return elements
+    return f"Loaded {len(element)} exemplar classes successfully"
