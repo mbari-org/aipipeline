@@ -59,7 +59,7 @@ def run_pipeline(argv=None):
     conf_files, config_dict = setup_config(args.config, silent=True)
     config_dict = parse_override_args(config_dict, other_args)
 
-    download_path = Path(config_dict["data"]["processed_path"])
+    download_path = Path(config_dict["data"]["download_dir"])
     labels = extract_labels_config(config_dict)
 
     # Print the new config

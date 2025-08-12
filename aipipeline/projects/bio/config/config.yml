@@ -6,9 +6,6 @@ redis:
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/901103-biodiversity"
-  labels: "Ctenophora sp. A"
-  download_args: [""]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53

@@ -5,11 +5,6 @@ redis:
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/i2mapbulk"
-  processed_path_sdcat: "/mnt/ML_SCRATCH/i2mapbulkprocessed"
-  labels: "all"
-  download_args: ["--verified"]
-  load_min_score: 0.7
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.5

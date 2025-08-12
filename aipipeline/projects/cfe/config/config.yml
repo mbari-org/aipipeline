@@ -12,11 +12,6 @@ docker:
      mode: ro
 
 data:
-  raw_data_path: "/mnt/CFElab/"
-  processed_path: "/mnt/ML_SCRATCH/902111-CFE"
-  version: "Baseline"
-  labels: "bloom,long_particle_blur,diatom_chain,aggregate,artifact,phaeocystis,copepod,rhizaria,particle_blur,larvacean,fecal_pellet,football,centric_diatom,gelatinous"
-  download_args: ["--verified"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
