@@ -80,18 +80,16 @@ class ProcessVSSBatch(beam.DoFn):
         """
         try:
             logger.debug(f"Processing batch of {len(batch)} images")
-            results = run_vss(batch, config_dict, top_k=3)
-            if results is None:
-                logger.error("No results returned from VSS")
-                return
-            yield results
+            run_vss(batch, config_dict, top_k=3, background=True)
+            yield len(batch)
         except Exception as ex:
             logger.error(f"Error processing batch: {ex}")
+            yield 0
 
 def run_pipeline(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Process images with VSS abd save results to a CSV file")
+    parser = argparse.ArgumentParser(description="Process images with VSS and save results to a CSV file")
     default_project = (
         Path(__file__).resolve().parent.parent.parent
         / "aipipeline"
@@ -101,7 +99,9 @@ def run_pipeline(argv=None):
         / "config.yml"
     )
     parser.add_argument("--input", required=True,
-        help="Input image directory, e.g. /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/",
+        help="Input image directory or file with image listing (one per line)"
+             ", e.g. /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/ "
+             "or /mnt/UAV/machineLearning/Unknown/Baseline/crops/Unknown/filelist.txt",
     )
     parser.add_argument("--config", required=False, default=default_project.as_posix(),
                         help="Config yaml file path")
@@ -114,10 +114,16 @@ def run_pipeline(argv=None):
     config_dict = parse_override_args(config_dict, other_args)
 
     with beam.Pipeline(options=options) as p:
-        image_pcoll = (
+        if Path(args.input).is_file():
+            image_pcoll = (
                 p
-                | "MatchFiles" >> MatchFiles(file_pattern=f"{args.input}*.jpg")
-        )
+                | "ReadFileList" >> beam.io.ReadFromText(args.input)
+            )
+        else:
+            image_pcoll = (
+                    p
+                    | "MatchFiles" >> MatchFiles(file_pattern=f"{args.input}*.jpg")
+            )
 
         # Apply the limit conditionally
         if args.max_images:
@@ -133,7 +139,8 @@ def run_pipeline(argv=None):
                 | "ReadImages" >> beam.Map(read_image_pad if args.resize else read_image)
                 | "BatchImages" >> beam.BatchElements(min_batch_size=args.batch_size, max_batch_size=args.batch_size)
                 | "ProcessBatches" >> beam.ParDo(ProcessVSSBatch(), config_dict)
-                | "LogResults" >> beam.Map(logger.info)
+                | "SumTotals" >> beam.CombineGlobally(sum)
+                | "PrintSum" >> beam.Map(lambda x: print(f"Total images processed: {x}"))
         )
 
 
