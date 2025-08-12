@@ -13,7 +13,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 
 from aipipeline.config_setup import setup_config
 from aipipeline.projects.bio.core.args import parse_args
-from aipipeline.projects.bio.run_predictor import process_single_file, process_batch_parallel
+from aipipeline.projects.bio.run_predictor import process_batch_parallel
 from mbari_aidata.plugins.loaders.tator.common import init_api_project, get_version_id
 
 # Global variables
@@ -83,6 +83,7 @@ def main():
         version_id = get_version_id(api, project_id, config_dict["data"]["version"])
 
     # For debugging purposes, uncomment to process a single file
+    # from aipipeline.projects.bio.run_predictor import process_single_file
     # process_single_file(video,0,args_dict,config_dict,version_id)
     print(f"Processing video: {video}")
     options = PipelineOptions()
@@ -94,14 +95,15 @@ def main():
             | "Get File Paths" >> beam.Map(lambda f: f.metadata.path)
             | "Batch into 6" >> beam.BatchElements(min_batch_size=6, max_batch_size=6)
             | "Run in Parallel on GPUs" >> beam.Map(
-            lambda batch: process_batch_parallel(
-                batch,
-                args_dict=args_dict,
-                config_dict=config_dict,
-                version_id=version_id
+                lambda batch: process_batch_parallel(
+                    batch,
+                    args_dict=args_dict,
+                    config_dict=config_dict,
+                    version_id=version_id
+                )
             )
         )
-        )
+
 
 if __name__ == "__main__":
     main()
