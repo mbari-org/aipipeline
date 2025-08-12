@@ -12,11 +12,6 @@ docker:
      mode: ro
 
 data:
-  raw_data_path: "/mnt/CFElab/"
-  processed_path: "/mnt/ML_SCRATCH/902111-CFE-Deployments"
-  version: "cfe_isiis_final-20250509"
-  labels: "all"
-  download_args: ["--verified"]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53

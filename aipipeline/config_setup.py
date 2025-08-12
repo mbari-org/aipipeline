@@ -30,13 +30,6 @@ def check_config(config_dict: Dict) -> bool:
             logger.error(f"Missing key {key} in configuration file")
             return False
 
-    # Required keys for the data section
-    required_keys = ["labels", "processed_path", "download_args"]
-    for key in required_keys:
-        if key not in config_dict["data"]:
-            logger.error(f"Missing key {key} in data section of configuration file")
-            return False
-
     # Check if the .ini files are present in the configuration
     if "sdcat" in config_dict:
         if "ini" not in config_dict["sdcat"]:

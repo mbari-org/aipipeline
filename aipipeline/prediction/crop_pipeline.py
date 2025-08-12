@@ -40,9 +40,9 @@ def run_pipeline(argv=None):
     args, beam_args = parser.parse_known_args(argv)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
-    processed_dir = config_dict["data"]["processed_path"]
+    processed_dir = config_dict["data"]["download_dir"]
     labels = config_dict["data"]["labels"].split(",")
-    processed_data = config_dict["data"]["processed_path"]
+    processed_data = config_dict["data"]["download_dir"]
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
     if args.image_dir is None:
         image_dir = f"{base_path}/images",

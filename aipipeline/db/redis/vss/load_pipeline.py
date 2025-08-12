@@ -58,17 +58,17 @@ def run_pipeline(argv=None):
     labels = extract_labels_config(config_dict)
     options = PipelineOptions(unknown_args)
 
-    processed_path = config_dict["data"]["processed_path"]
+    download_dir = config_dict["data"]["download_dir"]
 
     # Find the nested directory called "crops" in processed_data and get its parent directory - this is where everything is stored
     base_path = None
-    for f in Path(processed_path).rglob("crops"):
+    for f in Path(download_dir).rglob("crops"):
         logger.info(f"Found crops directory {f}")
         base_path = f.parent.as_posix()
         break
 
     if base_path is None:
-        logger.error(f"Cannot find crops directory in {processed_path}?")
+        logger.error(f"Cannot find crops directory in {download_dir}?")
         exit(1)
 
     if labels == "all":

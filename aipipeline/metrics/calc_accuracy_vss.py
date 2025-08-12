@@ -206,7 +206,7 @@ def main(argv=None):
         logger.error("REDIS_PASSWORD environment variable is not set.")
         return
 
-    processed_data = config_dict["data"]["processed_path"]
+    processed_data = config_dict["data"]["download_dir"]
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
 
     if not args.images:

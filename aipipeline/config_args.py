@@ -19,7 +19,7 @@ def parse_override_args(config: dict, other_args) -> argparse.Namespace:
     parser.add_argument('--redis.port', type=int, help='Redis port number')
     parser.add_argument('--data.labels', type=str, help='Comma separated list of labels to process/download')
     parser.add_argument('--data.version', type=str, help='Version of the data to process/download')
-    parser.add_argument('--data.processed_path', type=str, help='Directory to store processed data')
+    parser.add_argument('--data.download_dir', type=str, help='Directory to store downloaded/processed data')
     parser.add_argument('--data.download_args', type=str, help='Additional arguments for downloading data')
     parser.add_argument('--tator.host', type=str, help='Tator host URL')
     parser.add_argument('--tator.project', type=str, help='Tator project name')

@@ -43,13 +43,16 @@ def run_pipeline(argv=None):
     parser.add_argument("--clean", action="store_true", help="Clean previously downloaded data")
     parser.add_argument("--use-cleanvision", action="store_true", help="Clean bad data using cleanvision")
     parser.add_argument("--gen-multicrop", action="store_true", help="Artificially generate more data using multicrop")
+    parser.add_argument("--labels", nargs="+", help="Labels to download, if not provided all labels will be downloaded")
     args, other_args = parser.parse_known_args(argv)
     options = PipelineOptions(other_args)
     conf_files, config_dict = setup_config(args.config, silent=True)
     config_dict = parse_override_args(config_dict, other_args)
-
-    download_path = Path(config_dict["data"]["processed_path"])
-    labels = extract_labels_config(config_dict)
+    labels = args.labels if args.labels else [""]
+    data = config_dict.get("data", {})
+    download_path = Path(data.get("download_dir", "/tmp/downloads"))
+    download_path.mkdir(parents=True, exist_ok=True)
+    logger.info(f"Download path: {download_path}")
 
     # Print the new config
     logger.info("Configuration:")
@@ -63,10 +66,11 @@ def run_pipeline(argv=None):
     remove_multicrop_views(download_path.as_posix())
 
     # Set up the configuration for downloading
-    download_args = config_dict["data"].get("download_args", []) # Get download arguments from config
+    download_args = data.get("download_args", []) # Get download arguments from config
     download_args = download_args.split(" ") if isinstance(download_args, str) else download_args # Convert to list if it's a string
     download_args = [arg for arg in download_args if arg] # Remove empty strings
     download_args.extend(["--crop-roi", "--resize", "224"])
+    download_args = [arg.strip("'") for arg in download_args if arg.strip("'")]
     config_dict["data"]["download_args"] = download_args
 
     with beam.Pipeline(options=options) as p:

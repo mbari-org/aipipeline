@@ -229,7 +229,7 @@ def gen_machine_friendly_label(label: str) -> str:
 
 def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
     if processed_dir is None:
-        processed_data = config_dict["data"]["processed_path"]
+        processed_data = config_dict["data"]["download_dir"]
     else:
         processed_data = processed_dir
 
@@ -289,7 +289,7 @@ def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: st
     short_name = get_short_name(project)
     skip = False
     if processed_dir is None:
-        processed_data = config_dict["data"]["processed_path"]
+        processed_data = config_dict["data"]["download_dir"]
     else:
         processed_data = processed_dir
     base_path = os.path.join(processed_data, config_dict["data"]["version"])
@@ -367,7 +367,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
         "--voc",
         "--token", TATOR_TOKEN,
         "--config", conf_files[CONFIG_KEY],
-        "--base-path", config_dict["data"]["processed_path"]
+        "--base-path", config_dict["data"]["download_dir"]
     ]
     args_list.extend(config_dict["data"]["download_args"])
     if labels != "all":
@@ -384,14 +384,13 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
         return [f"Failed to download data: {result}"]
     return labels
 
-
-def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: int = 3):
+def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: int = 3, background: bool = False) -> tuple:
     """
-    Run vector similarity
+    Run vector similarity search (VSS) on a batch of images.
     :param image_batch: batch of images path/binary tuples to process, maximum of 3 as supported by the inference
     :param config_dict: dictionary of config for vss server
     :param top_k: number of vss to use for prediction; 1, 3, 5 etc.
-    :return:
+    :return: None if error, otherwise a tuple of file paths, predictions and scores
     """
     logger.info(f"Processing {len(image_batch)} images")
     vss_project = config_dict["vss"]["project"]
@@ -410,22 +409,32 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
         logger.error(f"Error processing images: {response.text}")
         return None
 
-    predictions = response.json()["predictions"]
-    scores = response.json()["scores"]
-    # Scores are  1 - score, so we need to invert them
-    scores = [[1 - float(x) for x in y] for y in scores]
-    logger.debug(f"Predictions: {predictions}")
-    logger.debug(f"Scores: {scores}")
+    if background:
+        logger.info("Running VSS in background mode")
+        return None
 
-    if len(predictions) == 0:
-        img_failed = [x[0] for x in image_batch]
-        return [f"No predictions found for {img_failed} images"]
-
-    # Workaround for bogus prediction output - put the predictions in a list
-    # top_k predictions per image
-    batch_size = len(image_batch)
-    predictions = [predictions[i:i + top_k] for i in range(0, batch_size * top_k, top_k)]
-    file_paths = [x[1][0] for x in files]
+    job_id = response.json()["job_id"]
+    logger.info(f"Job ID: {job_id}")
+    # Wait for the job to complete
+    status_url = f"{config_dict['vss']['url']}/predict/job/{job_id}/{vss_project}"
+    while True:
+        status_response = requests.get(status_url)
+        if status_response.status_code != 200:
+            logger.error(f"Error checking job status: {status_response.text}")
+            return None
+        status = status_response.json()
+        logger.debug(f"Job status: {status}")
+        if status["status"] == "done":
+            break
+        elif status["status"] == "failed":
+            logger.error("VSS job failed")
+            return None
+        time.sleep(10)
+    logger.info("VSS job completed successfully")
+    results = status["results"]
+    scores = results["scores"]
+    predictions = results["predictions"]
+    file_paths = results["filenames"]
     best_predictions = []
     best_scores = []
     for i, element in enumerate(zip(scores, predictions)):
@@ -436,7 +445,4 @@ def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: i
         best_predictions.append(best_pred)
         best_scores.append(best_score)
         logger.info(f"Best prediction: {best_pred} with score {best_score} for image {file_paths[i]}")
-
     return file_paths, best_predictions, best_scores
-
-

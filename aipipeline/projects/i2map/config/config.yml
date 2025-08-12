@@ -5,9 +5,6 @@ redis:
   port: 6380
 
 data:
-  processed_path: "/mnt/ML_SCRATCH/i2map"
-  labels: ""
-  download_args: [""]
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.5

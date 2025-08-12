@@ -11,7 +11,6 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from aipipeline.config_setup import setup_config
 from aipipeline.engines.docker import run_docker
 from aipipeline.prediction.library import clean_bad_images
-from aipipeline.projects.i2mapbulk.args import parse_args
 
 # Secrets
 dotenv.load_dotenv()
@@ -96,19 +95,36 @@ def parse_line(element):
     logger.info(f"Processing input: {input}, output: {output}")
     return 1, input, output
 
-# Run the pipeline, reading images from a file and skipping lines that start with #
+def parse_args(argv, logger):
+    import argparse
+    parser = argparse.ArgumentParser(description="Run the cluster pipeline.")
+    parser.add_argument("--input", type=str, required=True, help="Path to the input data file containing image directories.",)
+    parser.add_argument("--output", type=str, required=True, help="Path to the output directory to save the cluster results.",)
+    parser.add_argument("--config", type=str, default="config.ini",help="Path to the configuration file.",)
+    args, beam_args = parser.parse_known_args(argv)
+    return args, beam_args
+
+# Run the pipeline
 def run_pipeline(argv=None):
     args, beam_args = parse_args(argv, logger)
     options = PipelineOptions(beam_args)
     conf_files, config_dict = setup_config(args.config)
 
+    # If the input is a directory, create a list of image subdirectories within it
+    if not os.path.isdir(args.input):
+        logger.info(f"Input is not a directory, assuming it is a file with image directories: {args.input}")
+        return
+
+    input_dir = Path(args.input)
+    image_dirs = [str(d) for d in input_dir.glob("**/*") if d.is_dir()]
+    output_dirs = [Path(args.output) / d.name for d in input_dir.glob("**/*") if d.is_dir()]
+    image_tuples = [(1, image_dir, output_dir) for image_dir, output_dir in zip(image_dirs, output_dirs)]
+
     logger.info("Starting cluster pipeline...")
     with beam.Pipeline(options=options) as p:
         (
             p
-            | "Read data" >> beam.io.ReadFromText(args.data)
-            | "Filter comments" >> beam.Filter(lambda line: not line.startswith("#"))
-            | "Create elements" >> beam.Map(lambda line: parse_line(line))
+            | "Create elements" >> beam.Create(image_tuples)
             | "Clean data" >> beam.Map(clean_bad_images, config_dict=config_dict)
             | "Process (cluster)" >> beam.Map(process, config_dict=config_dict)
         )

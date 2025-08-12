@@ -99,6 +99,7 @@ just list
 - `remove-vss project='uav' *more_args=""` — Remove VSS entry (e.g., `--doc 'doc:marine organism:*'`)  
 - `init-vss project='uav' *more_args=""` — Initialize VSS for a project  
 - `load-vss project='uav'` — Load precomputed exemplars into VSS  
+- `gen-stats-csv project='UAV' data='...'`  - Generate training data stats from downloaded data. Aggregate stats for nested directories
 
 ## CFE ISIIS
 
@@ -106,8 +107,23 @@ just list
 - `load-cfe-isiis-sdcat data_dir="" stride="14"` — Load CFE ISIIS detections/clusters  
 - `cluster-cfe-isiis roi_dir="..." save_dir="..."` — Cluster CFE ISIIS Hawaii frames  
 - `cluster-cfe-isiis-hawaii-p1` — First pass clustering for CFE Hawaii  
-- `cluster-cfe-isiis-hawaii-p2 p1_dir=""` — Second pass clustering  
+- `cluster-cfe-isiis-hawaii-p2 p1_dir=""` — Second pass clustering
+- `gen-cfe-data` — Generate training data for CFE
+- `transcode-cfe-isiis-rc` — Transcode Rachel Carson videos  
+- `transcode-cfe-isiis-hawaii` — Transcode Hawaii videos    
 
+## Biodiversity
+
+- `predict-vss-velella` — Predict Velella images using VSS
+- `run-mega-stride-bio video='...'` — Mega stride on bio video  
+- `run-mega-track-bio video='...'` — Mega tracking on dive  
+- `run-mega-track-test-1min` — 1-minute test video  
+- `run-mega-track-test-fastapiyv5` — With FastAPI  
+- `gen-bio-data image_dir=""` — Generate training data
+- `run-ctenoA-prod` — Inference on videos in TSV  
+- `run-mega-inference` — Mega inference on one video  
+  
+ 
 ## Planktivore
 
 - `load-ptvr-images images='tmp/roi' *more_args=""` — Load Planktivore ROI images  
@@ -120,59 +136,32 @@ just list
 - `gen-ptvr-lowmag-data` — Generate low-mag training data  
 - `init-ptvr-lowmag-vss` — Init VSS DB for low-mag Planktivore data  
 
-## UAV (Unmanned Aerial Vehicle) 
-Most of these command are now run on the production server, *uav.shore.mbari.org*
+## UAV (Unmanned Aerial Vehicle)
+IMPORTANT: Many of these command are now run on the production server, *uav.shore.mbari.org*
 
-- `cluster-uav *more_args=""` — Cluster UAV missions  
-- `detect-uav *more_args=""` — Detect UAV missions  
+- `cluster-uav *more_args=""` — Cluster UAV missions - only run on the production server
+- `detect-uav *more_args=""` — Detect UAV missions - only run on the production server
+- `load-uav-images` — Load UAV mission images - only run on the production server
+- `load-uav type="cluster"` — Load UAV detections/clusters - only run on the production server
+- `fix-uav-metadata` — Fix UAV metadata (lat/lon/alt)
 - `detect-uav-test` — Test detect UAV missions  
-- `load-uav-images` — Load UAV mission images  
-- `load-uav type="cluster"` — Load UAV detections/clusters  
-- `fix-uav-metadata` — Fix UAV metadata (lat/lon/alt)  
-- `compute-saliency project='uav' *more_args=""`  
-- `crop project='uav' *more_args=""`  
-- `download-crop project='uav' *more_args=""`  
-- `download project='uav'`  
-- `cluster project='uav' *more_args=""`  
-- `predict-vss project='uav' image_dir='/tmp/download' *more_args=""`  
-- `predict-vss-save project='planktivore' *more_args="..."`  
-- `predict-vss-velella` — Predict Velella test images  
 - `gen-uav-data` — Generate training data  
-- `gen-stats-csv project='UAV' data='...'`  
 
 ## i2MAP
 
 - `run-mega-stride-i2map video='...' vit_model='...' version='...'`  
 - `run-mega-track-i2map video='...' vit_model='...' version='...'`  
 - `cluster-i2mapbulk` — Run inference & clustering on i2MAP bulk  
+- `transcode-i2map` — Transcode i2MAP `.mov` to `.mp4`  
 - `load-i2mapbulk data='data'`  
-- `download-i2mapbulk-unlabeled` — Get unlabeled data  
-- `load-cluster project="..." data='data' version="..." *more_args=""`  
-- `download-cluster project="..." version="..." *more_args=""`  
-- `gen-i2map-data` — Generate training data  
-- `gen-i2mapbulk-data` — Generate training from *i2map.shore.mbari.org* server  
+- `download-i2mapbulk-unlabeled` — Get unlabeled data   
+- `gen-i2map-data` — Generate training data from *mantis.shore.mbari.org* server
+- `gen-i2mapbulk-data` — Generate training from *i2map.shore.mbari.org* server
 
-## Bio
-
-- `run-mega-stride-bio video='...'` — Mega stride on bio video  
-- `run-mega-track-bio video='...'` — Mega tracking on dive  
-- `run-mega-track-test-1min` — 1-minute test video  
-- `run-mega-track-test-fastapiyv5` — With FastAPI  
-- `gen-bio-data image_dir=""` — Generate training data  
-
-## Other Mega Recipes
-
-- `run-ctenoA-prod` — Inference on videos in TSV  
-- `run-mega-inference` — Mega inference on one video  
-- `run-mega-track-isiis-video video='...'` — On single CFE video  
 
 ## Miscellaneous
 
-- `replace-m3-urls` — Replace `m3` URLs with Mantis  
-- `gen-cfe-data` — Generate training data for CFE  
-- `transcode-i2map` — Transcode i2MAP `.mov` to `.mp4`  
-- `transcode-cfe-isiis-rc` — Transcode Rachel Carson videos  
-- `transcode-cfe-isiis-hawaii` — Transcode Hawaii videos  
+- `replace-m3-urls` — Replace `m3` URLs with Mantis URLs in the database
  
 --
 

@@ -2,11 +2,9 @@
 # Filename: prediction/utils.py
 # Description: Utility functions for prediction pipelines
 
-import logging
 from collections import Counter
 from datetime import datetime
-from pathlib import Path
-from typing import List, Tuple
+from typing import List
 
 import cv2
 import numpy as np

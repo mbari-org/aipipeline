@@ -20,13 +20,6 @@ mounts:
     nginx_root: "/UAV"
 
 data:
-  raw_path: "/mnt/UAV/"
-  processed_path_sdcat: "/mnt/UAV/machineLearning/"
-  processed_path: "/mnt/ML_SCRATCH/UAV/"
-  version:
-  labels:
-  download_args: ["--verified"]
-  load_min_score: 0.7
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
