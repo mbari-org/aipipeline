@@ -1,17 +1,15 @@
 [![MBARI](https://www.mbari.org/wp-content/uploads/2014/11/logo-mbari-3b.png)](http://www.mbari.org)
 [![Python](https://img.shields.io/badge/language-Python-blue.svg)](https://www.python.org/downloads/)
 
-*aipipeline* is a library for running ai pipelines and monitoring the performance of the pipelines,
-e.g. accuracy, precision, recall, F1 score. This may include object detection, 
-clustering, classification, and vector search algorithms. It is designed to be used for a number of projects at MBARI 
-that require advanced workflows to process large amounts of images or video.  After workflows are developed,
-they may be moved to the project repositories for production use.  The roadmap includes adding the core functionality
-of some of the processing components to more broad use in the MBARI AI ecosystem.
+*aipipeline* is a library for running AI pipelines and monitoring the performance of the pipelines,
+e.g. balanced accuracy. This may include object detection, clustering, classification, and vector search algorithms. 
+It is designed to be used for a number of projects at MBARI that require advanced workflows to process large amounts
+of images or video.  After workflows are developed, they may be moved to the project repositories for production use.  
 
-### See the [MBARI Internal AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and services used in the pipelines.
+### See the [MBARI Internal AI documentation](https://docs.mbari.org/internal/ai) for more information on the tools and services used in the pipelines and what is coming in the core roadmap.
 
 ---
-Example plots from the t-SNE, confusion matrix and accuracy analysis of examplar data.
+Example plots from the t-SNE, confusion matrix and accuracy analysis of exemplar data.
 
 ![example tsne plots](docs/imgs/tsne_plot_example.png)
 ![example cm_ac](docs/imgs/cm_ac_example.png)
@@ -21,8 +19,10 @@ Example plots from the t-SNE, confusion matrix and accuracy analysis of examplar
 
 Three tools are required to run the code in this repository:
 
-### [Anaconda](https://www.anaconda.com/products/distribution) environment
-This is a package manager for python.  We recommend using the [Miniconda](https://docs.conda.io/en/latest/miniconda.html) version of Anaconda.
+### Python and a virtual environment 
+Recommend using the [Miniconda](https://docs.conda.io/en/latest/miniconda.html) version of Anaconda to manage python versions and virtual environments.
+This works well across all platforms.
+
 Install on **Mac OS X** with the following command:
 ```shell
 brew install miniconda
@@ -61,13 +61,12 @@ so you need to create a .env file with the following contents in the root direct
 ```shell
 TATOR_TOKEN=your_api_token
 REDIS_PASSWORD=your_redis_password
-ENVIRONMENT=testing or production
 ```
 
 
 ## Usage
 
-Recipes are available to run the pipelines.  To see the available recipes, run the following command:
+Recipes are available to run common operations and processing pipelines.  To see the available recipes, run the following command:
 ```shell
 just list
 ```
@@ -86,7 +85,8 @@ just list
 - `cp-dev-ptvr` — Copy Planktivore dev code to the project on Doris  
 - `cp-dev-uav` — Copy UAV dev code to the project on Doris  
 - `cp-dev-bio` — Copy Bio dev code to the project on Doris  
-- `cp-dev-i2map` — Copy i2MAP dev code to the project on Doris  
+- `cp-dev-i2map` — Copy i2MAP dev code to the project on Doris 
+- `cp-dev-vss` — Copy Vector Search System (VSS) dev code to the project on Doris   
 
 ## Labeling & Initialization
 
@@ -119,7 +119,7 @@ just list
 - `run-mega-track-bio video='...'` — Mega tracking on dive  
 - `run-mega-track-test-1min` — 1-minute test video  
 - `run-mega-track-test-fastapiyv5` — With FastAPI  
-- `gen-bio-data image_dir=""` — Generate training data
+- `gen-bio-data image_dir=""` — Generate training data for either classification or detection models
 - `run-ctenoA-prod` — Inference on videos in TSV  
 - `run-mega-inference` — Mega inference on one video  
   
@@ -138,6 +138,7 @@ just list
 
 ## UAV (Unmanned Aerial Vehicle)
 IMPORTANT: Many of these command are now run on the production server, *uav.shore.mbari.org*
+See the [bitbucket uavprocessing repo](bitbucket.org/mbari/uavprocessing.git) for more details.
 
 - `cluster-uav *more_args=""` — Cluster UAV missions - only run on the production server
 - `detect-uav *more_args=""` — Detect UAV missions - only run on the production server
@@ -152,11 +153,11 @@ IMPORTANT: Many of these command are now run on the production server, *uav.shor
 - `run-mega-stride-i2map video='...' vit_model='...' version='...'`  
 - `run-mega-track-i2map video='...' vit_model='...' version='...'`  
 - `cluster-i2mapbulk` — Run inference & clustering on i2MAP bulk  
-- `transcode-i2map` — Transcode i2MAP `.mov` to `.mp4`  
+- `transcode-i2map` — Transcode i2MAP `.mov` to `.mp4` for use with Tator
 - `load-i2mapbulk data='data'`  
 - `download-i2mapbulk-unlabeled` — Get unlabeled data   
-- `gen-i2map-data` — Generate training data from *mantis.shore.mbari.org* server
-- `gen-i2mapbulk-data` — Generate training from *i2map.shore.mbari.org* server
+- `gen-i2map-data` — Generate training data from *mantis.shore.mbari.org* server for either classification or detection models
+- `gen-i2mapbulk-data` — Generate training from *i2map.shore.mbari.org* server for either classification or detection models
 
 
 ## Miscellaneous
@@ -175,4 +176,4 @@ IMPORTANT: Many of these command are now run on the production server, *uav.shor
 - [fastapi-tator](https://github.com/mbari-org/fastapi-tator) - A RESTful API server for bulk operations on a Tator annotation database.
 
 
-🗓️ Last updated: 2025-06-20
+🗓️ Last updated: 2025-08-13
