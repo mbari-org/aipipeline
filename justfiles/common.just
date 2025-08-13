@@ -47,7 +47,7 @@ init-labels project='uav' leaf_type_id='19':
     --labels aipipeline/projects/{{project}}/config/labels.yml  \
     --type-id {{leaf_type_id}}"
 
-# Compute saliency for downloaded VOC data and update_trackers the Tator database
+# Compute saliency for downloaded VOC data and update the Tator database
 compute-saliency project='uav' *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/saliency_pipeline.py \
     --config aipipeline/projects/{{project}} \
