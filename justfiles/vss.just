@@ -1,3 +1,9 @@
+# Copy this to justfiles/uav.just
+cp-dev-vss:
+    #!/usr/bin/env bash
+    cd ..
+    cp justfiles/vss.just /Volumes/dcline/code/aipipeline/justfiles/vss.just
+
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/metrics/plot_tsne_vss.py \
@@ -71,9 +77,10 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     flat_name="${image_dir//\//-}" # Replace all slashes with dashes
     flat_name="${flat_name#-}" # Remove leading dash if it exists
     image_listing="${flat_name}-images.txt"
-    if [ ! -f $image_listing ]; then
+    if [ ! -f "$image_listing" ] || [ ! -s "$image_listing" ]; then
         echo "Finding images in {{image_dir}}"
         find {{image_dir}} -name '*.jpg' > $image_listing
+        find {{image_dir}} -name '*.png' >> $image_listing
     else
         echo "Using existing file $image_listing"
     fi
