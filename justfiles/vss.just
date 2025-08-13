@@ -63,6 +63,21 @@ predict-vss-load project='uav' image_dir='/tmp/download' *more_args="":
     --image-dir {{image_dir}} \
     {{more_args}}"
 
+predict-vss-by-dir project='uav' image_dir='/tmp/download' *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/{{project}}
+    export PYTHONPATH=.
+    ##############################################
+    # Predict images using the VSS service, processing images
+    # in subdirectories one at a time to limit memory use
+    image_dir="{{image_dir}}"
+    echo "Finding subdirectories in {{image_dir}}"
+    subdirs=$(ls -d {{image_dir}}/*/)
+    for subdir in $subdirs; do
+        echo "Processing subdirectory $subdir"
+        time just --justfile {{justfile()}} predict-vss {{project}} $subdir {{more_args}}
+    done
+
 # Predict images using the VSS service. Run with e.g. just predict-vss planktivore-lm /mnt/ML_SCRATCH/Planktivore/aidata-export-03-low-mag-square. Results are archived to /mnt/DeepSea-AI/data/
 predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     #!/usr/bin/env bash
@@ -79,7 +94,6 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     image_listing="${flat_name}-images.txt"
     if [ ! -f "$image_listing" ] || [ ! -s "$image_listing" ]; then
         echo "Finding images in {{image_dir}}"
-        find {{image_dir}} -name '*.jpg' > $image_listing
         find {{image_dir}} -name '*.png' >> $image_listing
     else
         echo "Using existing file $image_listing"
