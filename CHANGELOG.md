@@ -2,6 +2,17 @@
 
 
 
+## v0.85.1 (2025-08-14)
+
+### Performance
+
+* perf: bump vits default batch size to 512 and hdbscan batch size to 50000 in cluster_pipeline.py ([`9aca611`](https://github.com/mbari-org/aipipeline/commit/9aca611f0f8ac10510de35ea2e069ccf061890af))
+
+### Unknown
+
+* perf(vss); process by listing subdir which is faster for large image collections ([`b55fe0c`](https://github.com/mbari-org/aipipeline/commit/b55fe0cc35fcd241fb8a2f2c55ef8f85b9b8f771))
+
+
 ## v0.85.0 (2025-08-13)
 
 ### Build
