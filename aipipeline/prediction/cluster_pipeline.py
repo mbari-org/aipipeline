@@ -62,8 +62,10 @@ def process(element, config_dict):
         "--save-dir",
         str(save_path.as_posix()),
         "--device",
-        "cuda:0",
-        "--use-vits"
+        "cuda",
+        "--use-vits",
+        "--vits-batch-size","512",
+        "--hdbscan-batch-size", "50000"
     ]
 
     container = run_docker(
@@ -118,6 +120,11 @@ def run_pipeline(argv=None):
     input_dir = Path(args.input)
     image_dirs = [str(d) for d in input_dir.glob("**/*") if d.is_dir()]
     output_dirs = [Path(args.output) / d.name for d in input_dir.glob("**/*") if d.is_dir()]
+    # If image_dirs is empty, use the input directory itself
+    if len(image_dirs) == 0:
+        logger.info(f"No subdirectories found in {input_dir}, using the input directory itself.")
+        image_dirs = [str(input_dir)]
+        output_dirs = [Path(args.output) / input_dir.name]
     image_tuples = [(1, image_dir, output_dir) for image_dir, output_dir in zip(image_dirs, output_dirs)]
 
     logger.info("Starting cluster pipeline...")
