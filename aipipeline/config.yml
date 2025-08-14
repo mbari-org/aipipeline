@@ -3,7 +3,7 @@
 # These can be overridden per project by the config.yml in the project directory,
 # e.g. aipipeline/projects/i2map/config.yml
 docker:
-  sdcat: 'mbari/sdcat:1.20.4-cuda124'
+  sdcat: 'mbari/sdcat:1.27.9-cuda124'
   expd: 'get-expd-data'
 
 
