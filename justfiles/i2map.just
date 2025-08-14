@@ -75,12 +75,12 @@ gen-i2mapbulk-data:
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
         --data.download_args \'--verified\'"
 
-# Download and cluster data. Run with  just download-cluster i2map
+# Cluster bulk unknown data
 cluster-i2mapbulk:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/cluster_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml \
-        --input /mnt/ML_SCRATCH/i2mapbulk/crops \
-        --output /mnt/ML_SCRATCH/i2mapbulk/clusters"
+        --input /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
+        --output /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown"
 
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
