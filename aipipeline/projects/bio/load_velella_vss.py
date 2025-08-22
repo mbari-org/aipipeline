@@ -1,0 +1,165 @@
+# Utility script to add velella localization classified by VSS
+#
+# First run to find all JSON files that contain Velella_velella predictions:
+# find /mnt/DeepSea-AI/data/Planktivore/processed/vss_lm/ -type f -name "*.json" | xargs grep Velella_velella &> Velella_velella.txt
+#
+# Then run this script, e.g.
+# python load_velella_vss.py --input_file Velella_velella.txt --save_path /mnt/DeepSea-AI/data/Planktivore/processed/vss_lm/Velella_velella_top3
+#
+# This outputs a text file with the format
+# /mnt/DeepSea-AI/data/Planktivore/processed/vss_lm/20250809_060000/20250809_061648.898230.json:            "Velella_velella",
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+from datetime import datetime
+from pathlib import Path
+import json
+import logging
+import time
+
+import pandas as pd
+from PIL import Image
+
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+# Also log to the console
+console = logging.StreamHandler()
+logger.addHandler(console)
+logger.setLevel(logging.INFO)
+# and log to file
+now = datetime.now()
+log_filename = f"load_vellela_vss{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
+
+TATOR_TOKEN = os.getenv("TATOR_TOKEN")
+
+if not TATOR_TOKEN:
+    logger.error("TATOR_TOKEN environment variable not set")
+    sys.exit(1)
+
+if __name__ == "__main__":
+    time_start = time.time()
+    parser = argparse.ArgumentParser(description="Process Velella VSS predictions.")
+    parser.add_argument(
+        "--save_path",
+        type=str,
+        default="/mnt/DeepSea-AI/data/Planktivore/processed/vss_lm/Velella_velella_top3",
+        help="Directory to save results"
+    )
+    parser.add_argument(
+        "--input_file",
+        type=str,
+        default="Velella_velella.txt",
+        help="Path to the input text file with Velella_velella predictions"
+    )
+    parser.add_argument(
+        "--section",
+        type=str,
+        default="Velella-low-mag",
+        help="Section name for Tator/Aidata upload"
+    )
+    args = parser.parse_args()
+
+    save_path = Path(args.save_path)
+    save_path.mkdir(parents=True, exist_ok=True)
+
+    # Load the text file with the paths
+    with open(args.input_file, "r") as file:
+        lines = file.readlines()
+
+    paths = [line.split(":")[0].strip() for line in lines]
+
+    # Read the JSON files with Velella_velella predictions in the top 3 with < 0.33 score and format into SDCAT compatible format
+    sdcat_formatted_data = []
+    for path in paths:
+        with open(path, "r") as file:
+            data = json.load(file)
+            all_predictions = data.get("predictions")
+            all_scores = data.get("scores")
+            filenames = data.get("filenames")
+            i = 0
+            for i, filename in enumerate(filenames):
+                predictions = all_predictions[i]
+                scores = all_scores[i]
+                avg_score = sum(scores) / len(scores)
+                if avg_score > 0.33:
+                    continue
+
+                if all(p == "Velella_velella" for p in predictions):
+                    print(f"Found {filename} with all predictions Velella_velella and scores {scores}")
+                    image_path = filename
+                    image_src = Path(image_path)
+                    image_tgt = save_path / image_src.parent.name  / image_src.name
+                    image_tgt.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy(image_src, image_tgt)
+                    with Image.open(image_path) as img:
+                        image_width, image_height = img.size
+                    sdcat_formatted_data.append({
+                        "image_width": image_width,
+                        "image_height": image_height,
+                        "image_path": image_path,
+                        "score": 1.0-scores[0], # scores from VSS are reported as distance to the class, so we invert them
+                        "score_s": 1.0-scores[1],
+                        "label": predictions[0],
+                        "label_s": predictions[1],
+                        "x": 0.0,
+                        "y": 0.0,
+                        "xx": 1.0,
+                        "xy": 1.0,
+                        "cluster": -1
+                    })
+
+    df = pd.DataFrame.from_records(sdcat_formatted_data)
+    # Drop any duplicate rows; duplicates have the same image_path
+    df = df.drop_duplicates(subset=["image_path"])
+    df.to_csv(save_path / "velella_predictions_sdcat.csv", index=False)
+
+    # Load the SDCAT formatted data into Tator using aidata commands
+
+    # Find the unique image paths and load the media
+    image_paths = df['image_path'].values
+    project = "902004-Planktivore"
+    version = "Baseline"
+    config = "https://docs.mbari.org/internal/ai/projects/config/config_planktivore_lm.yml"
+
+    # Load the images
+    args = [
+        "load",
+        "images",
+        "--input",
+        str(save_path),
+        "--config",
+        config,
+        "--token",
+        TATOR_TOKEN,
+        "--section",
+        args.section,
+    ]
+    command = "aidata " + " ".join(args)
+    logger.info(f"Running {command}")
+    subprocess.run(command, shell=True)
+
+    # Now load the boxes
+    args = [
+        "load",
+        "boxes",
+        "--input",
+        str(save_path),
+        "--config",
+        config,
+        "--token",
+        TATOR_TOKEN,
+        "--version",
+        version
+    ]
+    command = "aidata " + " ".join(args)
+    logger.info(f"Running {command}")
+    subprocess.run(command, shell=True)
+
+    time_end = time.time()
+    logger.info(f"total processing time: {time_end - time_start}")
