@@ -1,9 +1,7 @@
 # aipipeline/projects/bio/config.yml
 # Config File for BioDiversity Project Production
 
-redis:
-  host: "doris.shore.mbari.org"
-  port: 6380
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_bio.yml"
 
 data:
   cleanvision_issues:
@@ -12,61 +10,3 @@ data:
     - name: "blurry"
     - name: "dark"
     - name: "exact_duplicates"
-
-mounts:
-  - name: "video"
-    path: "/mnt/M3"
-    host: "m3.shore.mbari.org"
-    nginx_root: "/M3"
-
-sdcat:
-  model: "hustvl/yolos-tiny"
-  ini: "sdcat.ini"
-
-vss:
-  project: "901103-biodiversity"
-  threshold: 0.1
-  model: "google/vit-base-patch16-224"
-
-tator:
-  project: "901103-biodiversity"
-  host: "https://mantis.shore.mbari.org"
-  url_load: "http://mantis.shore.mbari.org:8001/label/id"
-  image:
-    attributes:
-      video_reference_uuid:
-        type: string
-      index_elapsed_time_millis:
-        type: int
-  video:
-    attributes:
-      video_reference_uuid:
-        type: string
-      iso_start_datetime:
-        type: datetime
-  box:
-    attributes:
-      Label:
-        type: string
-      label_s:
-        type: string
-      concept:
-        type: string
-      score:
-        type: float
-      score_s:
-        type: float
-      cluster:
-        type: string
-      saliency:
-        type: float
-      group:
-        type: string
-      obs_uuid:
-        type: string
-      exemplar:
-        type: bool
-      verified:
-        type: bool
-
-ffmpeg_path: "/usr/bin/ffmpeg"

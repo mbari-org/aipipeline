@@ -1,24 +1,11 @@
 # aipipeline/projects/i2map/config.yml
 # Config file for BioDiversity Project Production
-redis:
-  host: "doris.shore.mbari.org"
-  port: 6380
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_i2map.yml"
 
 data:
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.5
-
-mounts:
-  - name: "image"
-    path: "/mnt/DeepSea-AI"
-    host: "https://mantis.shore.mbari.org"
-    nginx_root: "/DeepSea-AI"
-
-  - name: "video"
-    path: "/mnt/DeepSea-AI"
-    host: "https://mantis.shore.mbari.org"
-    nginx_root: "/DeepSea-AI"
 
 sdcat:
   model: "hustvl/yolos-tiny"

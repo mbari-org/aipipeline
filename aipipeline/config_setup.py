@@ -4,7 +4,9 @@
 import shutil
 from pathlib import Path
 from typing import List, Dict, Tuple
+from urllib.parse import urlparse
 
+import requests
 import yaml
 import os
 
@@ -14,7 +16,7 @@ SDCAT_KEY = "sdcat"
 CONFIG_KEY = "config"
 
 def extract_labels_config(config_dict) -> List[str]:
-    if config_dict["data"]["labels"]:
+    if "labels" in config_dict["data"]:
         labels = config_dict["data"]["labels"].split(",")
     else:
         labels = []
@@ -61,8 +63,20 @@ def setup_config(config_yml: str, overrides: dict = {}, silent=False) -> Tuple[D
     with config_path_yml.open("r") as file:
         try:
             config_dict = yaml.safe_load(file)
-            if not check_config(config_dict):
+
+            # Must have the config_url
+            required_key = "config_url"
+            if required_key not in config_dict:
+                logger.error(f"Missing key {required_key} in configuration file")
                 exit(1)
+
+            # Download the configuration
+            yaml_config = config_dict[required_key]
+            response = requests.get(yaml_config)
+            response.raise_for_status()
+            content = response.content.decode()
+            config_dict_remote = yaml.safe_load(content)
+
         except yaml.YAMLError as e:
             logger.error(f"Error reading YAML file: {e}")
             raise e
@@ -89,6 +103,9 @@ def setup_config(config_yml: str, overrides: dict = {}, silent=False) -> Tuple[D
     # Merge the two dictionaries
     merged_dict = merge_dicts(base_conf_dict, config_dict)
 
+    # Merge the config_dict_remote
+    merged_dict = merge_dicts(merged_dict, config_dict_remote)
+
     # Pretty print the configuration
     if not silent:
         logger.info("Configuration:")
@@ -97,6 +114,10 @@ def setup_config(config_yml: str, overrides: dict = {}, silent=False) -> Tuple[D
 
     # Apply any overrides
     merged_dict = merge_dicts(overrides, merged_dict)
+
+    # Check the final configuration
+    if not check_config(merged_dict):
+        exit(1)
 
     # Copy the config files to /tmp/project - project names are unique so no collision should occur
     project = merged_dict["tator"]["project"]

@@ -244,7 +244,6 @@ def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: st
         logger.error(f"Cannot find crops directory in {processed_data}?")
         return []
 
-    # Find the file stats.txt in base_path read it as a json file
     stats_file = None
     for f in Path(base_path).rglob("*stats.json"):
         logger.info(f"Found stats file {f}")

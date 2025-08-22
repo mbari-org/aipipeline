@@ -1,17 +1,11 @@
 # aipipeline/projects/planktivore/config_lowmag.yml
 # Config file for Planktivore project log mag images
 
-redis:
-  host: "doris.shore.mbari.org"
-  port: 6384
-
-docker:
-  bind_volumes:
-   /mnt/DeepSea-AI:
-     bind: /mnt/DeepSea-AI
-     mode: rw
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_planktivore_lm.yml"
 
 data:
+  download_args: "--verified --version mbari-ifcb2014-vitb16-20250318_20250320_002422"
+  download_dir: "/mnt/ML_SCRATCH/data/ptrv_lm"
   cleanvision_issues:
     - name: "low_information"
       threshold: 0.53
@@ -22,55 +16,3 @@ data:
 sdcat:
   model: "hustvl/yolos-tiny"
   ini: "sdcat.ini"
-
-vss:
-  project: "902004-Planktivore-LowMag"
-  threshold: 0.8
-  model: "google/vit-base-patch16-224"
-
-mounts:
-  - name: "image"
-    path: "/mnt/DeepSea-AI"
-    host: "https://mantis.shore.mbari.org"
-    nginx_root: "/DeepSea-AI"
-
-  - name: "video"
-    path: "/mnt/DeepSea-AI"
-    host: "https://mantis.shore.mbari.org"
-    nginx_root: "/DeepSea-AI"
-
-tator:
-  project: "902004-Planktivore"
-  host: "https://mantis.shore.mbari.org"
-  url_load: "http://mantis.shore.mbari.org:8001/label/id"
-  image:
-    attributes:
-      iso_datetime:
-        type: datetime
-      depth:
-        type: float
-  video:
-    attributes:
-      iso_datetime:
-        type: datetime
-      iso_start_datetime:
-        type: datetime
-  box:
-    attributes:
-      Label:
-        type: string
-      label_s:
-        type: string
-      score:
-        type: float
-      score_s:
-        type: float
-      cluster:
-        type: string
-
-ffmpeg_path: "/usr/bin/ffmpeg"
-
-plugins:
-  - name: "extractor"
-    module: "mbari_aidata.plugins.extractors.tap_planktivore_media"
-    function: "extract_media"
