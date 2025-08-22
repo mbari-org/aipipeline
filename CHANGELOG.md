@@ -2,6 +2,13 @@
 
 
 
+## v0.86.0 (2025-08-22)
+
+### Feature
+
+* feat: read base configuration YAML from shared docs server https://docs.mbari.org/internal/ai/projects/config/, make labels optional, and remove unused planktivore configuration files ([`2cb8659`](https://github.com/mbari-org/aipipeline/commit/2cb8659f7d0565636108322396eb74f709576490))
+
+
 ## v0.85.1 (2025-08-14)
 
 ### Performance
