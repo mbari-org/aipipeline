@@ -10,16 +10,10 @@ import os
 from pathlib import Path
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
-from typing import Dict, List
+from typing import Dict
 import logging
 
-from aipipeline.engines.docker import run_docker
-from aipipeline.config_setup import extract_labels_config, setup_config, CONFIG_KEY
-from aipipeline.engines.subproc import run_subprocess
-from aipipeline.prediction.library import (
-    get_short_name,
-    gen_machine_friendly_label,
-)
+from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.db.redis.vss.exemplars import load_exemplars
 
 logger = logging.getLogger(__name__)
@@ -55,7 +49,6 @@ def run_pipeline(argv=None):
     args, unknown_args = parser.parse_known_args(argv)
 
     conf_files, config_dict = setup_config(args.config)
-    labels = extract_labels_config(config_dict)
     options = PipelineOptions(unknown_args)
 
     download_dir = config_dict["data"]["download_dir"]
@@ -71,29 +64,26 @@ def run_pipeline(argv=None):
         logger.error(f"Cannot find crops directory in {download_dir}?")
         exit(1)
 
-    if labels == "all":
-        # Find the file stats.txt and read it as a json file
-        stats_file = Path(f"{base_path}/crops/stats.json")
-        if not stats_file.exists():
-            logger.error(f"Cannot find {stats_file}. Exiting.")
-            exit(1)
+    # Find the file stats.txt and read it as a json file
+    stats_file = Path(f"{base_path}/crops/stats.json")
+    if not stats_file.exists():
+        logger.error(f"Cannot find {stats_file}. Exiting.")
+        exit(1)
 
-        data = []
-        with stats_file.open("r") as f:
-            stats = json.load(f)
-            logger.info(f"Found stats: {stats}")
-            total_labels = stats["total_labels"]
-            labels = list(total_labels.keys())
-            logger.info(f"Found labels: {labels}")
-            for label, count in total_labels.items():
-                if count == 0:
-                    logger.info(f"Skipping label {label} with 0 crops")
-                    continue
-                logger.info(f"Found {count} crops for label {label}")
-                data.append((label,f"{base_path}/cluster/{label}") )
-            logger.debug(data)
-    else:
-        data = [(label, (base_path / "cluster" /  label).as_posix()) for label in labels]
+    data = []
+    with stats_file.open("r") as f:
+        stats = json.load(f)
+        logger.info(f"Found stats: {stats}")
+        total_labels = stats["total_labels"]
+        labels = list(total_labels.keys())
+        logger.info(f"Found labels: {labels}")
+        for label, count in total_labels.items():
+            if count == 0:
+                logger.info(f"Skipping label {label} with 0 crops")
+                continue
+            logger.info(f"Found {count} crops for label {label}")
+            data.append((label,f"{base_path}/cluster/{label}") )
+        logger.debug(data)
 
     with beam.Pipeline(options=options) as p:
         (

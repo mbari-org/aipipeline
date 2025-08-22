@@ -1,54 +1,16 @@
 # aipipeline/projects/i2map/config.yml
 # Config file for i2map project production
-redis:
-  host: "doris.shore.mbari.org"
-  port: 6380
+
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml"
 
 data:
   cleanvision_issues:
     - name: "low_information"
-      threshold: 0.5
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
+    - name: "exact_duplicates"
 
 sdcat:
   model: "hustvl/yolos-tiny"
   ini: "sdcat.ini"
-
-vss:
-  project: "i2map"
-  threshold: 0.1
-  model: "/mnt/DeepSea-AI/models/i2MAP/mbari-i2map-vits-b-8-20250216"
-
-tator:
-  project: "i2map"
-  host: "i2map.shore.mbari.org"
-  url_load: "http://i2map.shore.mbari.org:8001/label/id"
-
-  image:
-    attributes:
-      iso_datetime:
-        type: string
-      depth:
-        type: int
-
-  box:
-    attributes:
-      Label:
-        type: string
-      score:
-        type: float
-      cluster:
-        type: string
-      verified:
-        type: bool
-      delete:
-        type: bool
-
-
-ffmpeg_path: "/usr/bin/ffmpeg"
-mp4dump_path: "/usr/local/bento4/bin/mp4dump"
-ffprobe_path: "/usr/bin/ffprobe"
-
-plugins:
-  - name: "extractor"
-    module: "mbari_aidata.plugins.extractors.tap_i2map_media"
-    function: "extract_media"
