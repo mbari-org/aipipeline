@@ -2,6 +2,15 @@
 
 
 
+## v0.87.0 (2025-08-22)
+
+### Feature
+
+* feat(soundscape): triton inference example for the team ([`a6fd571`](https://github.com/mbari-org/aipipeline/commit/a6fd5713d589662d96bdb85bf754c42cd35839dc))
+
+* feat(bio): velella image loader for VSS ([`bf782cc`](https://github.com/mbari-org/aipipeline/commit/bf782ccfc54ee152f9cde6147c749707bd0c8c0f))
+
+
 ## v0.86.0 (2025-08-22)
 
 ### Feature
