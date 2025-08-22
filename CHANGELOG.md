@@ -2,6 +2,13 @@
 
 
 
+## v0.88.0 (2025-08-22)
+
+### Feature
+
+* feat(bio):  skip over duplicates and already loaded velella images ([`4473f58`](https://github.com/mbari-org/aipipeline/commit/4473f588a512806e50a88a052c930c4072a7fbf1))
+
+
 ## v0.87.0 (2025-08-22)
 
 ### Feature
