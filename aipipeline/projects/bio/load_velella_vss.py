@@ -58,6 +58,12 @@ if __name__ == "__main__":
         help="Path to the input text file with Velella_velella predictions"
     )
     parser.add_argument(
+        "--tator_loaded_csv",
+        type=str,
+        required=True,
+        help="Path to the previously loaded data"
+    )
+    parser.add_argument(
         "--section",
         type=str,
         default="Velella-low-mag",
@@ -65,6 +71,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Read in tator_loaded_csv
+    tator_loaded_df = pd.read_csv(args.tator_loaded_csv)
+    tator_loaded_images = list(tator_loaded_df['(media) $name'].values)
     save_path = Path(args.save_path)
     save_path.mkdir(parents=True, exist_ok=True)
 
@@ -73,6 +82,9 @@ if __name__ == "__main__":
         lines = file.readlines()
 
     paths = [line.split(":")[0].strip() for line in lines]
+
+    # Remove duplicates
+    paths = list(set(paths))
 
     # Read the JSON files with Velella_velella predictions in the top 3 with < 0.33 score and format into SDCAT compatible format
     sdcat_formatted_data = []
@@ -83,14 +95,15 @@ if __name__ == "__main__":
             all_scores = data.get("scores")
             filenames = data.get("filenames")
             i = 0
-            for i, filename in enumerate(filenames):
-                predictions = all_predictions[i]
-                scores = all_scores[i]
+            for filename, predictions, scores in zip(filenames, all_predictions, all_scores):
                 avg_score = sum(scores) / len(scores)
-                if avg_score > 0.33:
+                name = Path(filename).name
+                if avg_score > 0.33 or name in tator_loaded_images: # Skip files already loaded into Tator
+                    if name in tator_loaded_images:
+                        print(f"======>Skipping {name} as already loaded into Tator")
                     continue
 
-                if all(p == "Velella_velella" for p in predictions):
+                if all(p == "Velella_velella" for p in predictions) or scores[0] < 0.1 and predictions[0] == "Velella_velella":
                     print(f"Found {filename} with all predictions Velella_velella and scores {scores}")
                     image_path = filename
                     image_src = Path(image_path)
@@ -120,46 +133,46 @@ if __name__ == "__main__":
     df.to_csv(save_path / "velella_predictions_sdcat.csv", index=False)
 
     # Load the SDCAT formatted data into Tator using aidata commands
-
-    # Find the unique image paths and load the media
-    image_paths = df['image_path'].values
-    project = "902004-Planktivore"
-    version = "Baseline"
-    config = "https://docs.mbari.org/internal/ai/projects/config/config_planktivore_lm.yml"
-
-    # Load the images
-    args = [
-        "load",
-        "images",
-        "--input",
-        str(save_path),
-        "--config",
-        config,
-        "--token",
-        TATOR_TOKEN,
-        "--section",
-        args.section,
-    ]
-    command = "aidata " + " ".join(args)
-    logger.info(f"Running {command}")
-    subprocess.run(command, shell=True)
-
-    # Now load the boxes
-    args = [
-        "load",
-        "boxes",
-        "--input",
-        str(save_path),
-        "--config",
-        config,
-        "--token",
-        TATOR_TOKEN,
-        "--version",
-        version
-    ]
-    command = "aidata " + " ".join(args)
-    logger.info(f"Running {command}")
-    subprocess.run(command, shell=True)
-
-    time_end = time.time()
-    logger.info(f"total processing time: {time_end - time_start}")
+    #
+    # # Find the unique image paths and load the media
+    # image_paths = df['image_path'].values
+    # project = "902004-Planktivore"
+    # version = "Baseline"
+    # config = "https://docs.mbari.org/internal/ai/projects/config/config_planktivore_lm.yml"
+    #
+    # # Load the images
+    # args = [
+    #     "load",
+    #     "images",
+    #     "--input",
+    #     str(save_path),
+    #     "--config",
+    #     config,
+    #     "--token",
+    #     TATOR_TOKEN,
+    #     "--section",
+    #     args.section,
+    # ]
+    # command = "aidata " + " ".join(args)
+    # logger.info(f"Running {command}")
+    # subprocess.run(command, shell=True)
+    #
+    # # Now load the boxes
+    # args = [
+    #     "load",
+    #     "boxes",
+    #     "--input",
+    #     str(save_path),
+    #     "--config",
+    #     config,
+    #     "--token",
+    #     TATOR_TOKEN,
+    #     "--version",
+    #     version
+    # ]
+    # command = "aidata " + " ".join(args)
+    # logger.info(f"Running {command}")
+    # subprocess.run(command, shell=True)
+    #
+    # time_end = time.time()
+    # logger.info(f"total processing time: {time_end - time_start}")
