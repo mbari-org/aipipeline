@@ -88,6 +88,7 @@ if __name__ == "__main__":
     # Read the JSON files with Velella_velella predictions and format into SDCAT compatible format
     sdcat_formatted_data = []
     num_found = 0
+    files = []
     for path in paths:
         try:
             with open(path, "r") as file:
@@ -100,7 +101,8 @@ if __name__ == "__main__":
                     avg_score = sum(scores) / len(scores)
                     name = Path(filename).name
 
-                    if all(p == "Velella_velella" for p in predictions) and scores[0] < 0.2 or predictions[0] == "Velella_velella" and scores[0] < 0.1:
+                    # If the top two predictions are Velella_velella and their scores are both < 0.3, save the image and add to sdcat formatted data
+                    if predictions[0] == "Velella_velella" and predictions[1] == "Velella_velella" and scores[0] < 0.25 and scores[1] < 0.25:
                         if name not in tator_loaded_images:
                             print(f"Found {filename} with all predictions {predictions} and scores {scores}")
                             image_path = filename
