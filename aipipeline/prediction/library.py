@@ -227,30 +227,14 @@ def gen_machine_friendly_label(label: str) -> str:
     label_machine_friendly = label_machine_friendly.replace(".", "")
     return label_machine_friendly
 
-def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: str = None) -> List[tuple]:
-    if processed_dir is None:
-        processed_data = config_dict["data"]["download_dir"]
-    else:
-        processed_data = processed_dir
-
-    # Find the nested directory called "crops" in processed_data and get its parent directory - this is where everything is stored
-    base_path = None
-    for f in Path(processed_data).rglob("crops"):
-        logger.info(f"Found crops directory {f}")
-        base_path = f.parent.as_posix()
-        break
-
-    if base_path is None:
-        logger.error(f"Cannot find crops directory in {processed_data}?")
-        return []
-
+def compute_stats(crop_dir: str) -> List[tuple]:
     stats_file = None
-    for f in Path(base_path).rglob("*stats.json"):
+    for f in Path(crop_dir).rglob("*stats.json"):
         logger.info(f"Found stats file {f}")
         stats_file = f
 
     if stats_file is None:
-        logger.error(f"Cannot find stats file in {base_path}?")
+        logger.error(f"Cannot find stats file in {crop_dir}?")
         return []
 
     data = []
@@ -264,21 +248,16 @@ def compute_stats(labels_filter: List[str], config_dict: Dict, processed_dir: st
             if count == 0:
                 logger.info(f"Skipping label {label} with 0 crops")
                 continue
-            if labels_filter and 'all' not in labels_filter and label not in labels_filter:
-                logger.info(f"Skipping label {label} not in {labels_filter}")
-                continue
             logger.info(f"Found {count} crops for label {label}")
 
             # Total number of crops, and paths to crops and cluster output respectively
-            if Path(f"{base_path}/crops/{label}").exists():
-                crop_path = f"{base_path}/crops/{label}"
-            elif Path(f"{base_path}/{label}").exists():
-                crop_path = f"{base_path}/{label}"
+            if Path(f"{crop_dir}/{label}").exists():
+                crop_path = f"{crop_dir}/{label}"
             else:
-                logger.error(f"Cannot find crops for {label} in {base_path}")
+                logger.error(f"Cannot find crops for {label} in {crop_dir}")
                 continue
 
-            data.append((count, crop_path, f"{base_path}/cluster/{label}"))
+            data.append((count, crop_path, f"{crop_dir}/{label}"))
         logger.debug(data)
     return data
 
@@ -341,7 +320,7 @@ def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: st
                     logger.error(f"All {n} attempts failed. Giving up.")
                     return []
 
-    return compute_stats(labels_filter, config_dict, processed_dir=processed_dir)
+    return compute_stats(labels_filter, config_dict, crop_dir=processed_dir)
 
 def clean(base_path: str) -> str:
     # Remove any existing data, except for downloaded images
@@ -363,7 +342,6 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
         "aidata",
         "download",
         "dataset",
-        "--voc",
         "--token", TATOR_TOKEN,
         "--config", conf_files[CONFIG_KEY],
         "--base-path", config_dict["data"]["download_dir"]

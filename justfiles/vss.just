@@ -3,6 +3,7 @@ cp-dev-vss:
     #!/usr/bin/env bash
     cd ..
     cp justfiles/vss.just /Volumes/dcline/code/aipipeline/justfiles/vss.just
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' aipipeline/db/  /Volumes/dcline/code/aipipeline/aipipeline/db/
 
 # Generate a tsne plot of the VSS database
 plot-tsne-vss project='uav':
@@ -43,7 +44,7 @@ remove-vss project='uav' *more_args="":
         --config aipipeline/projects/{{project}}/config/config.yml \
         {{more_args}}"
 
-# Initialize the VSS database for a project
+# Initialize the VSS database for a project, e.g. just init-vss uav
 init-vss project='uav' *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
         --config aipipeline/projects/{{project}}/config/config.yml \
@@ -66,6 +67,7 @@ predict-vss-load project='uav' image_dir='/tmp/download' *more_args="":
 predict-vss-by-dir project='uav' image_dir='/tmp/download' *more_args="":
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/{{project}}
+
     export PYTHONPATH=.
     ##############################################
     # Predict images using the VSS service, processing images
@@ -101,5 +103,6 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/predict_pipeline.py \
     --config aipipeline/projects/{{project}}/config/config.yml \
     --input $image_listing \
+    --batch-size 512 \
     {{more_args}}"
 

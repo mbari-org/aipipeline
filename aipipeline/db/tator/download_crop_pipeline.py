@@ -72,13 +72,21 @@ def run_pipeline(argv=None):
     download_args.extend(["--crop-roi", "--resize", "224"])
     download_args = [arg.strip("'") for arg in download_args if arg.strip("'")]
     config_dict["data"]["download_args"] = download_args
+    version_index = download_args.index("--version") if "--version" in download_args else -1
+    versions = download_args[version_index + 1] if version_index != -1 and version_index + 1 < len(
+        download_args) else "Baseline"
+    # The version path is a combined path of all versions specified, separated by underscores
+    versions = versions.split(",")
+    version_path = "_".join(versions)
+    crop_path = download_path / version_path / "crops"
 
     with beam.Pipeline(options=options) as p:
         download_views = (
             p
             | "Start download" >> beam.Create([labels])
             | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
-            | "Compute stats" >> beam.Map(compute_stats, config_dict=config_dict)
+            | "Start stats" >> beam.Create([crop_path.as_posix()])
+            | "Compute stats" >> beam.Map(compute_stats)
         )
         if args.gen_multicrop:
             download_views = (
