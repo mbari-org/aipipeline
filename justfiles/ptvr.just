@@ -78,14 +78,40 @@ gen-ptvr-lowmag-data:
 load-ptvr-lowmag-velella:
   time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/load_velella_vss.py
 
-# Initialize the VSS database for the planktivore low mag data
-init-ptvr-lowmag-vss:
-  just --justfile {{justfile()}} init-vss planktivore-lm --data.download_dir /mnt/ML_SCRATCH/Planktivore/velella --data.download_args "'--verified --section Velella-low-mag --version Baseline'"
-  just --justfile {{justfile()}} init-vss planktivore-lm --data.download_dir /mnt/ML_SCRATCH/Planktivore/lowmag --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_002422'"
-  rm -r /mnt/ML_SCRATCH/Planktivore/velella /mnt/ML_SCRATCH/Planktivore/lowmag
+# Generate training data for the planktivore low mag
+gen-ptvr-highmag-data:
+  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000,mbari-ptvr-vits-b8-20250513_20250526_130025'"
 
 # Initialize the VSS database for the planktivore low mag data
+init-ptvr-lowmag-vss:
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/planktivore-lm
+  export PYTHONPATH=.
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/init_vss_pipeline.py\
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/ptrv_lm  \
+        --data.download_args "--verified --section Velella-low-mag --version Baseline" \
+        --clean
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/init_vss_pipeline.py\
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/ptrv_lm  \
+        --data.download_args "--verified --version mbari-ifcb2014-vitb16-20250318_20250320_002422" \
+        --clean
+  rm -r mnt/ML_SCRATCH/ptrv_lm
+
+# Initialize the VSS database for the planktivore high mag data
 init-ptvr-highmag-vss:
-  just --justfile {{justfile()}} init-vss planktivore-hm --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag0 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000'"
-  just --justfile {{justfile()}} init-vss planktivore-hm --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025'"
-  rm -r /mnt/ML_SCRATCH/Planktivore/highmag0 /mnt/ML_SCRATCH/Planktivore/highmag
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/planktivore-hm
+  export PYTHONPATH=.
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/init_vss_pipeline.py\
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/ptrv_hm  \
+        --data.download_args "--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000" \
+        --clean
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/init_vss_pipeline.py\
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/ptrv_hm  \
+        --data.download_args "--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025" \
+        --clean
+  rm -r mnt/ML_SCRATCH/ptrv_hm

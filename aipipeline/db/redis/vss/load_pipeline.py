@@ -3,6 +3,7 @@
 # Description: Run the VSS initialization pipeline
 import json
 import time
+from collections import defaultdict
 from datetime import datetime
 
 import dotenv
@@ -13,8 +14,10 @@ from apache_beam.options.pipeline_options import PipelineOptions
 from typing import Dict
 import logging
 
+from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.db.redis.vss.exemplars import load_exemplars
+from aipipeline.prediction.library import compute_stats
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -46,11 +49,10 @@ def run_pipeline(argv=None):
     parser = argparse.ArgumentParser(description="Load exemplars into the VSS database")
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
-    args, unknown_args = parser.parse_known_args(argv)
-
-    conf_files, config_dict = setup_config(args.config)
-    options = PipelineOptions(unknown_args)
-
+    args, other_args = parser.parse_known_args(argv)
+    options = PipelineOptions(other_args)
+    conf_files, config_dict = setup_config(args.config, silent=True)
+    config_dict = parse_override_args(config_dict, other_args)
     download_dir = config_dict["data"]["download_dir"]
 
     # Find the nested directory called "crops" in processed_data and get its parent directory - this is where everything is stored

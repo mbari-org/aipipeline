@@ -63,3 +63,25 @@ load-cluster project="uav" data='data' version="Baseline" *more_args="":
         --config aipipeline/projects/{{project}}/config/config.yml \
         --input {{data}} --version {{version}} \
         --token $TATOR_TOKEN {{more_args}}"
+
+# Download and crop with defaults for project e.g. download-crop i2map
+download-crop project='uav' *more_args="":
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml \
+        {{more_args}}
+
+# Download only
+download project='uav':
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml
+
+# Cluster only
+cluster project='uav' *more_args="":
+    #!/usr/bin/env bash
+    export PYTHONPATH=.
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/tator/download_crop_pipeline.py \
+        --config ./aipipeline/projects/{{project}}/config/config.yml
