@@ -9,11 +9,11 @@ from typing import List
 import cv2
 import numpy as np
 import piexif
-from PIL import Image, ImageEnhance
+from PIL import Image
 import pandas as pd
 import torch
 import torchvision.transforms as T
-from torchvision.io import read_image, write_jpeg
+from torchvision.io import write_jpeg
 import logging
 
 import xml.etree.ElementTree as ET
