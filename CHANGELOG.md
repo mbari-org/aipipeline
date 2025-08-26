@@ -2,6 +2,19 @@
 
 
 
+## v0.88.1 (2025-08-26)
+
+### Fix
+
+* fix(bio): handle bogus paths and uncomment loaders ([`4aa7248`](https://github.com/mbari-org/aipipeline/commit/4aa724869126a7ff3f217e223821ae96a43f593a))
+
+### Performance
+
+* perf(ptvr): bump to latest model for high mag mbari-ptvr-vits-b8-20250513 ([`b7e7ceb`](https://github.com/mbari-org/aipipeline/commit/b7e7ceb046ef64036d28d284dc000503002248a7))
+
+* perf(bio):  adjust prediction score to top 2 &lt; 0.2 for velella ([`233dc71`](https://github.com/mbari-org/aipipeline/commit/233dc710b51932c85b1ed6a27372f42b680d861f))
+
+
 ## v0.88.0 (2025-08-22)
 
 ### Feature
