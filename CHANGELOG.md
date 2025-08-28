@@ -2,6 +2,13 @@
 
 
 
+## v0.90.0 (2025-08-28)
+
+### Feature
+
+* feat(ptvr): alexandrium example loader and minor comment fix in velella load script ([`839c731`](https://github.com/mbari-org/aipipeline/commit/839c731c17610eb6f952de30e6a7211d53ed2085))
+
+
 ## v0.89.0 (2025-08-28)
 
 ### Feature
