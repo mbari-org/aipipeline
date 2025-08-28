@@ -2,6 +2,13 @@
 
 
 
+## v0.89.0 (2025-08-28)
+
+### Feature
+
+* feat(bio): added json count script count_velella_json.py ([`04ebcba`](https://github.com/mbari-org/aipipeline/commit/04ebcba75ec127f8e4648d23baf2ef694cf87118))
+
+
 ## v0.88.1 (2025-08-26)
 
 ### Fix
