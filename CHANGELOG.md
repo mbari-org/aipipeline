@@ -2,6 +2,13 @@
 
 
 
+## v0.91.0 (2025-08-29)
+
+### Feature
+
+* feat(bio): match velella times with STOQS high-resolution .nc4 data ([`16a1884`](https://github.com/mbari-org/aipipeline/commit/16a18841d585a27fdac90552e68494ef9576895d))
+
+
 ## v0.90.0 (2025-08-28)
 
 ### Feature
