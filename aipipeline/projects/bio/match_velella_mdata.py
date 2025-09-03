@@ -6,7 +6,7 @@ from pathlib import Path
 
 # Directory containing .nc files
 data_dir = "/Users/dcline/Dropbox/code/ai/aipipeline/aipipeline/projects/bio/data"
-vel = "/Users/dcline/Dropbox/code/ai/aipipeline/aipipeline/projects/bio/data/tator_data_verified_velella_section_Velella-low-mag_.csv"
+vel = "/Users/dcline/Dropbox/code/ai/aipipeline/aipipeline/projects/bio/data/tator_data_ptvr_lm_velella_08_22_25.csv"
 
 # Get all .nc and .nc4 files
 nc_files = glob.glob(f"{data_dir}/*.nc4")
