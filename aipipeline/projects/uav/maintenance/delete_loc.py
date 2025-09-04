@@ -8,8 +8,8 @@ project_id = 4  # project in the database
 version_id = 25  # version in the database
 
 # Connect to Tator
-token = os.environ
-api = tator.get_api(host='http://mantis.shore.mbari.org', token='ae84628927851c1a545c375ea8e4c3da2a022400')
+token = os.getenv("TATOR_TOKEN")
+api = tator.get_api(host='http://mantis.shore.mbari.org', token=token)
 
 # Search for media with name
 attribute_media = ["$name::trinity-2_20240820T233850_NewBrighton"]
