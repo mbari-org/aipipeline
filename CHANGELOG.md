@@ -2,6 +2,17 @@
 
 
 
+## v0.92.0 (2025-09-09)
+
+### Feature
+
+* feat(bio): match velella times with STOQS high-resolution .nc4 data ([`648bbb6`](https://github.com/mbari-org/aipipeline/commit/648bbb60d1508ae3fdc450a1ef6168e4c1bfc1b4))
+
+### Fix
+
+* fix(uav): correct config per latest refactor to central config.yml on docs ([`76bfe22`](https://github.com/mbari-org/aipipeline/commit/76bfe226bc6af39fc642b868cd9dcda5bc3957a8))
+
+
 ## v0.91.0 (2025-08-29)
 
 ### Feature
