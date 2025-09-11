@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/cfedeploy/load_isiis_sdcat_pipeline.py
+# Filename: projects/cfedeploy/load_isiis_loc_pipeline.py
 # Description: Load detections into Tator from sdcat clustering. Working with ISIIS frames extracted from videos.
 # This load frame-based detections on video media
 import argparse
