@@ -5,13 +5,11 @@
 import argparse
 import os
 import re
-from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
 import apache_beam as beam
 import dotenv
-import numpy as np
 import pandas as pd
 from apache_beam.options.pipeline_options import PipelineOptions
 import logging
@@ -21,7 +19,6 @@ from mbari_aidata.plugins.loaders.tator.attribute_utils import format_attributes
 from mbari_aidata.plugins.loaders.tator.common import init_api_project, get_version_id, find_box_type, find_media_type
 from mbari_aidata.plugins.loaders.tator.localization import gen_spec, load_bulk_boxes
 from mbari_aidata.plugins.loaders.tator.media import get_media_ids
-from mpmath.libmp import normalize
 
 # Secrets
 dotenv.load_dotenv()
@@ -56,13 +53,13 @@ def frame_depth_video(row, stride) -> tuple:
     if match1:
         video_name = f"{match1.group(1)}.mp4"
         second = float(match1.group(2))
-        frame = 0 if second == 0.0 else int(second*stride-1)
+        frame = int(second*stride+1)
         depth = None
         return (frame, depth, video_name)
     elif match2:
         video_name = f"{match2.group(1)}.mp4"
         second = float(match2.group(2))
-        frame = 0 if second == 0.0 else int(second*stride-1)
+        frame = int(second*stride+1)
         depth = match2.group(3)
         return (frame, depth, video_name)
     else:
@@ -143,6 +140,7 @@ def load(element, config_dict) -> str:
                         row["xy"] = max(0, min(1, row["xy"]))
                         specs.append(
                             gen_spec(
+                                elemental_id=row["elemental_id"],
                                 box=[row["x"], row["y"], row["xx"], row["xy"]],
                                 width=row["image_width"],
                                 height=row["image_height"],
@@ -170,7 +168,7 @@ def load(element, config_dict) -> str:
 def parse_args(argv, logger):
     parser = argparse.ArgumentParser(
         description=dedent("""\
-        Load detections into Tator from sdcat clustering from ISIIS frames extracted from videos
+        Load detections into Tator from ISIIS frames extracted from videos
         """),
         formatter_class=argparse.RawTextHelpFormatter,
     )
