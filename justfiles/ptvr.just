@@ -78,6 +78,15 @@ gen-ptvr-lowmag-data:
 load-ptvr-lowmag-velella:
   time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/bio/load_velella_vss.py
 
+# Load VSS mined planktivore low mag data into Tator
+load-ptrv-high-mag-vss:
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/planktivore-hm
+  export PYTHONPATH=.
+  find /mnt/DeepSea-AI/data/Planktivore/processed/vss_hm -name "*.json" > $PROJECT_DIR/vss_files.txt
+  time conda run -n aipipeline --no-capture-output python3 $PROJECT_DIR/load_rare_vss.py \
+    --tator_loaded_csv $PROJECT_DIR/tator_verified_data_section_aidata-export-02-high-mag.csv \
+    --input_json_paths $PROJECT_DIR/vss_files.txt
 # Generate training data for the planktivore low mag
 gen-ptvr-highmag-data:
   just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000,mbari-ptvr-vits-b8-20250513_20250526_130025'"
@@ -115,3 +124,18 @@ init-ptvr-highmag-vss:
         --data.download_args "--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025" \
         --clean
   rm -r mnt/ML_SCRATCH/ptrv_hm
+
+
+predict-vss-ptrv parquet="/mnt/DeepSea-AI/data/Planktivore/raw/2025_April-Ahi-Planktivore/April_2025_Ahi_highmag.parquet":
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/planktivore-hm
+  export PYTHONPATH=.
+  parquet="{{parquet}}"
+  # Get the base name without directory and extension
+  flat_name="${parquet##*/}" # Remove directory path
+  image_listing="${flat_name}-images.txt"
+  echo time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/export_filenames_from_parquet.py \
+        --input_parquet {{ parquet }} \
+        --output_text $image_listing
+#  just --justfile {{justfile()}} predict-vss planktivore-hm $image_listing
+
