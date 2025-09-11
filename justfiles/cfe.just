@@ -17,9 +17,9 @@ load-cfe-isiis-videos missions="":
         --config $PROJECT_DIR/config/config.yml" \
         --missions $PROJECT_DIR/data/{{missions}}
 
-# Load cfe ISII mission detections/clusters. Run with e.g. just load-cfe-isiis-sdcat /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/ 14
-load-cfe-isiis-sdcat data_dir="" stride="14" version="Baseline":
-    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/load_isiis_sdcat_pipeline.py \
+# Load cfe ISII mission localizations. Run with e.g. just load-cfe-isiis-loc /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/ 14
+load-cfe-isiis-loc data_dir="" stride="14" version="Baseline":
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/load_isiis_loc_pipeline.py \
         --config aipipeline/projects/cfedeploy/config/config.yml" \
         --data {{data_dir}} \
         --stride {{stride}} \
