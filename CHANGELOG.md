@@ -2,6 +2,13 @@
 
 
 
+## v0.93.0 (2025-09-11)
+
+### Feature
+
+* feat(isiis): add elemental_id support ([`1c4f593`](https://github.com/mbari-org/aipipeline/commit/1c4f59336f2493d6846599964a726c348cbedc64))
+
+
 ## v0.92.0 (2025-09-09)
 
 ### Feature
