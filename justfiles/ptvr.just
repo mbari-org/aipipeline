@@ -123,6 +123,10 @@ init-ptvr-highmag-vss:
         --data.download_dir /mnt/ML_SCRATCH/ptrv_hm  \
         --data.download_args "--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025" \
         --clean
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/init_vss_pipeline.py\
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/ptrv_hm  \
+        --data.download_args "--verified --version Baseline --labels alexandrium" \
   rm -r mnt/ML_SCRATCH/ptrv_hm
 
 
