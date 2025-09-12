@@ -2,6 +2,13 @@
 
 
 
+## v0.94.0 (2025-09-12)
+
+### Feature
+
+* feat(ptvr): loader for rare high-mag classes ([`1bba607`](https://github.com/mbari-org/aipipeline/commit/1bba607f0c660762cd32e068d5f072dae77fe6d9))
+
+
 ## v0.93.0 (2025-09-11)
 
 ### Feature
