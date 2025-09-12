@@ -2,6 +2,19 @@
 
 
 
+## v0.94.1 (2025-09-12)
+
+### Fix
+
+* fix: added missing alexandrium ([`df2c02c`](https://github.com/mbari-org/aipipeline/commit/df2c02cb934d916791c1fbb75fa2ad2c0e694d7a))
+
+* fix: minor fix to return string in vss ([`36168bd`](https://github.com/mbari-org/aipipeline/commit/36168bdec01923e50a3df1fd68051e954dd7bf90))
+
+### Performance
+
+* perf(ptvr): reduce cleaning of low-information and blurry images for high-mag ([`1173d2a`](https://github.com/mbari-org/aipipeline/commit/1173d2a8a7b229ce747ac0812573cf3423c1eb82))
+
+
 ## v0.94.0 (2025-09-12)
 
 ### Feature
