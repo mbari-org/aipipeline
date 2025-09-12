@@ -146,4 +146,4 @@ def load_exemplars(elements, conf_files: Dict) -> str:
     for element in elements:
         load_exemplar(element, conf_files=conf_files)
 
-    return f"Loaded {len(element)} exemplar classes successfully"
+    return f"Loaded {len(elements)} exemplar classes successfully"
