@@ -7,9 +7,6 @@ data:
   download_args: "--verified --version mbari-ptvr-vits-b8-20250513_20250526_130025,mbari-ifcb2014-vitb16-20250318_20250320_025000"
   download_dir: "/mnt/ML_SCRATCH/data/ptrv_hm"
   cleanvision_issues:
-    - name: "low_information"
-      threshold: 0.53
-    - name: "blurry"
     - name: "dark"
     - name: "exact_duplicates"
 
