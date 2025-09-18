@@ -1,0 +1,27 @@
+name: HighMagnificationLabels
+children:
+- name: Akashiwo
+- name: Amphidinium_Oxyphysis
+- name: Ceratium
+- name: Chaetoceros
+- name: Ciliate
+- name: Cylindrotheca
+- name: Detonula_Cerataulina_Lauderia
+- name: Detritus
+- name: Dictyocha
+- name: Dinoflagellate
+- name: Eucampia
+- name: Guinardia_Dactyliosolen
+- name: Gyrodinium
+- name: Medium_pennate
+- name: Mesodinium
+- name: Mixed_diatom_chain
+- name: Nano_plankton
+- name: Polykrikos
+- name: Prorocentrum
+- name: Pseudo-nitzschia
+- name: Strombidium
+- name: Thalassionema
+- name: Thalassiosira
+- name: Tiarina
+- name: Truncated

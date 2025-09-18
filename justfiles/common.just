@@ -41,7 +41,7 @@ update_trackers:
 update-env:  
   conda env update --file environment.yml --prune
 
-init-labels project='uav' leaf_type_id='19':
+init-labels project leaf_type_id:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/leaf_init.py \
     --config aipipeline/projects/{{project}}/config/config.yml \
     --labels aipipeline/projects/{{project}}/config/labels.yml  \
