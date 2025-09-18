@@ -1,0 +1,11 @@
+name: LowMagnificationLabels
+children:
+- name: Chaetoceros_socialis
+- name: aggregate
+- name: chaeteognath
+- name: copepod
+- name: fecal_pellet
+- name: larvacean
+- name: noise
+- name: phaeocystis
+- name: surface
