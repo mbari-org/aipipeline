@@ -51,7 +51,7 @@ if __name__ == "__main__":
     image_paths = df_all['image_path'].unique()
     project = "902111-CFE"
     section = "mine_depth_v1"
-    config = "/home/dcline/code/aidata/aidata/config/config_cfe.yml"
+    config = "https://docs.mbari.org/internal/ai/projects/config/config_cfe_deploy.yml"
 
     # Load the images
     for image_path in image_paths:
