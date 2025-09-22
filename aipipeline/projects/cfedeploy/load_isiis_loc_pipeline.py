@@ -5,6 +5,7 @@
 import argparse
 import os
 import re
+import uuid
 from pathlib import Path
 from textwrap import dedent
 
@@ -101,8 +102,11 @@ def load(element, config_dict) -> str:
         logger.info(f"Getting video files names from project {project_id}")
         media_map = get_media_ids(api, project, video_type.id)
 
+        elemental_ids = []
         for csv_file in all_csv_files:
             df = pd.read_csv(csv_file)
+            elemental_ids = elemental_ids + df['elemental_id'].to_list()
+
             df['frame'] = None
             df['depth'] = None
             df['video_name'] = None
@@ -112,7 +116,7 @@ def load(element, config_dict) -> str:
             # Rename class_s to label_s if it exists - this matches the attribute name in the config.yaml
             df.rename(columns={"class_s": "label_s"}, inplace=True)
 
-            # Get the first row to extract the image path
+            # Get the `first row to extract the image path
             if df.empty:
                 logger.error(f"No data found in {csv_file}.")
                 continue
@@ -138,9 +142,7 @@ def load(element, config_dict) -> str:
                         row["y"] = max(0, min(1, row["y"]))
                         row["xx"] = max(0, min(1, row["xx"]))
                         row["xy"] = max(0, min(1, row["xy"]))
-                        specs.append(
-                            gen_spec(
-                                elemental_id=row["elemental_id"],
+                        spec = gen_spec(
                                 box=[row["x"], row["y"], row["xx"], row["xy"]],
                                 width=row["image_width"],
                                 height=row["image_height"],
@@ -153,12 +155,20 @@ def load(element, config_dict) -> str:
                                 project_id=project_id,
                                 normalize=False
                             )
-                        )
+                        # Add elemental_id based on image_path and box coordinates to ensure uniqueness
+                        elemental_id = Path(row["crop_path"]).stem
+                        spec["elemental_id"] = elemental_id
+                        # Add the predicted_class attribute if label is provided
+                        spec["attributes"]["predicted_class"] = label if label is not None else row["class"]
+                        specs.append(spec)
                         logger.info(specs)
                         num_loaded += 1
                 box_ids = load_bulk_boxes(project_id, api, specs)
                 logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
 
+        uuids = set(elemental_ids)
+        len_data = len(elemental_ids)
+        print(f"Found {len(uuids)} unique images with {len_data} total detections in {all_detections}")
         return f"{all_detections} loaded."
     except Exception as e:
         logger.error(f"Error loading {all_detections}: {e}")
