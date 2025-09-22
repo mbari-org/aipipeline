@@ -2,6 +2,13 @@
 
 
 
+## v0.96.0 (2025-09-22)
+
+### Feature
+
+* feat(cfe): added check for elemental id duplicates, predicted_class and elemental_id to reference the detection crops for downstream processing ([`b59d375`](https://github.com/mbari-org/aipipeline/commit/b59d375493798ce766143decebb547f4b6538f93))
+
+
 ## v0.95.0 (2025-09-22)
 
 ### Feature
