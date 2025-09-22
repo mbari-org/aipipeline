@@ -4,6 +4,7 @@ cp-dev-cfe:
     cd ..
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.png' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/cfe/ /Volumes/dcline/code/aipipeline/aipipeline/projects/cfe/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.png' --exclude='*.log' --exclude='*__pycache__' ./aipipeline/projects/cfedeploy/ /Volumes/dcline/code/aipipeline/aipipeline/projects/cfedeploy/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' ./justfiles/  /Volumes/dcline/code/aipipeline/justfiles/
 
 # Generate training data for the CFE project
 gen-cfe-data:
@@ -16,6 +17,14 @@ load-cfe-isiis-videos missions="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/load_isiis_video_pipeline.py \
         --config $PROJECT_DIR/config/config.yml" \
         --missions $PROJECT_DIR/data/{{missions}}
+
+# Load cfe ISII mission localizations that have been classified. Run with e.g. just load-cfe-isiis-loc-classified /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/ 14 Baseline
+load-cfe-isiis-loc-classified data_dir="" stride="14" version="Baseline":
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/load_isiis_loc_pipeline.py \
+        --config aipipeline/projects/cfedeploy/config/config.yml" \
+        --data {{data_dir}} \
+        --stride {{stride}} \
+        --version {{version}}
 
 # Load cfe ISII mission localizations. Run with e.g. just load-cfe-isiis-loc /mnt/CFElab/Data_analysis/ISIIS/20240206_RachelCarson_detections/det_filtered/csv/ 14
 load-cfe-isiis-loc data_dir="" stride="14" version="Baseline":
