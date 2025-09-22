@@ -2,6 +2,13 @@
 
 
 
+## v0.95.0 (2025-09-22)
+
+### Feature
+
+* feat(ptvr): add leaf init for high and low ([`0982f91`](https://github.com/mbari-org/aipipeline/commit/0982f910eae93dd55cd01ebdfcfe6c40d9fe1b56))
+
+
 ## v0.94.1 (2025-09-12)
 
 ### Fix
