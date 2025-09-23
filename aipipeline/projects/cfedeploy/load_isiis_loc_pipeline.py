@@ -6,6 +6,7 @@ import argparse
 import os
 import re
 import uuid
+from datetime import datetime
 from pathlib import Path
 from textwrap import dedent
 
@@ -29,10 +30,12 @@ TATOR_TOKEN = os.getenv("TATOR_TOKEN")
 # Logging
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-# Also log to the console
-console = logging.StreamHandler()
-logger.addHandler(console)
-logger.setLevel(logging.INFO)
+now = datetime.now()
+log_filename = f"load-isiis-loc-pipeline{now:%Y%m%d}.log"
+handler = logging.FileHandler(log_filename, mode="w")
+handler.setFormatter(formatter)
+handler.setLevel(logging.DEBUG)
+logger.addHandler(handler)
 
 pattern1 = re.compile(
     r'^(CFE_ISIIS-\d{3}-\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}\.\d{3})_(\d{4})\.jpg$'
@@ -104,67 +107,71 @@ def load(element, config_dict) -> str:
 
         elemental_ids = []
         for csv_file in all_csv_files:
-            df = pd.read_csv(csv_file)
-            elemental_ids = elemental_ids + df['elemental_id'].to_list()
+            try:
+                df = pd.read_csv(csv_file)
+                elemental_ids = elemental_ids + df['elemental_id'].to_list()
 
-            df['frame'] = None
-            df['depth'] = None
-            df['video_name'] = None
+                df['frame'] = None
+                df['depth'] = None
+                df['video_name'] = None
 
-            df['frame'], df['depth'] ,df['video_name']= zip(*df.apply(lambda row: frame_depth_video(row, stride), axis=1))
+                df['frame'], df['depth'] ,df['video_name']= zip(*df.apply(lambda row: frame_depth_video(row, stride), axis=1))
 
-            # Rename class_s to label_s if it exists - this matches the attribute name in the config.yaml
-            df.rename(columns={"class_s": "label_s"}, inplace=True)
+                # Rename class_s to label_s if it exists - this matches the attribute name in the config.yaml
+                df.rename(columns={"class_s": "label_s"}, inplace=True)
 
-            # Get the `first row to extract the image path
-            if df.empty:
-                logger.error(f"No data found in {csv_file}.")
+                # Get the `first row to extract the image path
+                if df.empty:
+                    logger.error(f"No data found in {csv_file}.")
+                    continue
+
+                # Assign the labels to the localizations, batching by 500
+                batch_size = min(500, len(df))
+                num_loaded = 0
+                logger.info("Creating localizations ...")
+                for i in range(0, len(df), batch_size):
+                    batch_df = df.iloc[i : i + batch_size]
+
+                    specs = []
+                    for index, row in batch_df.iterrows():
+                        # if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
+                        attributes = format_attributes(row, box_attributes)
+                        if "label_s" in attributes and label is not None:
+                            attributes["label_s"] = label
+                        if row.depth is not None:
+                            attributes["depth"] = row.depth
+                        if row.frame is not None and row.video_name is not None:
+                            # Clamp all boxes to be within the normalized range of 0 to 1
+                            row["x"] = max(0, min(1, row["x"]))
+                            row["y"] = max(0, min(1, row["y"]))
+                            row["xx"] = max(0, min(1, row["xx"]))
+                            row["xy"] = max(0, min(1, row["xy"]))
+                            spec = gen_spec(
+                                    box=[row["x"], row["y"], row["xx"], row["xy"]],
+                                    width=row["image_width"],
+                                    height=row["image_height"],
+                                    version_id=version_id,
+                                    label=label if label is not None else row["class"],
+                                    attributes=attributes,
+                                    frame_number=row.frame,
+                                    type_id=box_type.id,
+                                    media_id=media_map[row.video_name],
+                                    project_id=project_id,
+                                    normalize=False
+                                )
+                            # Add elemental_id based on image_path and box coordinates to ensure uniqueness
+                            elemental_id = Path(row["crop_path"]).stem
+                            spec["elemental_id"] = elemental_id
+                            # Add the predicted_class attribute if label is provided
+                            spec["attributes"]["predicted_class"] = label if label is not None else row["class"]
+                            specs.append(spec)
+                            logger.info(specs)
+                            num_loaded += 1
+                    box_ids = load_bulk_boxes(project_id, api, specs)
+                    logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
+            except Exception as e:
+                logger.error(f"Error processing {all_detections} in files {csv_file}: {e}")
                 continue
-
-            # Assign the labels to the localizations, batching by 500
-            batch_size = min(500, len(df))
-            num_loaded = 0
-            logger.info("Creating localizations ...")
-            for i in range(0, len(df), batch_size):
-                batch_df = df.iloc[i : i + batch_size]
-
-                specs = []
-                for index, row in batch_df.iterrows():
-                    # if row['area'] > 300 and row['class'] == "copepod" and row["score"] > 0.97:  # Filter out boxes < 300 pixels and low score copepods
-                    attributes = format_attributes(row, box_attributes)
-                    if "label_s" in attributes and label is not None:
-                        attributes["label_s"] = label
-                    if row.depth is not None:
-                        attributes["depth"] = row.depth
-                    if row.frame is not None and row.video_name is not None:
-                        # Clamp all boxes to be within the normalized range of 0 to 1
-                        row["x"] = max(0, min(1, row["x"]))
-                        row["y"] = max(0, min(1, row["y"]))
-                        row["xx"] = max(0, min(1, row["xx"]))
-                        row["xy"] = max(0, min(1, row["xy"]))
-                        spec = gen_spec(
-                                box=[row["x"], row["y"], row["xx"], row["xy"]],
-                                width=row["image_width"],
-                                height=row["image_height"],
-                                version_id=version_id,
-                                label=label if label is not None else row["class"],
-                                attributes=attributes,
-                                frame_number=row.frame,
-                                type_id=box_type.id,
-                                media_id=media_map[row.video_name],
-                                project_id=project_id,
-                                normalize=False
-                            )
-                        # Add elemental_id based on image_path and box coordinates to ensure uniqueness
-                        elemental_id = Path(row["crop_path"]).stem
-                        spec["elemental_id"] = elemental_id
-                        # Add the predicted_class attribute if label is provided
-                        spec["attributes"]["predicted_class"] = label if label is not None else row["class"]
-                        specs.append(spec)
-                        logger.info(specs)
-                        num_loaded += 1
-                box_ids = load_bulk_boxes(project_id, api, specs)
-                logger.info(f"Loaded {len(box_ids)} boxes of {len(df)} into Tator")
 
         uuids = set(elemental_ids)
         len_data = len(elemental_ids)
