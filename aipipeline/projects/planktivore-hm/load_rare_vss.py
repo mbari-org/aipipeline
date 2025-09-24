@@ -71,6 +71,7 @@ if __name__ == "__main__":
                     "Strombidium",
                     "Cylindrotheca",
                     "Alexandrium"]
+    rare_classes=["Cylindrotheca"]
 
     # Read in tator_loaded_csv
     tator_loaded_df = pd.read_csv(args.tator_loaded_csv)
@@ -117,7 +118,9 @@ if __name__ == "__main__":
                             if name not in tator_loaded_images:
                                 # print(f"Found {filename} with all predictions {predictions} and scores {scores}")
                                 image_path = filename
-                                image_file.write(f"{image_path}\n")
+                                if name_match not in tator_loaded_images:
+                                    print(f"Skipping {filename} because it is already loaded")
+                                    image_file.write(f"{image_path}\n")
                                 num_found += 1
                                 with Image.open(image_path) as img:
                                     image_width, image_height = img.size
