@@ -45,5 +45,5 @@ gen-uav-data:
         --clean \
         --gen-multicrop \
         --data.processed_path /mnt/ML_SCRATCH/uav \
-        --data.download_args "'--verified --version yolo11x-oneclass-uav-vits-b-8-20250202'"
+        --data.download_args "'--verified --disable-ssl-verify --version yolo11x-oneclass-uav-vits-b-8-20250202'"
   echo "Done. Data is in /mnt/ML_SCRATCH/uav"
