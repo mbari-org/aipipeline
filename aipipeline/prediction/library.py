@@ -350,7 +350,7 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
     if labels != "all":
         labels_str = ",".join(labels)
         if len(labels_str) > 1:
-            args_list.extend(["--labels", f'"{labels_str}"'])
+            args_list.extend(["--labels", f'{labels_str}'])
             logger.info(f"Downloading data for labels: {labels}....")
     else:
         labels = []
