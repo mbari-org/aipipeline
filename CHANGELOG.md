@@ -2,6 +2,13 @@
 
 
 
+## v0.96.1 (2025-10-02)
+
+### Fix
+
+* fix: correct label quotes ([`51b2e95`](https://github.com/mbari-org/aipipeline/commit/51b2e9570f85b73963b3e1c7ffe88451c7d2532a))
+
+
 ## v0.96.0 (2025-09-22)
 
 ### Feature
