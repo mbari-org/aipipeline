@@ -3,8 +3,8 @@ cp-dev-i2map:
     #!/usr/bin/env bash
     cd ..
     cp justfiles/i2map.just /Volumes/dcline/code/aipipeline/justfiles/i2map.just
-    cp aipipeline/projects/i2map/config/config.yml /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/config.yml
-    cp aipipeline/projects/i2mapbulk/config/config_unknown.yml /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/config_unknown.yml
+    cp aipipeline/projects/i2map/config/*.yml /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/config/
+    cp aipipeline/projects/i2mapbulk/config/*.yml /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/config/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/i2map/ /Volumes/dcline/code/aipipeline/aipipeline/projects/i2map/
     rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/i2mapbulk/ /Volumes/dcline/code/aipipeline/aipipeline/projects/i2mapbulk/
 
@@ -48,7 +48,7 @@ download-i2mapbulk-unlabeled:
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/load_pipeline.py \
-        --config aipipeline/projects/i2mapbulk/config/config_unknown.yml --data {{data}}"
+        --config aipipeline/projects/i2mapbulk/config/config.yml --data {{data}}"
 
 # Generate training data for the i2map project
 gen-i2map-data:
@@ -57,7 +57,7 @@ gen-i2map-data:
         --clean \
         --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2map \
-        --data.download_args \'--version Baseline --generator vars-labelbot --group NMS\' "
+        --data.download_args '--version Baseline --generator vars-labelbot --group NMS '"
 
 # Download and cluster data. Run with  just download-cluster i2map
 cluster-i2map:
@@ -73,15 +73,57 @@ gen-i2mapbulk-data:
         --use-cleanvision True \
         --gen-multicrop \
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
-        --data.download_args \'--verified\'"
+        --data.download_args '--verified '"
 
 # Cluster bulk unknown data
 cluster-i2mapbulk:
-    time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/cluster_pipeline.py \
-        --config aipipeline/projects/i2mapbulk/config/config.yml \
-        --input /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
-        --output /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown"
+    #!/usr/bin/env bash
+    export PROJECT_DIR=$PWD/aipipeline/projects/i2mapbulk
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export RAY_DEDUP_LOGS=0
+    cd ~/code/sdcat
+    time conda run -n rapids-25.04 sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
+            --roi-dir /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
+            --save-dir /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown \
+            --alpha 1.0 \
+            --cluster-selection-epsilon .002 \
+            --min-cluster-size 3 \
+            --device cuda \
+            --use-vits \
+            --vits-batch-size 512 \
+            --hdbscan-batch-size 50000
 
+# Sweep cluster bulk unknown data
+cluster-i2mapbulk-sweep:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=$PWD/aipipeline/projects/i2mapbulk
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export RAY_DEDUP_LOGS=0
+    cd ~/code/sdcat
+    for epsilon in 0. .001 .002 .003; do
+        for alpha in 1. 1.1 1.2; do
+            for min_cluster in 3 5 7; do
+                echo "Running alpha=$alpha epsilon=$epsilon min_cluster=$min_cluster"
+                time conda run -n rapids-25.04 sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
+                        --roi-dir /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
+                        --save-dir /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown \
+                        --alpha $alpha \
+                        --cluster-selection-epsilon $epsilon \
+                        --min-cluster-size $min_cluster \
+                        --device cuda \
+                        --use-vits \
+                        --vits-batch-size 512 \
+                        --hdbscan-batch-size 50000 \
+                        --skip-visualization
+            done
+        done
+    done
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh
+
+# Generate cluster plots for i2map
+gen-cluster-plots-i2map:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/cluster_sweep_plot.py"
