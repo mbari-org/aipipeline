@@ -57,7 +57,31 @@ gen-i2map-data:
         --clean \
         --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2map \
-        --data.download_args '--version Baseline --generator vars-labelbot --group NMS '"
+        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS ' \
+        --labels 'Acanthamunnopsis milleri' 'Aegina' 'Aegina citrea' 'Aegina rosea' \
+        'Aegina sp. 1' 'Agalmatidae' 'Amphipoda' 'Annatiara affinis' \
+        'Apolemiidae' 'Appendicularia' 'Atolla' 'Bathochordaeus' \
+        'Bathochordaeus sinker' 'Bathochordaeus sinkers' 'Bathochordaeus stygius' \
+        'Beroe' 'Beroe cucumis' 'Bolinopsis' 'Bolinopsis infundibulum' \
+        'Calycophorae' 'Chaetognatha' 'Chiroteuthis calyx' 'Chuniphyes' \
+        'Colobonema sericeum' 'Copepoda' 'Cranchiidae' 'Crustacea' \
+        'Ctenophora' 'Cydippida' 'Cydippida sp. A' 'Cystisoma' \
+        'Desmophyes annectens' 'Earleria corachloeae' 'Euchirella bitumida' \
+         'Euphausiacea1' 'Euphysa' 'Eusergestes similis' \
+         'Eutonina indicans' 'Forskalia' 'Gonatus' 'Haliscera conica' \
+         'Halitrephes' 'Hastigerinella digitata' 'Hormiphora californensis' \
+         'Krill molt' 'Lensia' 'Lensia conoidea' 'Medusae' \
+         'Mertensiidae' 'Mitrocoma cellularia' 'Modeeria rotunda' \
+         'Myctophidae' 'Nanomia' 'Nanomia bijuga' 'Nanomia 2' \
+         'Octogonade mediterranea' 'Oikopleuridae' 'Pasiphaea' \
+         'Periphylla periphylla' 'Phronima' 'Physonectae' \
+         'Poeobius meseres' 'Prayidae' 'Ptychogena lactea' \
+         'Radiozoa' 'Resomia ornicephala' 'Rhopalonema' \
+         'Salpa fusiformis' 'Salpidae' 'Scina' 'Sergestid molt' \
+         'Siphonophorae' 'Solmissus' 'Solmundella bitentaculata' \
+         'sinker' 'Stellamedusa ventana' 'Teuthoidea' \
+         'Thalassocalyce inconstans' 'Tomopteridae' 'Tuscaroridae' \
+         'Vitreosalpa gemini' 'Vogtia' 'Zoarcidae'"
 
 # Download and cluster data. Run with  just download-cluster i2map
 cluster-i2map:
@@ -68,12 +92,35 @@ cluster-i2map:
 # Generate training data for the i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-data
 gen-i2mapbulk-data:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
-        --config aipipeline/projects/i2mapbulk/config/config_unknown.yml \
+        --config aipipeline/projects/i2mapbulk/config/config.yml \
         --clean \
         --use-cleanvision True \
-        --gen-multicrop \
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
-        --data.download_args '--verified '"
+        --data.download_args '--verified ' \
+        --labels 'Acanthamunnopsis milleri' 'Aegina' 'Aegina citrea' 'Aegina rosea' \
+        'Aegina sp. 1' 'Agalmatidae' 'Amphipoda' 'Annatiara affinis' \
+        'Apolemiidae' 'Appendicularia' 'Atolla' 'Bathochordaeus' \
+        'Bathochordaeus sinker' 'Bathochordaeus sinkers' 'Bathochordaeus stygius' \
+        'Beroe' 'Beroe cucumis' 'Bolinopsis' 'Bolinopsis infundibulum' \
+        'Calycophorae' 'Chaetognatha' 'Chiroteuthis calyx' 'Chuniphyes' \
+        'Colobonema sericeum' 'Copepoda' 'Cranchiidae' 'Crustacea' \
+        'Ctenophora' 'Cydippida' 'Cydippida sp. A' 'Cystisoma' \
+        'Desmophyes annectens' 'Earleria corachloeae' 'Euchirella bitumida' \
+         'Euphausiacea1' 'Euphysa' 'Eusergestes similis' \
+         'Eutonina indicans' 'Forskalia' 'Gonatus' 'Haliscera conica' \
+         'Halitrephes' 'Hastigerinella digitata' 'Hormiphora californensis' \
+         'Krill molt' 'Lensia' 'Lensia conoidea' 'Medusae' \
+         'Mertensiidae' 'Mitrocoma cellularia' 'Modeeria rotunda' \
+         'Myctophidae' 'Nanomia' 'Nanomia bijuga' 'Nanomia 2' \
+         'Octogonade mediterranea' 'Oikopleuridae' 'Pasiphaea' \
+         'Periphylla periphylla' 'Phronima' 'Physonectae' \
+         'Poeobius meseres' 'Prayidae' 'Ptychogena lactea' \
+         'Radiozoa' 'Resomia ornicephala' 'Rhopalonema' \
+         'Salpa fusiformis' 'Salpidae' 'Scina' 'Sergestid molt' \
+         'Siphonophorae' 'Solmissus' 'Solmundella bitentaculata' \
+         'sinker' 'Stellamedusa ventana' 'Teuthoidea' \
+         'Thalassocalyce inconstans' 'Tomopteridae' 'Tuscaroridae' \
+         'Vitreosalpa gemini' 'Vogtia' 'Zoarcidae'"
 
 # Cluster bulk unknown data
 cluster-i2mapbulk:
