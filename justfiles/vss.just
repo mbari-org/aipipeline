@@ -103,6 +103,6 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/predict_pipeline.py \
     --config aipipeline/projects/{{project}}/config/config.yml \
     --input $image_listing \
-    --batch-size 512 \
+    --batch-size 128 \
     {{more_args}}"
 

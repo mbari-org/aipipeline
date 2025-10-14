@@ -38,12 +38,27 @@ run-mega-track-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T17
         --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
         --stride 1 --video {{video}}" #--save-cotrack-video
 
+# Download i2mpabulk unverified data
+download-i2map-unverified:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2map-/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2mapu \
+        --data.download_args '--unverified --version Baseline --generator vars-labelbot --group NMS' "
+
 # Download i2mpabulk unlabeled data run with ENV_FILE=.env.i2map just download-i2mapbulk-unlabeled
 download-i2mapbulk-unlabeled:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml \
-        --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
-        --data.download_args \'--unverified\' "
+        --data.download_dir /mnt/ML_SCRATCH/i2mapbulku \
+        --data.download_args '--unverified' "
+
+# Download i2mpabulk unlabeled data run with ENV_FILE=.env.i2map just download-i2mapbulk-baseline
+download-i2mapbulk-baseline:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2mapbulk/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2mapbulkb \
+        --data.download_args '--version Baseline' "
+
 
 # Load i2MAP bulk data run with ENV_FILE=.env.i2map just load-i2mapbulk <path to the cluster_detections.csv file>
 load-i2mapbulk data='data':
@@ -57,7 +72,7 @@ gen-i2map-data:
         --clean \
         --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2map \
-        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS ' \
+        --data.download_args '--voc --verified --version Baseline --generator vars-labelbot --group NMS ' \
         --labels 'Acanthamunnopsis milleri' 'Aegina' 'Aegina citrea' 'Aegina rosea' \
         'Aegina sp. 1' 'Agalmatidae' 'Amphipoda' 'Annatiara affinis' \
         'Apolemiidae' 'Appendicularia' 'Atolla' 'Bathochordaeus' \
@@ -83,7 +98,7 @@ gen-i2map-data:
          'Thalassocalyce inconstans' 'Tomopteridae' 'Tuscaroridae' \
          'Vitreosalpa gemini' 'Vogtia' 'Zoarcidae'"
 
-# Download and cluster data. Run with  just download-cluster i2map
+# Download and cluster data. Run with just download-cluster i2map
 cluster-i2map:
     just --justfile {{justfile()}} cluster i2map --version Baseline \
         --input /mnt/ML_SCRATCH/i2map/Baseline/crops \
@@ -96,7 +111,7 @@ gen-i2mapbulk-data:
         --clean \
         --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
-        --data.download_args '--verified ' \
+        --data.download_args '--voc --verified ' \
         --labels 'Acanthamunnopsis milleri' 'Aegina' 'Aegina citrea' 'Aegina rosea' \
         'Aegina sp. 1' 'Agalmatidae' 'Amphipoda' 'Annatiara affinis' \
         'Apolemiidae' 'Appendicularia' 'Atolla' 'Bathochordaeus' \
@@ -122,6 +137,36 @@ gen-i2mapbulk-data:
          'Thalassocalyce inconstans' 'Tomopteridae' 'Tuscaroridae' \
          'Vitreosalpa gemini' 'Vogtia' 'Zoarcidae'"
 
+# Initialize the VSS database for the i2MAP bulk project, run with ENV_FILE=.env.i2map just init-i2mapbulk-vss
+init-i2mapbulk-vss:
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/i2mapbulk
+  export PYTHONPATH=.
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/init_pipeline.py \
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2mapbulk  \
+        --data.download_args "--verified " \
+        --clean
+
+# Remove ambiguous i2map exemplars VSS database
+clean-i2map-vss:
+    time just --justfile {{justfile()}} remove-vss i2map --doc \'doc:marine organism:\*\'
+    time just --justfile {{justfile()}} remove-vss i2map --doc \'doc:marine snow:\*\'
+    time just --justfile {{justfile()}} remove-vss i2map --doc \'doc: mix Pasiphaea and krill:\*\'
+    time just --justfile {{justfile()}} remove-vss i2map --doc \'doc: Unknown:\*\'
+
+
+# Initialize the VSS database for the i2MAP bulk project
+init-i2map-vss:
+  #!/usr/bin/env bash
+  export PROJECT_DIR=./aipipeline/projects/i2map
+  export PYTHONPATH=.
+  time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/init_pipeline.py \
+        --config $PROJECT_DIR/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2map  \
+        --data.download_args "--verified --version Baseline --generator vars-labelbot --group NMS " \
+        --clean
+
 # Cluster bulk unknown data
 cluster-i2mapbulk:
     #!/usr/bin/env bash
@@ -131,8 +176,8 @@ cluster-i2mapbulk:
     export RAY_DEDUP_LOGS=0
     cd ~/code/sdcat
     time conda run -n rapids-25.04 sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
-            --roi-dir /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
-            --save-dir /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown \
+            --roi-dir /mnt/ML_SCRATCH/i2mapbulku/crops \
+            --save-dir /mnt/ML_SCRATCH/i2mapbulku/clusters \
             --alpha 1.0 \
             --cluster-selection-epsilon .002 \
             --min-cluster-size 3 \
@@ -154,8 +199,8 @@ cluster-i2mapbulk-sweep:
             for min_cluster in 3 5 7; do
                 echo "Running alpha=$alpha epsilon=$epsilon min_cluster=$min_cluster"
                 time conda run -n rapids-25.04 sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
-                        --roi-dir /mnt/ML_SCRATCH/i2mapbulk/crops/Unknown \
-                        --save-dir /mnt/ML_SCRATCH/i2mapbulk/clusters/Unknown \
+                        --roi-dir /mnt/ML_SCRATCH/i2mapbulku/crops \
+                        --save-dir /mnt/ML_SCRATCH/i2mapbulku/clusters \
                         --alpha $alpha \
                         --cluster-selection-epsilon $epsilon \
                         --min-cluster-size $min_cluster \
@@ -167,6 +212,7 @@ cluster-i2mapbulk-sweep:
             done
         done
     done
+
 # Transcode i2MAP videos from mov to mp4 for use in Tator
 transcode-i2map:
     aipipeline/projects/i2map/mov2mp4.sh
@@ -174,3 +220,23 @@ transcode-i2map:
 # Generate cluster plots for i2map
 gen-cluster-plots-i2map:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/cluster_sweep_plot.py"
+# Load vss generated i2mapbulk data run with ENV_FILE=.env.i2map just load-i2mapbulk-vss
+load-i2mapbulk-vss:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/i2mapbulk
+    export PYTHONPATH=.
+    find /mnt/DeepSea-AI/data/i2MAP/processed/vss -type f -name "*.json" &> $PROJECT_DIR/i2mapbulkjson.txt
+    find /mnt/DeepSea-AI/data/M3/processed/vss -type f -name "*.json" &>  $PROJECT_DIR/m3mapbulkjson.txt
+    cd $PROJECT_DIR
+    conda run -n aipipeline --no-capture-output python3 load_vss.py \
+                  --input_json_paths i2mapbulkjson.txt \
+                  --save_path /tmp/i2mapbulkvss_top3 \
+                  --tator_loaded_csv tator_i2mapbulk_baseline.csv \
+                  --version mbari-i2map-vits-b8-20251008-vss
+
+    conda run -n aipipeline --no-capture-output python3 load_vss.py \
+                  --input_json_paths m3mapbulkjson.txt \
+                  --save_path /tmp/m3mapbulkvss_top3 \
+                  --tator_loaded_csv tator_i2mapbulk_baseline.csv \
+                  --version mbari-m3-vits-b8-20251011-vss
+
