@@ -228,8 +228,9 @@ load-i2mapbulk-vss:
     find /mnt/DeepSea-AI/data/i2MAP/processed/vss -type f -name "*.json" &> $PROJECT_DIR/i2mapbulkjson.txt
     find /mnt/DeepSea-AI/data/M3/processed/vss -type f -name "*.json" &>  $PROJECT_DIR/m3mapbulkjson.txt
     cd $PROJECT_DIR
+    conda run -n aipipeline --no-capture-output python3 download_baseline.py --project_id 1 --box_type 5 --image_type 3 --output_csv tator_i2mapbulk_baseline.csv
     conda run -n aipipeline --no-capture-output python3 load_vss.py \
-                  --input_json_paths i2mapbulkjson.txt \
+                  --input_json_paths i2mapbulkjson.txt \-
                   --save_path /tmp/i2mapbulkvss_top3 \
                   --tator_loaded_csv tator_i2mapbulk_baseline.csv \
                   --version mbari-i2map-vits-b8-20251008-vss
@@ -239,4 +240,15 @@ load-i2mapbulk-vss:
                   --save_path /tmp/m3mapbulkvss_top3 \
                   --tator_loaded_csv tator_i2mapbulk_baseline.csv \
                   --version mbari-m3-vits-b8-20251011-vss
-
+load-i2map-vss:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/i2map
+    export PYTHONPATH=.
+    find /mnt/DeepSea-AI/data/i2MAP/processed/vss -type f -name "*.json" &> $PROJECT_DIR/i2mapjson.txt
+    cd $PROJECT_DIR
+    conda run -n aipipeline --no-capture-output python3 download_baseline.py --project_id 3 --box_type 3 --image_type 5 --output_csv tator_i2map_baseline.csv
+    conda run -n aipipeline --no-capture-output python3 load_vss.py \
+                  --input_json_paths i2mapjson.txt \
+                  --save_path /tmp/i2mapvss_top3 \
+                  --tator_loaded_csv tator_i2map_baseline.csv \
+                  --version mbari-i2map-vits-b8-20251008-vss
