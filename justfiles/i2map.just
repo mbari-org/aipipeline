@@ -38,15 +38,36 @@ run-mega-track-i2map video='/mnt/DeepSea-AI/data/i2MAP/2025/04/i2MAP_20250402T17
         --det-model /mnt/DeepSea-AI/models/midwater/megadetrt-yolov5 \
         --stride 1 --video {{video}}" #--save-cotrack-video
 
-# Download i2mpabulk unverified data
-download-i2map-unverified:
+# Download i2maap unverified data Baseline version
+download-i2map-unverified-baseline:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
-        --config aipipeline/projects/i2map-/config/config.yml \
+        --config aipipeline/projects/i2map/config/config.yml \
         --data.download_dir /mnt/ML_SCRATCH/i2mapu \
         --data.download_args '--unverified --version Baseline --generator vars-labelbot --group NMS' "
 
-# Download i2mpabulk unlabeled data run with ENV_FILE=.env.i2map just download-i2mapbulk-unlabeled
-download-i2mapbulk-unlabeled:
+# Download i2map data Baseline version
+download-i2map-baseline:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2map/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2map \
+        --data.download_args '--version Baseline --generator vars-labelbot --group NMS' "
+
+# Download i2map pseudo-labeled data
+download-i2map-psueodo-labeled:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2map/config/config.yml \
+        --data.download_dir /mnt/DeepSea-AI/scratch/i2map \
+        --data.download_args '--voc --version Baseline,mbari-i2map-vits-b8-20251008-vss' "
+
+# Download i2mapbulk pseudo-labeled data run with ENV_FILE=.env.i2map just download-i2mapbulk-psueodo-labeled
+download-i2mapbulk-psueodo-labeled:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2mapbulk/config/config.yml \
+        --data.download_dir /mnt/DeepSea-AI/scratch/i2mapbulk \
+        --data.download_args '--voc --version Baseline,mbari-i2map-vits-b8-20251008-vss' "
+
+# Download i2mpabulk unverified data run with ENV_FILE=.env.i2map just download-i2mapbulk-unlabeled
+download-i2mapbulk-unverified:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml \
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulku \
@@ -240,6 +261,7 @@ load-i2mapbulk-vss:
                   --save_path /tmp/m3mapbulkvss_top3 \
                   --tator_loaded_csv tator_i2mapbulk_baseline.csv \
                   --version mbari-m3-vits-b8-20251011-vss
+# Load vss generated i2map data
 load-i2map-vss:
     #!/usr/bin/env bash
     export PROJECT_DIR=./aipipeline/projects/i2map
@@ -252,3 +274,6 @@ load-i2map-vss:
                   --save_path /tmp/i2mapvss_top3 \
                   --tator_loaded_csv tator_i2map_baseline.csv \
                   --version mbari-i2map-vits-b8-20251008-vss
+# Train rf-detr model on i2map pseudo-labeled data
+train-rfdetr-i2map:
+    conda run -n rtdetr --no-capture-output python3 aipipeline/projects/bio/train_rfdetr.py
