@@ -1,7 +1,7 @@
 # aipipeline/projects/i2map/config.yml
 # Config file for i2map project production
 
-config_url: "https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml"
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_i2mapbulk.yml"
 
 data:
   cleanvision_issues:
