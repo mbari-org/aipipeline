@@ -11,7 +11,6 @@ from typing import List
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 from cleanvision import Imagelab
-from multiprocessing import cpu_count
 from tempfile import TemporaryDirectory
 
 # Logging setup
