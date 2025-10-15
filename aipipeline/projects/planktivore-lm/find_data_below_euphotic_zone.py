@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore", category=SerializationWarning)
 
 # Directory containing .nc files with AHI data extracted from
 # https://data.caloos.org/#search?type_group=all&query=ahi%20planktivore&page=1
-this_dir =  Path(__file__).resolve().parent.parent.parent
+this_dir =  Path(__file__).resolve().parent
 nc_dir = this_dir / "cencoos"
 
 # Get all .nc and .nc4 files
@@ -20,6 +20,7 @@ for file in nc_dir.rglob("*.nc"):
 # Initialize final results
 final_matches = []
 all_matched_indices = set()
+total_records = 0
 
 # Process each .nc file
 for i, file in enumerate(nc_files):
@@ -39,7 +40,12 @@ for i, file in enumerate(nc_files):
         # Select records below euphotic zone (depth > 20m)
         print("Filtering records below euphotic zone (depth > 20m)...")
         depth_values = ds.depth.values
-        mask = depth_values < -20
+        # Get the range of values
+        print(f"Depth range: min={np.nanmin(depth_values)}, max={np.nanmax(depth_values)}")
+        print(f"Total AHI records in file: {len(ds.time.values)}")
+        total_records += len(ds.time.values)
+        # Create a mask for depths less than 20m
+        mask = depth_values < -20.
         ds_below_euphotic = ds.isel(time=mask)
         # Get the time values as a DataFrame
         ds_below_euphotic = pd.DataFrame(ds_below_euphotic.time.values, columns=['time'])
@@ -59,7 +65,7 @@ if final_matches:
     # Save results
     final_matches = pd.DataFrame({'time': np.concatenate(final_matches)})
     final_matches = final_matches.drop_duplicates().reset_index(drop=True)
-    print(f"Unique records after removing duplicates: {len(final_matches)}")
+    print(f"Unique records after removing duplicates: {len(final_matches)} out of {total_records} total records")
     output_file = f"{nc_dir}/lm_below_euphotic_results.csv"
     final_matches.to_csv(output_file, index=False)
     print(f"\nResults saved to: {output_file}")

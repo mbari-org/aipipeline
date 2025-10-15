@@ -1,9 +1,8 @@
-import glob
 from pathlib import Path
 import pandas as pd
 import numpy as np
 
-this_dir =  Path(__file__).resolve().parent.parent.parent
+this_dir =  Path(__file__).resolve().parent
 data_dir = this_dir
 time_file = this_dir / "cencoos" / "lm_below_euphotic_results.csv"
 roi_parquet_files = data_dir.glob("*_lowmag_level2.parquet")
@@ -32,6 +31,8 @@ for path in roi_paths:
     # Vectorized extraction of epoch from the first column for speed
     df_roi['epoch'] = df_roi.iloc[:, 0].str.extract(r'-(\d+)-')[0].astype(np.int64)
     df_roi['time'] = pd.to_datetime(df_roi['epoch'], unit='us')
+    # Rename the first column to 'filename' for use in loader
+    df_roi = df_roi.rename(columns={df_roi.columns[0]: 'filename'})
     df_roi = df_roi.sort_values('time').reset_index(drop=True)
 
     # Use merge_asof to find the nearest time in df_times for each ROI
