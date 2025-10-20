@@ -1,11 +1,16 @@
 from pathlib import Path
 import pandas as pd
 import numpy as np
+import re
 
 this_dir =  Path(__file__).resolve().parent
 data_dir = this_dir
 time_file = this_dir / "cencoos" / "lm_below_euphotic_results.csv"
 roi_parquet_files = data_dir.glob("*_lowmag_level2.parquet")
+
+# Regex to parse width and height from filenames like:
+# ..._0_124_636_0_rawcolor.png  -> width=124, height=636
+filename_wh_re = re.compile(r'_(\d+)_(\d+)_(\d+)_rawcolor\.\w+$', re.IGNORECASE)
 
 # Get times below euphotic zone in the time_file
 df_times = pd.read_csv(time_file, parse_dates=['time'])
@@ -34,6 +39,24 @@ for path in roi_paths:
     # Rename the first column to 'filename' for use in loader
     df_roi = df_roi.rename(columns={df_roi.columns[0]: 'filename'})
     df_roi = df_roi.sort_values('time').reset_index(drop=True)
+
+    # Parse width and height from filenames
+    widths = []
+    heights = []
+    for fn in df_roi['filename']:
+        m = filename_wh_re.search(fn)
+        if m:
+            widths.append(int(m.group(2)))  # width is the second group
+            heights.append(int(m.group(3)))  # height is the third group
+        else:
+            widths.append(np.nan)
+            heights.append(np.nan)
+    df_roi['width'] = widths
+    df_roi['height'] = heights
+
+    # Skip rows where width or height < 200
+    df_roi = df_roi[(df_roi['width'] >= 200) & (df_roi['height'] >= 200)]
+    print(f"ROIs after filtering width/height >= 200: {len(df_roi)}")
 
     # Use merge_asof to find the nearest time in df_times for each ROI
     merged = pd.merge_asof(
