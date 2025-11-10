@@ -153,7 +153,7 @@ See the [bitbucket uavprocessing repo](bitbucket.org/mbari/uavprocessing.git) fo
 - `run-mega-stride-i2map video='...' vit_model='...' version='...'`  
 - `run-mega-track-i2map video='...' vit_model='...' version='...'`  
 - `cluster-i2mapbulk` — Run inference & clustering on i2MAP bulk  
-- `transcode-i2map` — Transcode i2MAP `.mov` to `.mp4` for use with Tator
+- `transcode-i2map input_dir='...' output_dir='' ` — Transcode i2MAP `.mov` to `.mp4` for use with Tator
 - `load-i2mapbulk data='data'`  
 - `download-i2mapbulk-unlabeled` — Get unlabeled data   
 - `gen-i2map-data` — Generate training data from *mantis.shore.mbari.org* server for either classification or detection models
