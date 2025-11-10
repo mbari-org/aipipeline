@@ -2,6 +2,21 @@
 
 
 
+## v0.97.0 (2025-11-10)
+
+### Feature
+
+* feat(i2map): upload video to i2map.shore ([`858005e`](https://github.com/mbari-org/aipipeline/commit/858005e925be90209a7393ecdf8d3cd6724a5d65))
+
+### Unknown
+
+* added filename column for downstream use, clean_roi_data.py in prep for some filtering before choosing random sample to load, and beginnings of loader ([`e04f581`](https://github.com/mbari-org/aipipeline/commit/e04f5810505edb7580cc3d5cd438341dea4eb90e))
+
+* added filename column for downstream use, clean_roi_data.py in prep for some filtering before choosing random sample to load, and beginnings of loader ([`c2896c9`](https://github.com/mbari-org/aipipeline/commit/c2896c935d87b83ed4d4ab320678540cc7dc308d))
+
+* scripts to search for ROIS below a depth ([`1172bb9`](https://github.com/mbari-org/aipipeline/commit/1172bb9d9088561fa44114425a46066ccb9a2363))
+
+
 ## v0.96.1 (2025-10-02)
 
 ### Fix
