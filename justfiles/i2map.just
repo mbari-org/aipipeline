@@ -167,9 +167,11 @@ cluster-i2mapbulk-sweep:
             done
         done
     done
-# Transcode i2MAP videos from mov to mp4 for use in Tator
-transcode-i2map:
-    aipipeline/projects/i2map/mov2mp4.sh
+
+# Transcode i2MAP videos from mov to mp4 for use in Tator. Keyframe every 2 seconds
+# Example just transcode-i2map /mnt/M3/master/i2MAP/2025/04/20250402/ /mnt/DeepSea-AI/data/i2MAP/2025/04/20250402
+transcode-i2map input_dir='/mnt/M3/master/i2MAP/2025/04/20250402/' output_dir='/mnt/DeepSea-AI/data/i2MAP/2025/04/20250402':
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2map/mov2mp4.py --input {{input_dir}} --output {{output_dir}} --gop 120"
 
 # Generate cluster plots for i2map
 gen-cluster-plots-i2map:
