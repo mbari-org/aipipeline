@@ -173,6 +173,14 @@ cluster-i2mapbulk-sweep:
 transcode-i2map input_dir='/mnt/M3/master/i2MAP/2025/04/20250402/' output_dir='/mnt/DeepSea-AI/data/i2MAP/2025/04/20250402':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2map/mov2mp4.py --input {{input_dir}} --output {{output_dir}} --gop 120"
 
+# Upload transcoed i2MAP mp4 videos from a directory into a section
+upload-i2map-videos input_dir='/mnt/DeepSea-AI/data/i2MAP/2025/04/20250402' section="Video/i2MAP/2025/04":
+    #!/bin/bash
+    find {{input_dir}} \( -name '*.mp4' \) -exec sh -c '
+    for file do
+        time aidata load videos --upload --config https://docs.mbari.org/internal/ai/projects/config/config_i2map.yml --input "$file" --section {{section}}
+    done' sh {} +
+
 # Generate cluster plots for i2map
 gen-cluster-plots-i2map:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/cluster_sweep_plot.py"
