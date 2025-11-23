@@ -57,12 +57,13 @@ run-mega-track-test-fastapiyv5:
      --video aipipeline/projects/bio/data/V4361_20211006T163256Z_h265_1min.mp4"
 
 # Generate training data for the bio project
-gen-bio-data image_dir="":
-    just --justfile {{justfile()}} download-crop bio --skip-clean True --gen-multicrop --data.processed_path /mnt/ML_SCRATCH/bio --data.download_args "'--verified'"
-    time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/clean_pipeline.py \
-        --config aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/901103-biodiversity/crops"
-    time just --justfile {{justfile()}} _base_cmd "aipipeline/prediction/clean_pipeline.py \
-        --config aipipeline/projects/bio/config/config.yml --image-dir /mnt/ML_SCRATCH/M3/crops"
+gen-bio-data: 
+   time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/bio/config/config.yml \
+        --skip-clean True \
+        --data.download_dir /mnt/ML_SCRATCH/bio \
+        --data.download_args '--verified --voc --version Baseline,mega-vits-track-gcam,mbari-i2map-vits-b8-20251008-vss '"
+
 run-ctenoA-prod:
     echo "Running strided inference on multiple videos from TSV"
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/bio/cluster.py \
