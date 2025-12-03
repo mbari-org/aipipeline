@@ -5,14 +5,17 @@ import subprocess
 from pathlib import Path
 import argparse
 
-def transcode_file(input_file: Path, output_file: Path, gop: int):
-    """Run ffmpeg to transcode the video."""
+
+def transcode_file(input_file: Path, output_file: Path, gop: int, codec: str = "hevc"):
+    """Run ffmpeg to transcode with selectable codec."""
     output_file.parent.mkdir(parents=True, exist_ok=True)
-    print(f"Transcoding: {input_file} → {output_file}")
+
     command = [
         "ffmpeg", "-y", "-hwaccel", "cuda", "-i", str(input_file),
         "-g", str(gop), "-keyint_min", str(gop), "-sc_threshold", "0",
-        "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+        "-c:v", "h264",
+        "-an",  # Remove audio
+        "-preset", "slow",  # Slower preset = better quality
         "-avoid_negative_ts", "make_zero",
         "-movflags", "faststart+frag_keyframe+empty_moov+default_base_moof",
         str(output_file)
