@@ -336,7 +336,7 @@ def clean(base_path: str) -> str:
     return f"Cleaned {base_path} but not images"
 
 
-def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str]:
+def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> str:
     TATOR_TOKEN = os.getenv("TATOR_TOKEN")
     args_list = [
         "aidata",
@@ -352,14 +352,20 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> List[str
         if len(labels_str) > 1:
             args_list.extend(["--labels", f'{labels_str}'])
             logger.info(f"Downloading data for labels: {labels}....")
-    else:
-        labels = []
 
     result = run_subprocess(args_list=args_list)
     if result != 0:
         logger.error(f"Failed to download data: {result}")
-        return [f"Failed to download data: {result}"]
-    return labels
+        return f"Failed to download data: {result}"
+
+    # Find the directory containing the downloaded data and return it. This is the first directory with
+    # a subdirectory named "images"
+    download_dir = None
+    for f in Path(config_dict["data"]["download_dir"]).glob("*"):
+        if f.is_dir() and (Path(f) / "images").exists():
+            download_dir = f.as_posix()
+            break
+    return download_dir
 
 def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: int = 3, background: bool = False) -> tuple:
     """

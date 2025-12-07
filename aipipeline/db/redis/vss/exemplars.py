@@ -47,7 +47,7 @@ def load_exemplars(labels: List[tuple[str, str]], conf_files=Dict) -> str:
             with open(exemplar_file, "r") as f:
                 exemplar_count = len(f.readlines())
 
-        if exemplar_count < 10 or exemplar_file is None:
+        if exemplar_count < 500 or exemplar_file is None:
             all_detections = list(Path(save_dir).rglob("*_detections.csv"))
             exemplar_file = sorted(all_detections, key=os.path.getmtime, reverse=True)[0] if all_detections else None
 
@@ -123,9 +123,7 @@ def load_exemplar(data, conf_files=Dict) -> str:
         "--password",
         REDIS_PASSWORD,
         "--config",
-        conf_files[CONFIG_KEY],
-        "--token",
-        TATOR_TOKEN,
+        conf_files[CONFIG_KEY]
     ]
     try:
         result = run_subprocess(args_list=args_list)
