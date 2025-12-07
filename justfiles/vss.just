@@ -45,12 +45,10 @@ remove-vss project='uav' *more_args="":
         {{more_args}}"
 
 # Initialize the VSS database for a project, e.g. just init-vss uav
-init-vss project='uav' *more_args="":
+init-vss project='uav':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
         --config aipipeline/projects/{{project}}/config/config.yml \
-        --batch-size 1 \
-        --skip-clean True \
-        {{more_args}}"
+        --data.download_dir /mnt/ML_SCRATCH/{{project}} " 
 
 # Load already computed exemplars into the VSS database
 load-vss project='uav' :
@@ -103,6 +101,6 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/predict_pipeline.py \
     --config aipipeline/projects/{{project}}/config/config.yml \
     --input $image_listing \
-    --batch-size 512 \
+    --batch-size 128 \
     {{more_args}}"
 

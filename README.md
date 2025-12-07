@@ -97,7 +97,7 @@ just list
 - `reset-vss-all` — Reset **all** VSS data (dangerous)  
 - `reset-vss project='uav'` — Reset VSS database for a project  
 - `remove-vss project='uav' *more_args=""` — Remove VSS entry (e.g., `--doc 'doc:marine organism:*'`)  
-- `init-vss project='uav' *more_args=""` — Initialize VSS for a project  
+- `init-vss project='uav'` — Initialize VSS for a project using all verified labels  
 - `load-vss project='uav'` — Load precomputed exemplars into VSS  
 - `gen-stats-csv project='UAV' data='...'`  - Generate training data stats from downloaded data. Aggregate stats for nested directories
 

@@ -1,6 +1,6 @@
 # aipipeline, Apache-2.0 license
-# Filename: aipiipeline/db/redis/vss/init_pipeline.py
-# Description: Run the VSS initialization pipeline
+# Filename: aipiipeline/db/redis/vss/init_vss_pipeline.py
+# Description: Run the VSS initialization pipeline with special padded and rescale for plankivore ROIs
 from datetime import datetime
 
 import dotenv
@@ -80,34 +80,29 @@ def run_pipeline(argv=None):
     download_args = [arg for arg in download_args if arg] # Remove empty strings
     download_args.extend(["--crop-roi"])
     config_dict["data"]["download_args"] = download_args
-    download_path = Path(config_dict["data"]["download_dir"])
-    # Get the --version argument if it exists in the download args
-    version_index = download_args.index("--version") if "--version" in download_args else -1
-    versions = download_args[version_index + 1] if version_index != -1 and version_index + 1 < len(
-        download_args) else "Baseline"
-    # The version path created during download is a combined path of all versions specified, separated by underscores
-    versions = versions.split(",")
-    version_path = "_".join(versions)
-    crop_path = download_path / version_path / "crops"
 
     # Need to wrap this to handle the extra arg labels passed by beam from the "Download labeled data" step
-    def _pad_and_rescale(labels=[], input_path: Path=None, output_path: Path=None) -> str:
-        logger.info(f"Padding {input_path} to {output_path}")
-        return pad_and_rescale(input_path=input_path, output_path=output_path)
+    def _pad_and_rescale(input_path: Path) -> str:
+        logger.info(f"Padding {input_path}")
+        return pad_and_rescale(input_path, input_path)
 
     with beam.Pipeline(options=options) as p:
-        (
-            p
-            | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
-            | "Square ROIs" >> beam.Map(_pad_and_rescale, input_path=crop_path, output_path=crop_path)
-            | "Compute stats" >> beam.Map(compute_stats)
-            | "Generate views" >> beam.Map(generate_multicrop_views)
-            | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
-            | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
-            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
-            | "Log results" >> beam.Map(logger.info)
-        )
+            download_data = (
+                p
+                | "Start download" >> beam.Create([labels])
+                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
+            )
+            crop_path = download_data | beam.Map(lambda s: s + '/crops')
+            (
+                 crop_path
+                | "Square ROIs" >> beam.Map(_pad_and_rescale, input_path=crop_path)
+                | "Compute stats" >> beam.Map(compute_stats)
+                | "Generate views" >> beam.Map(generate_multicrop_views)
+                | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
+                | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
+                | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
+                | "Log results" >> beam.Map(logger.info)
+            )
 
 
 if __name__ == "__main__":

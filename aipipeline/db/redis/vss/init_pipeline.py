@@ -77,29 +77,24 @@ def run_pipeline(argv=None):
     download_args = config_dict["data"].get("download_args", []) # Get download arguments from config
     download_args = download_args.split(" ") if isinstance(download_args, str) else download_args # Convert to list if it's a string
     download_args = [arg for arg in download_args if arg] # Remove empty strings
-    download_args.extend(["--crop-roi", "--resize", "224"])
+    download_args.extend(["--crop-roi", "--resize", "224", "--verified"])
     config_dict["data"]["download_args"] = download_args
-    version_index = download_args.index("--version") if "--version" in download_args else -1
-    versions = download_args[version_index + 1] if version_index != -1 and version_index + 1 < len(
-        download_args) else "Baseline"
-    # The version path is a combined path of all versions specified, separated by underscores
-    versions = versions.split(",")
-    version_path = "_".join(versions)
-    crop_path = download_path / version_path / "crops"
 
     with beam.Pipeline(options=options) as p:
-        (
-            p
-            | "Start download" >> beam.Create([labels])
-            | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
-            | "Start stats" >> beam.Create([crop_path.as_posix()])
-            | "Compute stats" >> beam.Map(compute_stats)
-            | "Generate views" >> beam.Map(generate_multicrop_views)
-            | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
-            | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
-            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
-            | "Log results" >> beam.Map(logger.info)
-        )
+            download_data = (
+                p
+                | "Start download" >> beam.Create([labels])
+                | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
+            )
+            crop_path = download_data | beam.Map(lambda s: s + '/crops')
+            (
+                crop_path
+                | "Compute stats" >> beam.Map(compute_stats)
+                | "Generate views" >> beam.Map(generate_multicrop_views)
+                | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
+                | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
+                | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
+            )
 
 
 if __name__ == "__main__":
