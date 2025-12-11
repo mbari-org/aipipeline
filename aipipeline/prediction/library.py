@@ -358,13 +358,17 @@ def download(labels: List[str], conf_files: Dict, config_dict: Dict) -> str:
         logger.error(f"Failed to download data: {result}")
         return f"Failed to download data: {result}"
 
-    # Find the directory containing the downloaded data and return it. This is the first directory with
-    # a subdirectory named "images"
+    # Find the directory containing the downloaded data and return it.
     download_dir = None
-    for f in Path(config_dict["data"]["download_dir"]).glob("*"):
-        if f.is_dir() and (Path(f) / "images").exists():
-            download_dir = f.as_posix()
+    # Find all directories in the download directory
+    all_dirs = [f for f in Path(config_dict["data"]["download_dir"]).glob("*") if f.is_dir()]
+    # Return the first directory that ends in "images"
+    for d in all_dirs:
+        if d.name.endswith("images"):
+            download_dir = d.as_posix()
             break
+    if download_dir is None:
+        logger.error(f"Failed to find downloaded data directory in {config_dict['data']['download_dir']}")
     return download_dir
 
 def run_vss(image_batch: List[tuple[np.array, str]], config_dict: dict, top_k: int = 3, background: bool = False) -> tuple:
