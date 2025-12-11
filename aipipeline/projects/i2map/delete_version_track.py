@@ -2,7 +2,7 @@ import tator
 import os
 
 project_id = 3  # bio project in the database (mantis.shore.mbari.org)
-version_id = 71  # Version ID to delete localizations for
+version_id = 72  # Version ID to delete localizations for
 box_type = 3  # Box type ID
 # Connect to Tator
 token = os.getenv("TATOR_TOKEN")
