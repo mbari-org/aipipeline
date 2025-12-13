@@ -94,3 +94,19 @@ replace-m3-urls:
 
 
 
+# Transcode M3 videos from mov to mp4 for use in Tator. Keyframe every 2 seconds
+# Example just transcode-bio /mnt/M3/master/DocRicketts/2022/05/1443/ /mnt/DeepSea-AI/data/DocRicketts/2022/05/1443/
+transcode-bio input_dir='/mnt/M3/master/DocRicketts/2018/05/1023/' output_dir='/mnt/DeepSea-AI/data/DocRicketts/2018/05/1023/':
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2map/mov2mp4.py --input {{input_dir}} --output {{output_dir}} --gop 60"
+# Download Ctenophora sp. A training data only
+gen-ctenoA-data:
+    #!/usr/bin/env bash
+    export PYTHONPATH=deps:deps/biotrack:.
+    export MPLCONFIGDIR=/tmp
+    time conda run -n aipipeline --no-capture-output python3 \
+        aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/bio/config/config.yml \
+        --clean \
+        --data.download_dir /mnt/ML_SCRATCH/bio_ctenoA \
+        --data.download_args '--labels "Ctenophora sp. A"'
+    aidata transform voc --base-path /mnt/ML_SCRATCH/bio_ctenoA/ --crop-size 728 --crop-overlap 0.2 --min-visibility 0.
