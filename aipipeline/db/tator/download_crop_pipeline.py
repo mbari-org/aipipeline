@@ -11,7 +11,7 @@ from apache_beam.options.pipeline_options import PipelineOptions
 import logging
 
 from aipipeline.config_args import parse_override_args
-from aipipeline.config_setup import extract_labels_config, setup_config
+from aipipeline.config_setup import setup_config
 from aipipeline.prediction.library import download, clean, compute_stats, generate_multicrop_views, \
     clean_images, remove_multicrop_views
 
@@ -66,11 +66,10 @@ def run_pipeline(argv=None):
     remove_multicrop_views(download_path.as_posix())
 
     # Set up the configuration for downloading
-    download_args = data.get("download_args", []) # Get download arguments from config
-    download_args = download_args.split(" ") if isinstance(download_args, str) else download_args # Convert to list if it's a string
-    download_args = [arg for arg in download_args if arg] # Remove empty strings
+    import shlex
+    download_args = data.get("download_args", [])  # Get download arguments from config
+    download_args = shlex.split(download_args)
     download_args.extend(["--crop-roi", "--resize", "224"])
-    download_args = [arg.strip("'") for arg in download_args if arg.strip("'")]
     config_dict["data"]["download_args"] = download_args
 
     with beam.Pipeline(options=options) as p:
