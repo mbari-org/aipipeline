@@ -67,8 +67,9 @@ def run_pipeline(argv=None):
 
     # Set up the configuration for downloading
     import shlex
-    download_args = data.get("download_args", [])  # Get download arguments from config
-    download_args = shlex.split(download_args)
+    download_args = data.get("download_args", [])
+    if len(download_args) > 0:
+        download_args = shlex.split(download_args)
     download_args.extend(["--crop-roi", "--resize", "224"])
     config_dict["data"]["download_args"] = download_args
 
