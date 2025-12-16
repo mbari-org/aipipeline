@@ -54,34 +54,16 @@ load-i2mapbulk data='data':
 gen-i2map-data:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/i2map/config/config.yml \
-        --clean \
         --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2map \
-        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS ' \
-        --labels 'Acanthamunnopsis milleri' 'Aegina' 'Aegina citrea' 'Aegina rosea' \
-        'Aegina sp. 1' 'Agalmatidae' 'Amphipoda' 'Annatiara affinis' \
-        'Apolemiidae' 'Appendicularia' 'Atolla' 'Bathochordaeus' \
-        'Bathochordaeus sinker' 'Bathochordaeus sinkers' 'Bathochordaeus stygius' \
-        'Beroe' 'Beroe cucumis' 'Bolinopsis' 'Bolinopsis infundibulum' \
-        'Calycophorae' 'Chaetognatha' 'Chiroteuthis calyx' 'Chuniphyes' \
-        'Colobonema sericeum' 'Copepoda' 'Cranchiidae' 'Crustacea' \
-        'Ctenophora' 'Cydippida' 'Cydippida sp. A' 'Cystisoma' \
-        'Desmophyes annectens' 'Earleria corachloeae' 'Euchirella bitumida' \
-         'Euphausiacea1' 'Euphysa' 'Eusergestes similis' \
-         'Eutonina indicans' 'Forskalia' 'Gonatus' 'Haliscera conica' \
-         'Halitrephes' 'Hastigerinella digitata' 'Hormiphora californensis' \
-         'Krill molt' 'Lensia' 'Lensia conoidea' 'Medusae' \
-         'Mertensiidae' 'Mitrocoma cellularia' 'Modeeria rotunda' \
-         'Myctophidae' 'Nanomia' 'Nanomia bijuga' 'Nanomia 2' \
-         'Octogonade mediterranea' 'Oikopleuridae' 'Pasiphaea' \
-         'Periphylla periphylla' 'Phronima' 'Physonectae' \
-         'Poeobius meseres' 'Prayidae' 'Ptychogena lactea' \
-         'Radiozoa' 'Resomia ornicephala' 'Rhopalonema' \
-         'Salpa fusiformis' 'Salpidae' 'Scina' 'Sergestid molt' \
-         'Siphonophorae' 'Solmissus' 'Solmundella bitentaculata' \
-         'sinker' 'Stellamedusa ventana' 'Teuthoidea' \
-         'Thalassocalyce inconstans' 'Tomopteridae' 'Tuscaroridae' \
-         'Vitreosalpa gemini' 'Vogtia' 'Zoarcidae'"
+        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS '"
+
+# Initialize the VSS database for the i2map project
+init-vss-i2map:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+        --config aipipeline/projects/i2map/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2map \
+        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS '"
 
 # Download and cluster data. Run with  just download-cluster i2map
 cluster-i2map:
@@ -93,8 +75,6 @@ cluster-i2map:
 gen-i2mapbulk-data:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml \
-        --clean \
-        --use-cleanvision True \
         --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
         --data.download_args '--verified '"
 
@@ -102,9 +82,33 @@ gen-i2mapbulk-data:
 gen-i2mapbulk-baseline:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml \
-        --data.download_dir /mnt/ML_SCRATCH/i2mapbulkall \
+        --data.download_dir /mnt/DeepSea-AI/scratch/i2mapbulkall \
         --data.download_args '--version Baseline '"
 
+# Download all Baseline i2map project from the bulk server, run with ENV_FILE=.env.i2map just gen-i2mapbulk-mbari-i2map-vits-b8-20251008-vss
+gen-i2mapbulk-nms:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
+        --config aipipeline/projects/i2mapbulk/config/config.yml \
+        --data.download_dir /mnt/DeepSea-AI/scratch/i2mapbulk_nms"
+
+# Run SDCAT to predict and cluster i2map bulk unknown data. Run after gen-i2mapbulk-baseline
+sdcat-i2mapbulk-baseline:
+    #!/usr/bin/env bash
+    export PROJECT_DIR=$PWD/aipipeline/projects/i2mapbulk
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export RAY_DEDUP_LOGS=0
+    cd ~/code/sdcat
+    time conda run -n rapids-25.04 --no-capture-output sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
+            --roi-dir /mnt/DeepSea-AI/scratch/i2mapbulkall/Baseline/crops/ \
+            --save-dir /mnt/DeepSea-AI/scratch/i2mapbulkall/Baseline/predictions \
+            --device cuda:0 \
+            --use-vits \
+            --vits-batch-size 512 \
+            --skip-visualization
+# Run filter based on F1
+sdcat-i2map-filter-baseline:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/filter_sdcat_f1.py"
 # Cluster bulk unknown data
 cluster-i2mapbulk:
     #!/usr/bin/env bash
@@ -156,7 +160,7 @@ cluster-i2mapbulk-sweep:
 transcode-i2map input_dir='/mnt/M3/master/i2MAP/2025/04/20250402/' output_dir='/mnt/DeepSea-AI/data/i2MAP/2025/04/20250402':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2map/mov2mp4.py --input {{input_dir}} --output {{output_dir}} --gop 120"
 
-# Upload transcoed i2MAP mp4 videos from a directory into a section
+# Upload transcoded i2MAP mp4 videos from a directory into a section
 upload-i2map-videos input_dir='/mnt/DeepSea-AI/data/i2MAP/2025/04/20250402' section="Video/i2MAP/2025/04":
     #!/bin/bash
     find {{input_dir}} \( -name '*.mp4' \) -exec sh -c '
