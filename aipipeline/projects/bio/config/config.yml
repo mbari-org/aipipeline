@@ -10,3 +10,7 @@ data:
     - name: "blurry"
     - name: "dark"
     - name: "exact_duplicates"
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  ini: "sdcat.ini"

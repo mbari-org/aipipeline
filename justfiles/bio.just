@@ -108,5 +108,5 @@ gen-ctenoA-data:
         --config aipipeline/projects/bio/config/config.yml \
         --clean \
         --data.download_dir /mnt/ML_SCRATCH/bio_ctenoA \
-        --data.download_args '--labels "Ctenophora sp. A"'
-    aidata transform voc --base-path /mnt/ML_SCRATCH/bio_ctenoA/ --crop-size 728 --crop-overlap 0.2 --min-visibility 0.
+        --data.download_args '--voc --labels "Ctenophora sp. A"'
+    aidata transform voc --base-path /mntai/ML_SCRATCH/bio_ctenoA/ --crop-size 728 --crop-overlap 0.2 --min-visibility 0.
