@@ -110,7 +110,12 @@ just list
 - `cluster-cfe-isiis-hawaii-p2 p1_dir=""` — Second pass clustering
 - `gen-cfe-data` — Generate training data for CFE
 - `transcode-cfe-isiis-rc` — Transcode Rachel Carson videos  
-- `transcode-cfe-isiis-hawaii` — Transcode Hawaii videos    
+- `transcode-cfe-isiis-hawaii` — Transcode Hawaii videos
+- `gen-cfe-dino_v7` - Generate data for the CFE project from the deployment version cfe_isiis_dino_v7-20250916
+- `merge-media-cfe-isiis-rc` - Merge absolute media paths for CFE ISII RC mission with downloaded localizations.csv
+- `fast-crop-cfe-isiis-rc` - Fast ROI crop for CFE ISIIS mission videos
+
+
 
 ## Biodiversity
 

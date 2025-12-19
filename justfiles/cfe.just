@@ -12,6 +12,20 @@ gen-cfe-data:
         --data.download_dir /mnt/ML_SCRATCH/isiis \
         --data.download_args "'--verified --version Baseline'"
 
+# Generate data for the CFE project from the deployment version cfe_isiis_dino_v7-20250916
+gen-cfe-dino_v7:
+  just --justfile {{justfile()}} download-crop cfedeploy --clean --gen-multicrop \
+        --data.download_dir /mnt/ML_SCRATCH/isiis \
+        --data.download_args "'--voc --version cfe_isiis_dino_v7-20250916 '"
+
+# Merge absolute media paths for CFE ISII RC mission with downloaded localizations.csv
+merge-media-cfe-isiis-rc:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/merge_media_path.py"
+
+# Fast crop ROI for CFE ISIIs mission videos
+fast-crop-cfe-isiis-rc:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/fast_crop_roi.py"
+
 # Load cfe ISII mission videos. Run with e.g. just load-cfe-isiis-videos hawaii-video.txt or just load-cfe-isiis-videos rachelcarson-video.txt. Populate files in project/cfedeploy/data first
 load-cfe-isiis-videos missions="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/load_isiis_video_pipeline.py \
