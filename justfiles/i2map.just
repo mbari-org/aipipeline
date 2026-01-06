@@ -65,6 +65,11 @@ init-vss-i2map:
         --data.download_dir /mnt/ML_SCRATCH/i2map \
         --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS '"
 
+    ENV_FILE=.env.i2map time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+        --config aipipeline/projects/i2map/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
+        --data.download_args '--verified  '"
+
 # Download and cluster data. Run with  just download-cluster i2map
 cluster-i2map:
     just --justfile {{justfile()}} cluster i2map --version Baseline \
