@@ -58,6 +58,18 @@ gen-i2map-data:
         --data.download_dir /mnt/ML_SCRATCH/i2map \
         --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS '"
 
+# Initialize the VSS database for the i2map project into the m3 project in VSS
+init-vss-i2map-m3:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+        --config aipipeline/projects/m3/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2map \
+        --data.download_args '--verified --version Baseline --generator vars-labelbot --group NMS '"
+
+    ENV_FILE=.env.i2map time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+        --config aipipeline/projects/m3/config/config.yml \
+        --data.download_dir /mnt/ML_SCRATCH/i2mapbulk \
+        --data.download_args '--verified  '"
+
 # Initialize the VSS database for the i2map project
 init-vss-i2map:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
