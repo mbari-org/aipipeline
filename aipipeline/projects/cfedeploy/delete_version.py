@@ -1,9 +1,9 @@
 import tator
 import os
 
-project_id = 14  # planktivore project in the database (mantis.shore.mbari.org)
-version_id = 63  # Version ID to delete localizations for
-box_type = 18  # Box type ID for planktivore localizations (e.g., 18 for bounding boxes)
+project_id = 14  # cfe project in the database (mantis.shore.mbari.org)
+version_id = 64  # Version ID to delete localizations for
+box_type = 18  # Box type ID for bounding boxes
 # Connect to Tator
 token = os.getenv("TATOR_TOKEN")
 api = tator.get_api(host='https://mantis.shore.mbari.org', token=token)
@@ -25,4 +25,4 @@ if count > 0:
 
 
 # Delete the version itself
-api.delete_version(project=project_id, version=version_id)
+api.delete_version(version_id)
