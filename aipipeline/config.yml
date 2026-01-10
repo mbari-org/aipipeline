@@ -5,7 +5,7 @@
 docker:
   sdcat: 'mbari/sdcat:1.27.9-cuda124'
   expd: 'get-expd-data'
-
+  voccropper: 'mbari/voc-imagecropper'
 
   bind_volumes:
     /mnt/ML_SCRATCH:
