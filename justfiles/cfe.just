@@ -133,3 +133,7 @@ transcode-cfe-isiis-hawaii:
         --output "/mnt/DeepSea-AI/data/ISIIS/20250401_Hawaii" \
         --gop 30"
 
+# Fix off-by-one errors in CFE ISIIS Rachel Carson detections
+fix-cfe-isiis-rc-offbyone:
+    python3 aipipeline/projects/cfedeploy/simplify_csv.py  /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916.csv -O /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916_S.csv
+    cd aipipeline/projects/cfedeploy && ./update_frames /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916.csv -O /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916_S.csv
