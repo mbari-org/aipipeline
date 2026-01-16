@@ -1,5 +1,5 @@
 # aipipeline, Apache-2.0 license
-# Filename: projects/uav/load-sdcat-pipeline.py
+# Filename: projects/i2mapbulk/load_pipeline_best_top2.py
 # Description: Load detections into Tator from sdcat clustering
 import os
 from datetime import datetime
