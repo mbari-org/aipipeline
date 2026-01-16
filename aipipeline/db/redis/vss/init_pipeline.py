@@ -14,7 +14,7 @@ from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.prediction.library import (
     download,
-    compute_stats,
+    report_stats,
     clean,
     remove_multicrop_views,
     generate_multicrop_views,
@@ -51,7 +51,8 @@ def run_pipeline(argv=None):
     example_project = Path(__file__).resolve().parent.parent / "projects" / "uav" / "config" / "config.yml"
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--clean", action="store_true", help="Clean previously downloaded data")
-    parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
+    parser.add_argument("--skip-download", action="store_true", help="Skip downloading data")
+    parser.add_argument("--skip-generate-views", action="store_true", help="Skip generating multicrop views")
 
     MIN_DETECTIONS = 2000
     args, other_args = parser.parse_known_args(argv)
@@ -81,20 +82,28 @@ def run_pipeline(argv=None):
     config_dict["data"]["download_args"] = download_args
 
     with beam.Pipeline(options=options) as p:
+        if args.skip_download:
+            logger.info("Skipping download step")
+            crop_path = (
+                p
+                | "Skip download" >> beam.Create([config_dict["data"]["download_dir"]])
+            )
+        else:
             download_data = (
                 p
                 | "Start download" >> beam.Create([labels])
                 | "Download labeled data" >> beam.Map(download, conf_files=conf_files, config_dict=config_dict)
             )
             crop_path = download_data | beam.Map(lambda s: s + '/crops')
-            (
-                crop_path
-                | "Compute stats" >> beam.Map(compute_stats)
-                | "Generate views" >> beam.Map(generate_multicrop_views)
-                | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
-                | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
-                | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
-            )
+
+        (
+            crop_path
+            | "Report stats" >> beam.Map(report_stats)
+            | "Generate views" >> beam.Map(lambda path: path if args.skip_generate_views else generate_multicrop_views(path))
+            | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
+            | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
+            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
+        )
 
 
 if __name__ == "__main__":
