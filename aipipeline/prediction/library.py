@@ -222,7 +222,7 @@ def gen_machine_friendly_label(label: str) -> str:
     label_machine_friendly = label_machine_friendly.replace(".", "")
     return label_machine_friendly
 
-def compute_stats(crop_dir: str) -> List[tuple]:
+def report_stats(crop_dir: str) -> List[tuple]:
     stats_file = None
     for f in Path(crop_dir).rglob("*stats.json"):
         logger.info(f"Found stats file {f}")
@@ -256,66 +256,43 @@ def compute_stats(crop_dir: str) -> List[tuple]:
         logger.debug(data)
     return data
 
-def crop_rois_voc(labels_filter: List[str], config_dict: Dict, processed_dir: str = None, image_dir: str = None) -> List[
-    tuple]:
-    project = config_dict["tator"]["project"]
-    short_name = get_short_name(project)
-    skip = False
-    if processed_dir is None:
-        processed_data = config_dict["data"]["download_dir"]
-    else:
-        processed_data = processed_dir
-    base_path = os.path.join(processed_data, config_dict["data"]["version"])
-    if image_dir is None:
-        image_dir = (Path(base_path) / "images").as_posix()
+def crop_rois_voc(element, config_dict: Dict) -> str:
+    xml, images, output_dir = element
     args = [
-        "-d",
-        f"{base_path}/voc",
-        "--image_dir",
-        f"{image_dir}",
-        "-o",
-        f"{base_path}/crops",
-        "--resize",
-        "224x224",
+        "-d", xml,
+        "--image_dir",  images,
+        "-o",  output_dir,
+        "--resize",  "224x224",
     ]
-    # This is not currently working. Need to fix this
-    #
-    # if labels != "all":
-    #     labels_str = ",".join(labels)
-    #     args.extend(["--labels", f'"{labels_str}"'])
-
-    now = datetime.now().strftime("%Y%m%d")
+    now = datetime.now().strftime("%Y%m%d%H%M%S")
 
     n = 3  # Number of retries
     delay_secs = 30  # Delay between retries
 
-    if not skip:
-        for attempt in range(1, n + 1):
-            try:
-                container = run_docker(
-                    image=config_dict["docker"]["voccropper"],
-                    name=f"{short_name}-voccrop-{now}",
-                    args_list=args,
-                    bind_volumes=config_dict["docker"]["bind_volumes"]
-                )
-                if container:
-                    logger.info(f"Cropping ROIs in {base_path}....")
-                    container.wait()
-                    logger.info(f"Done cropping ROIs in {base_path}....")
-                    break  # Exit loop if successful
-                else:
-                    logger.error(f"Failed to crop ROIs in {base_path}....")
-                    return []
-            except Exception as e:
-                logger.error(f"Attempt {attempt}/{n}: Failed to crop ROIs in {base_path}....{e}")
-                if attempt < n:
-                    logger.info(f"Retrying in {delay_secs} seconds...")
-                    time.sleep(delay_secs)
-                else:
-                    logger.error(f"All {n} attempts failed. Giving up.")
-                    return []
+    for attempt in range(1, n + 1):
+        try:
+            container = run_docker(
+                image=config_dict["docker"]["voccropper"],
+                name=f"voccrop{now}",
+                args_list=args,
+                bind_volumes=config_dict["docker"]["bind_volumes"]
+            )
+            if container:
+                container.wait()
+                break  # Exit loop if successful
+            else:
+                logger.error(f"Failed to crop detections with {container.logs().decode('utf-8')}....")
+                break
+        except Exception as e:
+            logger.error(f"Attempt {attempt}/{n}: Failed to crop detections....{e}")
+            if attempt < n:
+                logger.info(f"Retrying in {delay_secs} seconds...")
+                time.sleep(delay_secs)
+            else:
+                logger.error(f"All {n} attempts failed. Giving up.")
+                break
 
-    return compute_stats(labels_filter, config_dict, crop_dir=processed_dir)
+    return download
 
 def clean(base_path: str) -> str:
     # Remove any existing data, except for downloaded images
