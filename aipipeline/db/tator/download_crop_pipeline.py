@@ -12,7 +12,7 @@ import logging
 
 from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import setup_config
-from aipipeline.prediction.library import download, clean, compute_stats, generate_multicrop_views, \
+from aipipeline.prediction.library import download, clean, report_stats, generate_multicrop_views, \
     clean_images, remove_multicrop_views
 
 logger = logging.getLogger(__name__)
@@ -81,7 +81,7 @@ def run_pipeline(argv=None):
         )
         crop_path = download_data | beam.Map(lambda s: s + '/crops')
 
-        download_views =  crop_path |"Compute stats" >> beam.Map(compute_stats)
+        download_views =  crop_path |"Compute stats" >> beam.Map(report_stats)
 
         if args.gen_multicrop:
             download_views = (
