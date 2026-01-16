@@ -14,7 +14,7 @@ from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.prediction.library import (
     download,
-    compute_stats,
+    report_stats,
     clean,
     remove_multicrop_views,
     generate_multicrop_views,
@@ -96,7 +96,7 @@ def run_pipeline(argv=None):
             (
                  crop_path
                 | "Square ROIs" >> beam.Map(_pad_and_rescale, input_path=crop_path)
-                | "Compute stats" >> beam.Map(compute_stats)
+                | "Report stats" >> beam.Map(report_stats)
                 | "Generate views" >> beam.Map(generate_multicrop_views)
                 | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
                 | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
