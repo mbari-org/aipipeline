@@ -49,7 +49,14 @@ download-i2mapbulk-unlabeled:
 load-i2mapbulk data='data':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/i2mapbulk/load_pipeline.py \
         --config aipipeline/projects/i2mapbulk/config/config.yml --data {{data}}"
-
+# Load i2MAP video data run with ENV_FILE=.env.i2map just load-i2map-video path/to/video.mp4 section='Video/i2MAP/2025/04'
+load-i2map-video video='/mnt/DeepSea-AI/data/i2MAP/2018/10/' section='Videos':
+    time python -m mbari_aidata load videos --upload --config https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml \
+    --input {{video}} --section {{section}} --token $TATOR_TOKEN
+# Load i2MAP track data from a directory of tar.gz files. Run with ENV_FILE=.env.i2map just load-i2map-tracks dir='/path/to/dir/'
+load-i2map-tracks dir='/mnt/DeepSea-AI/data/i2MAP/processed/tracks/2018/10/20181023/':
+    find {{dir}} -type f -name '*.tar.gz' -exec aidata load tracks --input '{}' --token $TATOR_TOKEN --version i2map-rfdetr-vits-boosttrack \
+    --config https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml \;
 # Generate training data for the i2map project
 gen-i2map-data:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
