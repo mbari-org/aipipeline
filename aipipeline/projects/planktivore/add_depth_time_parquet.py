@@ -34,7 +34,6 @@ def fetch_nc_data(data_dir: Path) -> pd.DataFrame:
     for file in data_dir.rglob("*.nc4"):
         if pattern.match(file.name):
             nc_files.append(file)
-            break
 
     nc_files = sorted(nc_files)
 
@@ -138,6 +137,7 @@ def process_year(*, year: int, nc_path: Path, parquet_path: Path, skip_existing:
         print(f"Last row of merged dataframe: {merged.iloc[-1]}")
         print(f"First row of times dataframe: {df_times.iloc[0]}")
         print(f"Last row of times dataframe: {df_times.iloc[-1]}")
+        print(f"Writing merged dataframe to {new_parquet_file}...")
         merged.to_parquet(new_parquet_file)
 
 def main() -> None:
