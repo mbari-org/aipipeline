@@ -140,6 +140,17 @@ just list
 - `cluster-ptvr-sweep roi_dir='...' save_dir='...' device='cuda'` — Run cluster sweep on Planktivore data  
 - `gen-ptvr-lowmag-data` — Generate low-mag training data  
 - `init-ptvr-lowmag-vss` — Init VSS DB for low-mag Planktivore data  
+- `add-depth-time-ptvr year="2025" *more_args=""` — Add depth and time to Planktivore parquet files (needed for downstream processing). Skips already processed files by default; use `--no-skip` to disable.
+
+**Environment for `add-depth-time-ptvr`:**
+```shell
+conda create -n pandas-parquet \
+  -c conda-forge \
+  python=3.12 \
+  pandas==3.0.0 \
+  xarray \
+  netcdf4 -y
+```
 
 ## UAV (Unmanned Aerial Vehicle)
 IMPORTANT: Many of these command are now run on the production server, *uav.shore.mbari.org*
