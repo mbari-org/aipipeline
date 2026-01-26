@@ -3,9 +3,9 @@ cp-dev-ptvr:
     #!/usr/bin/env bash
     cd ..
     cp justfiles/ptvr.just /Volumes/dcline/code/aipipeline/justfiles/ptvr.just
-    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
-    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore-lm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-lm/
-    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.pt*' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore-hm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-hm/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.parquet' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.parquet' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore-lm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-lm/
+    rsync -rtv --no-group --exclude='*.DS_Store' --exclude='*.parquet' --exclude='*.log' --exclude='*__pycache__' aipipeline/projects/planktivore-hm/ /Volumes/dcline/code/aipipeline/aipipeline/projects/planktivore-hm/
 
 # Load planktivore ROI images, e.g. just load-ptvr-images /mnt/DeepSea-AI/data/Planktivore/raw/aidata-export-02 --section aidata-export-02
 load-ptvr-images images='tmp/roi' *more_args="":
@@ -89,7 +89,7 @@ load-ptrv-high-mag-vss:
     --input_json_paths $PROJECT_DIR/vss_files.txt
 # Generate training data for the planktivore low mag
 gen-ptvr-highmag-data:
-  just --justfile {{justfile()}} download-crop planktivore --clean --gen-multicrop --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000,mbari-ptvr-vits-b8-20250513_20250526_130025'"
+  just --justfile {{justfile()}} download-crop planktivore-hm --clean --gen-multicrop --data.download_dir /mnt/ML_SCRATCH/Planktivore/highmag1 --data.download_args "'--verified --version mbari-ifcb2014-vitb16-20250318_20250320_025000,mbari-ptvr-vits-b8-20250513_20250526_130025'"
 
 # Initialize the VSS database for the planktivore low mag data
 init-ptvr-lowmag-vss:
@@ -141,5 +141,21 @@ predict-vss-ptrv parquet="/mnt/DeepSea-AI/data/Planktivore/raw/2025_April-Ahi-Pl
   echo time conda run -n aipipeline --no-capture-output python3 aipipeline/projects/planktivore/export_filenames_from_parquet.py \
         --input_parquet {{ parquet }} \
         --output_text $image_listing
-#  just --justfile {{justfile()}} predict-vss planktivore-hm $image_listing
 
+# Add depth and time to the planktivore parquet files. This is needed for downstream processing.
+# Mount LRAVU directory to /mnt/LRAVU on doris before running, e.g.
+# sudo mount -t smb3 //atlas.shore.mbari.org/LRAUV /mnt/ML_SCRATCH/LRAUV -o username=dcline,dir_mode=0777,file_mode=0666,vers=3.0,ro
+# Run by year, e.g. just add-depth-time-ptvr 2025
+# Be deafult, skips over already processed files - to disable add --no-skip, e.g. just add-depth-time-ptvr "2025" "--no-skip"
+# Create environment first with
+#    conda create -n pandas-parquet \
+#      -c conda-forge \
+#      python=3.12 \
+#      pandas==3.0.0 \
+#      xarray \
+#      netcdf4 -y
+add-depth-time-ptvr year="2025" *more_args="":
+    #!/usr/bin/env bash
+    export PROJECT_DIR=./aipipeline/projects/planktivore
+    export PYTHONPATH=.
+    time conda run -n pandas-parquet --no-capture-output python $PROJECT_DIR/add_depth_time_parquet.py {{year}} {{more_args}}
