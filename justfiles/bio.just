@@ -61,8 +61,16 @@ gen-bio-data:
    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
         --config aipipeline/projects/bio/config/config.yml \
         --skip-clean True \
-        --data.download_dir /mnt/ML_SCRATCH/bio \
+        --data.download_dir /mnt/DeepSea-AI/data/bio \
         --data.download_args '--verified --voc --version Baseline,mega-vits-track-gcam,mbari-i2map-vits-b8-20251008-vss '"
+
+# Initialize the VSS database for the bio project
+init-vss-bio: gen-bio-data
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+        --config aipipeline/projects/m3/config/config.yml \
+        --skip-download \
+        --skip-generate-views \
+        --data.download_dir /mnt/DeepSea-AI/data/bio/Baseline_mega-vits-track-gcam_mbari-i2map-vits-b8-20251008-vss/crops"
 
 run-ctenoA-prod:
     echo "Running strided inference on multiple videos from TSV"
