@@ -55,8 +55,10 @@ load-i2map-video video='/mnt/DeepSea-AI/data/i2MAP/2018/10/' section='Videos':
     --input {{video}} --section {{section}} --token $TATOR_TOKEN
 # Load i2MAP track data from a directory of tar.gz files. Run with ENV_FILE=.env.i2map just load-i2map-tracks dir='/path/to/dir/'
 load-i2map-tracks dir='/mnt/DeepSea-AI/data/i2MAP/processed/tracks/2018/10/20181023/':
-    find {{dir}} -type f -name '*.tar.gz' -exec aidata load tracks --input '{}' --token $TATOR_TOKEN --version i2map-rfdetr-vits-boosttrack \
-    --config https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml \;
+    find {{dir}} -type f -name '*.tar.gz' -exec aidata load tracks --input '{}' --token $TATOR_TOKEN \
+    --version i2map-rfdetr-vits-boosttrack \
+    --config https://docs.mbari.org/internal/ai/projects/config/config_i2map_bulk.yml \
+    --label-thresholds aipipeline/projects/i2mapbulk/threshold_mbari-i2mapm3-vits-b8-20260116.txt \;
 # Generate training data for the i2map project
 gen-i2map-data:
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/tator/download_crop_pipeline.py \
