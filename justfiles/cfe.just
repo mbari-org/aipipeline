@@ -124,11 +124,11 @@ cluster-isiis-sweep det_dir='/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_
 init-vss-cfe-isiis:
     mkdir /tmp/Baseline_v3 || true
     cp -r /mnt/CFElab/Data_analysis/ISIIS/Baseline_v3/crops /tmp/Baseline_v3
-    time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/init_pipeline.py \
+    time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/init_pipeline.py \
         --config aipipeline/projects/cfe/config/config.yml \
         --skip-download \
         --skip-generate-views \
-        --data.download_dir /tmp/Baseline_v3/crops"
+        --data.download_dir /tmp/Baseline_v3
 
 # Transcode CFE ISIIS videos from mov to mp4 for use in Tator from Rachel Carson
 transcode-cfe-isiis-rc:
