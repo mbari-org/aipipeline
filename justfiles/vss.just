@@ -101,9 +101,9 @@ predict-vss project='uav' image_dir="/tmp/download" *more_args="":
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/predict_pipeline.py \
     --config aipipeline/projects/{{project}}/config/config.yml \
     --input $image_listing \
-    --batch-size 128 \
+    --batch-size 512 \
     {{more_args}}"
 
 # Convert VSS prediction data in JSON files into a single csv files
-combine-vss-json project='uav' json_dir='/mnt/DeepSea-AI/data/CFE/processed/vss/' output_csv='/mnt/DeepSea-AI/data/CFE/processed/vss/vss_predictions.csv':
+combine-vss-json json_dir='/mnt/DeepSea-AI/data/CFE/processed/vss/' output_csv='/mnt/DeepSea-AI/data/CFE/processed/vss/vss_predictions.csv':
     time just --justfile {{justfile()}} _base_cmd "aipipeline/db/redis/vss/json_to_csv.py {{json_dir}} {{output_csv}}"
