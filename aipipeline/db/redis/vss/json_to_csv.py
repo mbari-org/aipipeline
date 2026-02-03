@@ -3,6 +3,8 @@ import csv
 from pathlib import Path
 from typing import Any, Dict, List
 
+import pandas as pd
+
 
 def flatten_json(data: Dict[str, Any]) -> List[Dict[str, Any]]:
     """
@@ -78,15 +80,34 @@ def process_directory(root_dir: str, output_csv: str) -> None:
         print("No data to write")
         return
 
-    fieldnames = list(all_rows[0].keys())
+    # Remove duplicates based on file_path
+    unique_rows = {}
+    for row in all_rows:
+        file_path = row.get("file_path")
+        if file_path and file_path not in unique_rows:
+            unique_rows[file_path] = row
+
+    deduplicated_rows = list(unique_rows.values())
+    duplicates_removed = len(all_rows) - len(deduplicated_rows)
+
+    if duplicates_removed > 0:
+        print(f"Removed {duplicates_removed} duplicate(s)")
+
+    fieldnames = list(deduplicated_rows[0].keys())
 
     with open(output_csv, 'w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(all_rows)
+        writer.writerows(deduplicated_rows)
 
-    print(f"Merged {len(all_rows)} rows into {output_csv}")
+    print(f"Merged {len(deduplicated_rows)} unique rows into {output_csv}")
 
+
+    # Read back and add uuid column
+    df = pd.read_csv(output_csv)
+    extract_uuid = lambda x: x.split('/')[-1].split('.')[0] if pd.notna(x) else None
+    df['uuid'] = df['file_path'].apply(extract_uuid)
+    df.to_csv(output_csv, index=False)
 
 if __name__ == "__main__":
     import sys
