@@ -11,18 +11,7 @@ from pathlib import Path
 from xarray.conventions import SerializationWarning
 
 warnings.filterwarnings("ignore", category=SerializationWarning)
-
-def _time_to_datetime64ns(time_values: np.ndarray) -> np.ndarray:
-    time_values = np.asarray(time_values)
-
-    if np.issubdtype(time_values.dtype, np.datetime64):
-        return time_values.astype("datetime64[ns]")
-
-    if np.issubdtype(time_values.dtype, np.number):
-        return pd.to_datetime(time_values, unit="s", origin="unix").to_numpy(dtype="datetime64[ns]")
-
-    return pd.to_datetime(time_values).to_numpy(dtype="datetime64[ns]")
-
+ 
 def fetch_nc_data(data_dir: Path) -> pd.DataFrame:
     if not data_dir.exists():
         print(f"Year directory does not exist: {data_dir}")
