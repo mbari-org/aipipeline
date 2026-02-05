@@ -17,7 +17,6 @@ import logging
 from aipipeline.config_args import parse_override_args
 from aipipeline.config_setup import extract_labels_config, setup_config
 from aipipeline.db.redis.vss.exemplars import load_exemplars
-from aipipeline.prediction.library import compute_stats
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
