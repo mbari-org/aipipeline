@@ -8,6 +8,7 @@ from datetime import datetime
 import numpy as np
 from pathlib import Path
 from typing import Dict, List
+import re
 
 import cv2
 import requests
@@ -134,6 +135,7 @@ def generate_multicrop_views(elements) -> List[tuple]:
 
 
 def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
+    import subprocess
     logger.info(f'Clustering {data} with min_detections {min_detections}')
     num_images, crop_dir, cluster_dir = data
     project = config_dict["tator"]["project"]
@@ -147,6 +149,7 @@ def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
 
     label = Path(crop_dir).name
     machine_friendly_label = gen_machine_friendly_label(label)
+    container_name = re.sub(r'[^a-zA-Z0-9]', '', f"{short_name}-sdcat-clu-{machine_friendly_label}")
 
     try:
         # Skip clustering if there are too few images, but generate a detection file for the next step
@@ -163,7 +166,8 @@ def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
             min_cluster_size = 2
 
             logger.info(f"Running clustering on {num_images} images with min-cluster-size=2")
-            args = [
+            command = [
+                "sdcat",
                 "cluster",
                 "roi",
                 "--skip-visualization",
@@ -178,21 +182,24 @@ def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
                 "--device",
                 "cuda:0",
             ]
-            container = run_docker(
-                image=config_dict["docker"]["sdcat"],
-                name=f"{short_name}-sdcat-clu-{machine_friendly_label}",
-                args_list=args,
-                bind_volumes=config_dict["docker"]["bind_volumes"],
-            )
-            if container:
-                logger.info(f"Clustering {label}....")
-                container.wait()
-                logger.info(f"Done clustering {label}....")
-                if not Path(cluster_dir).exists():
-                    logger.error(f"Failed to cluster {label}")
-                    return 0, crop_dir, cluster_dir
+            logger.info(f"Running command: {' '.join(command)}")
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            # Log the output and errors
+            if result.stdout:
+                logger.info(result.stdout)
+            if result.stderr:
+                logger.error(result.stderr)
+
+            if result.returncode != 0:
+                logger.error(f"Command failed with return code {result.returncode}")
+
+            if not Path(cluster_dir).exists():
+                logger.error(f"Failed to cluster {label}")
+                return 0, crop_dir, cluster_dir
             else:
-                logger.error(f"Failed to cluster for {label}....")
+                logger.error(f"Cluster finished for {label}....")
+                return num_images, crop_dir, cluster_dir
     except Exception as e:
         logger.error(f"Failed to cluster for {label}....{e}")
 
@@ -215,12 +222,10 @@ def get_short_name(project: str) -> str:
 
 
 def gen_machine_friendly_label(label: str) -> str:
-    label_machine_friendly = label.replace(" ", "_").lower()
-    label_machine_friendly = label_machine_friendly.replace("(", "")
-    label_machine_friendly = label_machine_friendly.replace(")", "")
-    label_machine_friendly = label_machine_friendly.replace(",", "")
-    label_machine_friendly = label_machine_friendly.replace(".", "")
+    # Remove all non-alphanumeric characters
+    label_machine_friendly = re.sub(r'\W+', '', label)
     return label_machine_friendly
+
 
 def report_stats(crop_dir: str) -> List[tuple]:
     stats_file = None
