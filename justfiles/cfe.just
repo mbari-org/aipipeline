@@ -128,7 +128,7 @@ init-vss-cfe-isiis:
         --config aipipeline/projects/cfe/config/config.yml \
         --skip-download \
         --skip-generate-views \
-        --data.download_dir /tmp/Baseline_v3/crops
+        --data.download_dir /mnt/ML_SCRATCH/isiis/crops
 
 # Transcode CFE ISIIS videos from mov to mp4 for use in Tator from Rachel Carson
 transcode-cfe-isiis-rc:
