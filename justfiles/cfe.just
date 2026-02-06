@@ -10,7 +10,7 @@ cp-dev-cfe:
 gen-cfe-data:
   just --justfile {{justfile()}} download-crop cfe --clean --gen-multicrop \
         --data.download_dir /mnt/ML_SCRATCH/isiis \
-        --data.download_args "'--verified --version Baseline'"
+        --data.download_args "'--labels diatom_chain_spiral,phaeocystis,artifact,diatom_chain_spines,copepod,aggregate_dense,particle_blur,bloom,rhizaria,larvacean,aggregate_string,aggregate_light,loose_fecal_pellet,long_fecal_pellet,fecal_pellet,football,centric_diatom,chaetognath,short_fecal_pellet,siphonophore,bubble,worm,jelly,shrimp,gelatinous,ctenophore,noise,salp --crop-roi --resize 224 --voc --verified'"
 
 # Generate data for the CFE project from the deployment version cfe_isiis_dino_v7-20250916
 gen-cfe-dino_v7:
