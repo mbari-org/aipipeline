@@ -122,8 +122,6 @@ cluster-isiis-sweep det_dir='/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_
 # Initialize the VSS database with CFE ISIIS downloaded data from CFE lab Baseline_v3
 # This populates the vector database with the crops from Baseline_v3, up to 2000 images per class
 init-vss-cfe-isiis:
-    mkdir /tmp/Baseline_v3 || true
-    cp -r /mnt/CFElab/Data_analysis/ISIIS/Baseline_v3/crops /tmp/Baseline_v3
     time conda run -n aipipeline --no-capture-output python3 aipipeline/db/redis/vss/init_pipeline.py \
         --config aipipeline/projects/cfe/config/config.yml \
         --skip-download \
