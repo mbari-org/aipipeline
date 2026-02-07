@@ -81,10 +81,8 @@ class ProcessVSSBatch(beam.DoFn):
         try:
             logger.debug(f"Processing batch of {len(batch)} images")
             run_vss(batch, config_dict, top_k=3, background=True)
-            yield len(batch)
         except Exception as ex:
             logger.error(f"Error processing batch: {ex}")
-            yield 0
 
 def run_pipeline(argv=None):
     import argparse
@@ -120,9 +118,12 @@ def run_pipeline(argv=None):
                 | "ReadFileList" >> beam.io.ReadFromText(args.input)
             )
         else:
+            input_path = args.input
+            if not input_path.endswith('/'):
+                input_path += '/'
             image_pcoll = (
                     p
-                    | "MatchFiles" >> MatchFiles(file_pattern=f"{args.input}*.jpg")
+                    | "MatchFiles" >> MatchFiles(file_pattern=f"{input_path}**/*.jpg")
             )
 
         # Apply the limit conditionally
@@ -139,8 +140,6 @@ def run_pipeline(argv=None):
                 | "ReadImages" >> beam.Map(read_image_pad if args.resize else read_image)
                 | "BatchImages" >> beam.BatchElements(min_batch_size=args.batch_size, max_batch_size=args.batch_size)
                 | "ProcessBatches" >> beam.ParDo(ProcessVSSBatch(), config_dict)
-                | "SumTotals" >> beam.CombineGlobally(sum)
-                | "PrintSum" >> beam.Map(lambda x: print(f"Total images processed: {x}"))
         )
 
 
