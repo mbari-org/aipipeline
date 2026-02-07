@@ -53,6 +53,7 @@ def run_pipeline(argv=None):
     parser.add_argument("--config", required=True, help=f"Config file path, e.g. {example_project}")
     parser.add_argument("--clean", action="store_true", help="Clean previously downloaded data")
     parser.add_argument("--skip-download", required=False, default=False, help="Skip downloading data")
+    parser.add_argument("--vits-batch-size", type=int, default=64, help="Batch size for clustering")
 
     MIN_DETECTIONS = 2000
     args, other_args = parser.parse_known_args(argv)
@@ -99,7 +100,7 @@ def run_pipeline(argv=None):
                 | "Report stats" >> beam.Map(report_stats)
                 | "Generate views" >> beam.Map(generate_multicrop_views)
                 | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
-                | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=MIN_DETECTIONS)
+                | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, vits_batch_size=args.vits_batch_size, min_detections=MIN_DETECTIONS)
                 | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
                 | "Log results" >> beam.Map(logger.info)
             )

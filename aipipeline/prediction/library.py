@@ -94,10 +94,10 @@ def clean_images(elements, config_dict: Dict) -> List[tuple]:
 
     return elements
 
-def cluster_collections(elements, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
+def cluster_collections(elements, config_dict: Dict, batch_size:int = 512, min_detections: int = 2000) -> List[tuple]:
     logger.info(f"Clustering in {elements} ")
     for element in elements:
-        cluster(element, config_dict, min_detections=min_detections)
+        cluster(element, config_dict, batch_size=batch_size, min_detections=min_detections)
 
     return elements
 
@@ -134,7 +134,7 @@ def generate_multicrop_views(elements) -> List[tuple]:
     return data
 
 
-def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
+def cluster(data, config_dict: Dict, batch_size:int = 512, min_detections: int = 2000) -> List[tuple]:
     import subprocess
     logger.info(f'Clustering {data} with min_detections {min_detections}')
     num_images, crop_dir, cluster_dir = data
@@ -144,12 +144,9 @@ def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
     if not tmp_config.exists():
         logger.error(f"Cannot find {tmp_config}. Did the config_setup run successfully?")
         return 0, crop_dir, cluster_dir
-    short_name = get_short_name(project)
     logger.info(data)
 
     label = Path(crop_dir).name
-    machine_friendly_label = gen_machine_friendly_label(label)
-    container_name = re.sub(r'[^a-zA-Z0-9]', '', f"{short_name}-sdcat-clu-{machine_friendly_label}")
 
     try:
         # Skip clustering if there are too few images, but generate a detection file for the next step
@@ -181,6 +178,8 @@ def cluster(data, config_dict: Dict, min_detections: int = 2000) -> List[tuple]:
                 f"'{cluster_dir}'",
                 "--device",
                 "cuda:0",
+                "--vits-batch-size",
+                f"{batch_size}",
             ]
             logger.info(f"Running command: {' '.join(command)}")
             result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)

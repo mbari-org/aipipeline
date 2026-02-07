@@ -92,7 +92,7 @@ def load_exemplars(labels: List[tuple[str, str]], conf_files=Dict) -> str:
     return f"Loaded {num_loaded} labels"
 
 # Load exemplars into Vector Search Server
-def load_exemplar(data, conf_files=Dict) -> str:
+def load_exemplar(data, conf_files=Dict, batch_size:int = 512) -> str:
     logger.debug(data)
     num_loaded = 0
     _, label_path, save_dir = data
@@ -123,7 +123,9 @@ def load_exemplar(data, conf_files=Dict) -> str:
         "--password",
         REDIS_PASSWORD,
         "--config",
-        conf_files[CONFIG_KEY]
+        conf_files[CONFIG_KEY],
+        "--batch-size",
+        f"{batch_size}",
     ]
     try:
         result = run_subprocess(args_list=args_list)
@@ -139,9 +141,9 @@ def load_exemplar(data, conf_files=Dict) -> str:
     return f"Loaded {num_loaded} labels"
 
 
-def load_exemplars(elements, conf_files: Dict) -> str:
+def load_exemplars(elements, conf_files: Dict, batch_size:int = 512) -> str:
     logger.info(f"Loading {elements} ")
     for element in elements:
-        load_exemplar(element, conf_files=conf_files)
+        load_exemplar(element, conf_files=conf_files, batch_size=batch_size)
 
     return f"Loaded {len(elements)} exemplar classes successfully"

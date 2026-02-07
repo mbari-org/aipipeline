@@ -54,6 +54,7 @@ def run_pipeline(argv=None):
     parser.add_argument("--skip-download", action="store_true", help="Skip downloading data")
     parser.add_argument("--skip-generate-views", action="store_true", help="Skip generating multicrop views")
     parser.add_argument("--min-detections", type=int, default=2000, help="Minimum number of detections to cluster")
+    parser.add_argument("--batch-size", type=int, default=512, help="Batch size for computing embeddings and clustering")
 
     args, other_args = parser.parse_known_args(argv)
     options = PipelineOptions(other_args)
@@ -101,8 +102,8 @@ def run_pipeline(argv=None):
             | "Report stats" >> beam.Map(report_stats)
             | "Generate views" >> beam.Map(lambda path: path if args.skip_generate_views else generate_multicrop_views(path))
             | "Clean bad examples" >> beam.Map(clean_images, config_dict=config_dict)
-            | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, min_detections=args.min_detections)
-            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files)
+            | "Cluster examples" >> beam.Map(cluster_collections, config_dict=config_dict, batch_size=args.batch_size, min_detections=args.min_detections)
+            | "Load exemplars" >> beam.Map(load_exemplars, conf_files=conf_files, batch_size=args.batch_size)
         )
 
 

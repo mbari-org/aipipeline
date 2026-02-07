@@ -127,6 +127,7 @@ init-vss-cfe-isiis:
         --skip-download \
         --skip-generate-views \
         --min-detections 25000 \
+        --batch-size 512 \
         --data.download_dir /mnt/ML_SCRATCH/isiis/crops
 
 # Transcode CFE ISIIS videos from mov to mp4 for use in Tator from Rachel Carson
