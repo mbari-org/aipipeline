@@ -77,15 +77,17 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     # from dark, blurry, and exact_duplicates
     issue_columns = [f"is_{issue}_issue" for issue in issues.keys()]
     bad_images = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
-    # Save the bad images to a file
-    with open(f"{crop_path}/bad_images.txt", "w") as f:
-        f.write("\n".join(bad_images))
-    for img in bad_images:
-        os.remove(img)
-        num_removed += 1
-    logger.info(f"Removed {num_removed} of {count} images in {crop_path} using cleanvision {issues}")
+    if len(bad_images) < 0.5*count:
+        # Save the bad images to a file
+        with open(f"{crop_path}/bad_images.txt", "w") as f:
+            f.write("\n".join(bad_images))
+        for img in bad_images:
+            os.remove(img)
+            num_removed += 1
+        logger.info(f"Removed {num_removed} of {count} images in {crop_path} using cleanvision {issues}")
+    else:
+        logger.info(f"Too many images to remove in {crop_path} due to exceeding max_prevalence so no cleaning performed")
     return count - num_removed, crop_path, save_path
-
 
 def clean_images(elements, config_dict: Dict) -> List[tuple]:
     logger.info(f"Cleaning bad images in {elements} ")
