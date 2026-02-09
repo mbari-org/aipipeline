@@ -1,0 +1,12 @@
+# aipipeline/projects/m3/config.yml
+# Config file for VARS project production
+
+config_url: "https://docs.mbari.org/internal/ai/projects/config/config_vars.yml"
+
+data:
+  cleanvision_issues:
+    - name: "exact_duplicates"
+
+sdcat:
+  model: "hustvl/yolos-tiny"
+  ini: "sdcat.ini"
