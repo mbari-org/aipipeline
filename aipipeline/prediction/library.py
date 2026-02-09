@@ -75,9 +75,20 @@ def clean_bad_images(element, config_dict: Dict) -> tuple:
     imagelab.report()
     # Create column names for issues, e.g. is_dark_issue, is_blurry_issue, is_exact_duplicates_issue
     # from dark, blurry, and exact_duplicates
-    issue_columns = [f"is_{issue}_issue" for issue in issues.keys()]
-    bad_images = imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index
-    if len(bad_images) < 0.5*count:
+    issue_columns = [f"is_{issue}_issue" for issue in issues.keys() if issue not in ["exact_duplicates", "near_duplicates"]]
+    bad_images = set(imagelab.issues[imagelab.issues[issue_columns].any(axis=1)].index) if issue_columns else set()
+
+    # Handle duplicates separately to keep one from each set
+    for issue_type in ["near_duplicates", "exact_duplicates"]:
+        if issue_type in issues and issue_type in imagelab.info and imagelab.info[issue_type]["sets"]:
+            for dup_set in imagelab.info[issue_type]["sets"]:
+                if len(dup_set) > 1:
+                    # Keep the first image, mark others for removal
+                    sorted_paths = sorted(dup_set)
+                    bad_images.update(sorted_paths[1:])
+
+    bad_images = list(bad_images)
+    if len(bad_images) < 0.6*count:
         # Save the bad images to a file
         with open(f"{crop_path}/bad_images.txt", "w") as f:
             f.write("\n".join(bad_images))
