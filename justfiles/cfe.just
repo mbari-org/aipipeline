@@ -100,11 +100,12 @@ cluster-isiis-sweep det_dir='/mnt/ML_SCRATCH/cfe/Hawaii_detections/det_filtered_
     export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
     export RAY_DEDUP_LOGS=0
     cd ~/code/sdcat
+    conda activate rapids-25.04
     for epsilon in 0. .001 .002 .003; do
         for alpha in 1. 1.1 1.2; do
             for min_cluster in 3 5 7; do
                 echo "Running alpha=$alpha epsilon=$epsilon min_cluster=$min_cluster"
-                time conda run -n rapids-25.04 python -m sdcat cluster detections --config-ini $PROJECT_DIR/config/sdcat.ini \
+                time python -m sdcat cluster detections --config-ini $PROJECT_DIR/config/sdcat.ini \
                         --det-dir {{det_dir}} \
                         --save-dir {{save_dir}} \
                         --alpha $alpha \
@@ -147,4 +148,32 @@ transcode-cfe-isiis-hawaii:
 # Fix off-by-one errors in CFE ISIIS Rachel Carson detections
 fix-cfe-isiis-rc-offbyone:
     python3 aipipeline/projects/cfedeploy/simplify_csv.py  /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916.csv -O /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916_S.csv
-    cd aipipeline/projects/cfedeploy && ./update_frames /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916.csv -O /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916_S.csv
+    cd aipipeline/projects/cfedeploy && ./update_frames /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916.csv -O /tmp/rc_2024_02_cfe_isiis_dino_v7-20250916_S.cs
+# Copy OOD out of distribution for clustering
+copy-ood-cfe-isiis:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/copy_roi.py"
+# Cluster sweep OOD out of distribution
+cluster-ood-isiis-sweep roi_dir='/mnt/ML_SCRATCH/isiis/ood_alpha_0.3_high_roi' save_dir='/mnt/ML_SCRATCH/isiis/ood_alpha_0.3_high_roi_cluster':
+    #!/usr/bin/env bash
+    export PROJECT_DIR=$PWD/aipipeline/projects/cfedeploy
+    export RAY_TMPDIR=/mnt/ML_SCRATCH/ray/
+    export MPLCONFIGDIR=/mnt/ML_SCRATCH/matplotlib
+    export RAY_DEDUP_LOGS=0
+    cd ~/code/sdcat
+    for epsilon in 0. .001 .002 .003; do
+        for alpha in 1. 1.1 1.2; do
+            for min_cluster in 3 5 7; do
+                echo "Running alpha=$alpha epsilon=$epsilon min_cluster=$min_cluster"
+                time conda run -n rapids-25.04 --no-capture-output  python3 -m sdcat cluster roi --config-ini $PROJECT_DIR/config/sdcat.ini \
+                        --roi-dir {{roi_dir}} \
+                        --save-dir {{save_dir}} \
+                        --alpha $alpha \
+                        --cluster-selection-epsilon $epsilon \
+                        --min-cluster-size $min_cluster \
+                        --device cuda \
+                        --use-vits \
+                        --vits-batch-size 512 \
+                        --hdbscan-batch-size 20000
+            done
+        done
+    done
