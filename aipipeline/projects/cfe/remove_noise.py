@@ -22,12 +22,12 @@ print(f"Total rows after removing artifact: {len(df)}")
 
 # Add a new column file_path_clean that replaces the string  /mnt/ML_SCRATCH/isiis_roi/mnt/ML_SCRATCH/isiis/ with /mnt/ML_SCRATCH/isiis/
 def clean_file_path(row):
-    return row["file_path"].replace("/mnt/ML_SCRATCH/isiis_roi/", "/mnt/ML_SCRATCH/isiis/")
+    return row["file_path"].replace("/mnt/ML_SCRATCH/isiis_roi/", "/")
 df["file_path_clean"]=df.apply(clean_file_path, axis=1)
-
 # Copy the clean files to a new directory
 print(f"Copying files to {clean_dir}...")
-shutil.copytree(roi_dir, clean_dir, dirs_exist_ok=True)
+for _, row in df.iterrows():
+    shutil.copy(row["file_path_clean"], clean_dir)
 
 
 
