@@ -29,3 +29,8 @@ init-vss-vars:
         --min-detections 25000 \
         --batch-size 512 \
         --data.download_dir /mnt/DeepSea-AI/data/VARS/crops"
+
+# Clean duplicates from Tator database
+clean-vss-vars-dups:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/vars/maintenance/remove_duplicate_locs.py \
+         aipipeline/projects/vars/tator_data_50055_verified.csv"

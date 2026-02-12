@@ -5,6 +5,10 @@ config_url: "https://docs.mbari.org/internal/ai/projects/config/config_vars.yml"
 
 data:
   cleanvision_issues:
+    - name: "low_information"
+      threshold: 0.53
+    - name: "blurry"
+    - name: "dark"
     - name: "exact_duplicates"
 
 sdcat:
