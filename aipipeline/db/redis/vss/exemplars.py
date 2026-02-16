@@ -96,7 +96,7 @@ def load_exemplar(data, conf_files=Dict, batch_size:int = 512) -> str:
     logger.debug(data)
     num_loaded = 0
     _, label_path, save_dir = data
-    label = Path(label_path).stem # Get the label from the path
+    label = Path(label_path).name # Get the label from the path
     # Grab the most recent file
     all_exemplars = list(Path(save_dir).rglob("*exemplars.csv"))
     logger.info(f"Found {len(all_exemplars)} exemplar files for {label}")
