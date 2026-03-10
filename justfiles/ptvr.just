@@ -159,3 +159,11 @@ add-depth-time-ptvr year="2025" *more_args="":
     export PROJECT_DIR=./aipipeline/projects/planktivore
     export PYTHONPATH=.
     time conda run -n pandas-parquet --no-capture-output python $PROJECT_DIR/add_depth_time_parquet.py {{year}} {{more_args}}
+
+# Load depth to the planktivore media in Tator
+load-depth-time-prtr parquet_path="/mnt/DeepSea-AI/data/Planktivore/raw/":
+    time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore/load_depth_time.py {{parquet_path}}
+
+# Run patrick download and load
+load-patrick-dataset:
+    time conda run -n aipipeline --no-capture-output python ./aipipeline/projects/planktivore-hm/download_patrick_dataset.py
