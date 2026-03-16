@@ -177,3 +177,6 @@ cluster-ood-isiis-sweep roi_dir='/mnt/ML_SCRATCH/isiis/ood_alpha_0.3_high_roi' s
             done
         done
     done
+# Run syncback of data
+syncback-cfe-isiis:
+    time just --justfile {{justfile()}} _base_cmd "aipipeline/projects/cfedeploy/syncback_voxel51.py"
